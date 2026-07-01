@@ -1,0 +1,105 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { findPanorama, loadGoogleMaps } from "@/lib/google-maps";
+import type { GameLocation, Movement } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function optionsFor(movement: Movement): google.maps.StreetViewPanoramaOptions {
+  const moving = movement === "moving";
+  const nmpz = movement === "noMoveNoPanZoom";
+  return {
+    addressControl: false,
+    showRoadLabels: false,
+    motionTracking: false,
+    motionTrackingControl: false,
+    fullscreenControl: false,
+    enableCloseButton: false,
+    imageDateControl: false,
+    zoomControl: !nmpz,
+    scrollwheel: !nmpz,
+    panControl: false,
+    linksControl: moving,
+    clickToGo: moving,
+    disableDefaultUI: nmpz,
+  };
+}
+
+interface Props {
+  location: GameLocation;
+  movement: Movement;
+  onUnavailable: () => void;
+}
+
+export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
+  const holderRef = useRef<HTMLDivElement>(null);
+  const panoRef = useRef<google.maps.StreetViewPanorama | null>(null);
+  const svcRef = useRef<google.maps.StreetViewService | null>(null);
+  const [ready, setReady] = useState(false);
+  const [loadingPano, setLoadingPano] = useState(true);
+
+  // Initialise the panorama + service once.
+  useEffect(() => {
+    let cancelled = false;
+    loadGoogleMaps()
+      .then((g) => {
+        if (cancelled || !holderRef.current) return;
+        svcRef.current = new g.maps.StreetViewService();
+        panoRef.current = new g.maps.StreetViewPanorama(holderRef.current, {
+          visible: true,
+          ...optionsFor(movement),
+        });
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) onUnavailable();
+      });
+    return () => {
+      cancelled = true;
+    };
+    // movement handled in its own effect; init once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-apply movement constraints when difficulty changes.
+  useEffect(() => {
+    if (ready && panoRef.current) panoRef.current.setOptions(optionsFor(movement));
+  }, [movement, ready]);
+
+  // Resolve and load the panorama for the current location.
+  useEffect(() => {
+    if (!ready || !svcRef.current || !panoRef.current) return;
+    let cancelled = false;
+    setLoadingPano(true);
+    findPanorama(svcRef.current, location.lat, location.lng)
+      .then((res) => {
+        if (cancelled) return;
+        if (!res) {
+          onUnavailable();
+          return;
+        }
+        const pano = panoRef.current!;
+        pano.setPano(res.panoId);
+        pano.setPov({ heading: location.heading ?? res.heading, pitch: location.pitch ?? 0 });
+        pano.setZoom(0);
+        setLoadingPano(false);
+      })
+      .catch(() => {
+        if (!cancelled) onUnavailable();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, location, onUnavailable]);
+
+  return (
+    <div className="relative h-full w-full">
+      <div ref={holderRef} className="h-full w-full [&_.gm-style-cc]:hidden" />
+      {(!ready || loadingPano) && (
+        <div className="absolute inset-0">
+          <Skeleton className="h-full w-full rounded-none" />
+        </div>
+      )}
+    </div>
+  );
+}
