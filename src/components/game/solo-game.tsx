@@ -47,7 +47,6 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
   } = engine;
   const { record } = useLocalProfile();
 
-  const [pinned, setPinned] = useState(false);
   const [applied, setApplied] = useState<ApplyResult | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
@@ -73,7 +72,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
 
   // No Google coverage → swap in another location instead of showing the demo.
   const handleNoCoverage = useCallback(() => {
-    if (rerollRef.current >= 12) {
+    if (rerollRef.current >= 6) {
       setForceDemo(true);
       return;
     }
@@ -107,7 +106,6 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
 
   const handlePlayAgain = useCallback(() => {
     setApplied(null);
-    setPinned(false);
     restart();
   }, [restart]);
 
@@ -121,7 +119,6 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
       enter: () => {
         if (game.phase === "reveal") next();
       },
-      m: () => setPinned((p) => !p),
     },
     game.phase !== "finished",
   );
@@ -172,8 +169,6 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
           onSubmit={() => void submit()}
           submitting={submitting}
           initialView={mapConfig.view}
-          pinned={pinned}
-          onTogglePinned={() => setPinned((p) => !p)}
           onHint={useHint}
           hintUsed={!!hintCircle}
           hintCircle={hintCircle}

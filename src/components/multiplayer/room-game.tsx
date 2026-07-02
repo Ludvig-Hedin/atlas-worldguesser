@@ -25,7 +25,6 @@ export function RoomGame({ room }: { room: RoomState }) {
   const submitGuess = useMutation(api.rooms.submitGuess);
   const [guess, setGuess] = useState<LatLng | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
 
   const mapCfg = getMapConfig(room.mapId);
@@ -75,7 +74,6 @@ export function RoomGame({ room }: { room: RoomState }) {
         e.preventDefault();
         if (room.status === "active" && guess && !iGuessed && !submitting) void submit();
       },
-      m: () => setPinned((p) => !p),
     },
     room.status === "active",
   );
@@ -130,8 +128,6 @@ export function RoomGame({ room }: { room: RoomState }) {
             onSubmit={() => void submit()}
             submitting={submitting}
             initialView={mapCfg.view}
-            pinned={pinned}
-            onTogglePinned={() => setPinned((p) => !p)}
             onHint={useHint}
             hintUsed={!!hintCircle}
             hintCircle={hintCircle}

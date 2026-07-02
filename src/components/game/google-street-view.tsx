@@ -128,7 +128,16 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         <>
           <CompassStrip heading={heading} />
           <PanoramaControls
+            headingDeg={heading}
             showZoom={canPanZoom}
+            onResetNorth={
+              canPanZoom
+                ? () => {
+                    const p = panoRef.current;
+                    if (p) p.setPov({ heading: 0, pitch: p.getPov().pitch });
+                  }
+                : undefined
+            }
             onZoomIn={() => {
               const p = panoRef.current;
               if (p) p.setZoom(Math.min(5, p.getZoom() + 1));

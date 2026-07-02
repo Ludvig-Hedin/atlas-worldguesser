@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { GLOBE_POINTS } from "@/lib/globe-points";
 
 // One calm rotation roughly every two minutes.
-const RADIANS_PER_SECOND = (Math.PI * 2) / 120;
-const INITIAL_CENTER_LON = (-78 * Math.PI) / 180;
-const SCALE = 0.5; // globe radius as fraction of min(viewport w, h)
+const RADIANS_PER_SECOND = (Math.PI * 2) / 130;
+const INITIAL_CENTER_LON = (-30 * Math.PI) / 180;
+const SCALE = 0.44; // globe radius as fraction of min(viewport w, h) — whole Earth, uncropped
+const CY = 0.5; // vertical center as fraction of height
+
+type Point = readonly [lat: number, lon: number];
 
 /**
- * Ambient dotted globe rendered to a canvas. Light dots on the dark theme,
- * spins slowly, pauses when the tab is hidden or reduced-motion is requested.
- * Purely decorative: pointer-events off, aria-hidden.
+ * Ambient dotted globe of Earth's land, rendered to a canvas. Points are loaded
+ * from /globe.json (generated from Natural Earth land polygons). Spins slowly,
+ * pauses when the tab is hidden or reduced-motion is requested. Purely
+ * decorative: pointer-events off, aria-hidden.
  */
 export function GlobeBackground({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pointsRef = useRef<Point[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,14 +34,15 @@ export function GlobeBackground({ className }: { className?: string }) {
     let height = 0;
     let dpr = 1;
     let raf = 0;
+    let alive = true;
 
     // Cache dot colors by quantized alpha to avoid per-frame string churn.
     const colorCache = new Map<number, string>();
     const colorFor = (alpha: number) => {
-      const key = Math.round(alpha * 50);
+      const key = Math.round(alpha * 40);
       let c = colorCache.get(key);
       if (!c) {
-        c = `rgba(200, 216, 245, ${(key / 50).toFixed(2)})`;
+        c = `rgba(150, 185, 255, ${(key / 40).toFixed(3)})`;
         colorCache.set(key, c);
       }
       return c;
@@ -48,30 +53,32 @@ export function GlobeBackground({ className }: { className?: string }) {
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx!.clearRect(0, 0, width, height);
 
+      const points = pointsRef.current;
+      if (points.length === 0) return;
+
       const size = Math.min(width, height);
       const globeRadius = size * SCALE;
       const cx = width * 0.5;
-      const cy = height * 0.5;
+      const cy = height * CY;
       const centerLon = INITIAL_CENTER_LON + rotation;
-      const baseDotRadius = Math.max(0.6, size / 470);
+      const baseDotRadius = Math.max(0.7, size / 520);
 
-      for (const point of GLOBE_POINTS) {
+      for (const point of points) {
         const lat = point[0];
-        const lon = point[1];
-        const relLon = lon - centerLon;
+        const relLon = point[1] - centerLon;
         const cosLat = Math.cos(lat);
 
         const sphereZ = cosLat * Math.cos(relLon);
-        if (sphereZ <= 0.018) continue; // behind the horizon
+        if (sphereZ <= 0.02) continue; // behind the horizon
 
         const sphereX = cosLat * Math.sin(relLon);
         const sphereY = Math.sin(lat);
 
         const x = cx + sphereX * globeRadius;
         const y = cy - sphereY * globeRadius;
-        const perspective = 0.72 + sphereZ * 0.28;
+        const perspective = 0.7 + sphereZ * 0.3;
 
-        ctx!.fillStyle = colorFor(0.16 + sphereZ * 0.5);
+        ctx!.fillStyle = colorFor(0.2 + sphereZ * 0.62);
         ctx!.beginPath();
         ctx!.arc(x, y, baseDotRadius * perspective, 0, Math.PI * 2);
         ctx!.fill();
@@ -112,7 +119,20 @@ export function GlobeBackground({ className }: { className?: string }) {
     resize();
     raf = requestAnimationFrame(frame);
 
+    fetch("/globe.json")
+      .then((r) => r.json())
+      .then((data: Point[]) => {
+        if (alive) {
+          pointsRef.current = data;
+          draw();
+        }
+      })
+      .catch(() => {
+        /* decorative — silently skip if unavailable */
+      });
+
     return () => {
+      alive = false;
       cancelAnimationFrame(raf);
       ro.disconnect();
       media.removeEventListener("change", onMotion);
