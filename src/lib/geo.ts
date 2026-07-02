@@ -38,6 +38,27 @@ export async function countryAtAsync(pt: LatLng): Promise<string | null> {
   return countryAt(pt, fc);
 }
 
+/** A geodesic circle polygon (GeoJSON) around a center — used for the map hint. */
+export function circlePolygon(
+  center: LatLng,
+  radiusMeters: number,
+  steps = 72,
+): Feature<Polygon> {
+  const R = 6_371_008.8;
+  const lat = (center.lat * Math.PI) / 180;
+  const lng = (center.lng * Math.PI) / 180;
+  const d = radiusMeters / R;
+  const coords: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const brng = (i / steps) * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(lat) * Math.cos(d) + Math.cos(lat) * Math.sin(d) * Math.cos(brng));
+    const lng2 =
+      lng + Math.atan2(Math.sin(brng) * Math.sin(d) * Math.cos(lat), Math.cos(d) - Math.sin(lat) * Math.sin(lat2));
+    coords.push([(lng2 * 180) / Math.PI, (lat2 * 180) / Math.PI]);
+  }
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [coords] } };
+}
+
 /** Rough continent for a coordinate — good enough for an in-game hint. */
 export function continentOf(lat: number, lng: number): string {
   if (lat <= -60) return "Antarctica";

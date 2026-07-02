@@ -12,7 +12,9 @@ import { MapSheet } from "./map-sheet";
 import { RoundReveal } from "./round-reveal";
 import { MatchResults } from "./match-results";
 import { SoloCloudSync } from "./solo-cloud-sync";
+import type { HintCircle } from "./guess-map";
 import { features } from "@/lib/env";
+import { pickLocations } from "@/lib/locations";
 import { useSoloGame } from "@/hooks/use-solo-game";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
@@ -30,27 +32,55 @@ interface SoloGameProps {
 
 export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameProps) {
   const engine = useSoloGame({ mapId, settings, customLocations });
-  const { game, guess, setGuess, submit, next, restart, currentLocation, currentResult, totalScore, submitting } =
-    engine;
+  const {
+    game,
+    guess,
+    setGuess,
+    submit,
+    next,
+    restart,
+    replaceCurrentLocation,
+    currentLocation,
+    currentResult,
+    totalScore,
+    submitting,
+  } = engine;
   const { record } = useLocalProfile();
 
   const [pinned, setPinned] = useState(false);
   const [applied, setApplied] = useState<ApplyResult | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [hintUsed, setHintUsed] = useState(false);
+  const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
+  const [forceDemo, setForceDemo] = useState(false);
+  const rerollRef = useRef(0);
   const recordedRef = useRef<string | null>(null);
 
-  // Reset the hint each round.
+  // Reset the hint + coverage re-roll each round.
   useEffect(() => {
-    setHintUsed(false);
+    setHintCircle(null);
+    setForceDemo(false);
+    rerollRef.current = 0;
   }, [game.round]);
 
   const useHint = useCallback(() => {
-    setHintUsed(true);
-    toast(`This place is in ${continentOf(currentLocation.lat, currentLocation.lng)}`, {
+    if (hintCircle) return;
+    const radiusMeters = getMapConfig(mapId).scaleKm * 500;
+    setHintCircle({ center: { lat: currentLocation.lat, lng: currentLocation.lng }, radiusMeters });
+    toast(`Search area shown on the map · ${continentOf(currentLocation.lat, currentLocation.lng)}`, {
       icon: <Lightbulb className="size-4 text-primary-muted" />,
     });
-  }, [currentLocation]);
+  }, [hintCircle, mapId, currentLocation]);
+
+  // No Google coverage → swap in another location instead of showing the demo.
+  const handleNoCoverage = useCallback(() => {
+    if (rerollRef.current >= 12) {
+      setForceDemo(true);
+      return;
+    }
+    rerollRef.current += 1;
+    const [nextLoc] = pickLocations(mapId, 1);
+    if (nextLoc) replaceCurrentLocation(nextLoc);
+  }, [mapId, replaceCurrentLocation]);
 
   // The game is fully client-driven (random seed) — avoid SSR/hydration mismatch.
   useEffect(() => setMounted(true), []);
@@ -118,7 +148,12 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-black">
-      <StreetViewCanvas location={currentLocation} movement={settings.movement} />
+      <StreetViewCanvas
+        location={currentLocation}
+        movement={settings.movement}
+        onUnavailable={handleNoCoverage}
+        forceDemo={forceDemo}
+      />
 
       <GameHUD
         round={game.round}
@@ -140,7 +175,8 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
           pinned={pinned}
           onTogglePinned={() => setPinned((p) => !p)}
           onHint={useHint}
-          hintUsed={hintUsed}
+          hintUsed={!!hintCircle}
+          hintCircle={hintCircle}
         />
       )}
 

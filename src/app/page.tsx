@@ -3,6 +3,7 @@ import { ArrowRight, Globe2, MapPin, Timer, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/site-header";
+import { GlobeBackground } from "@/components/globe-background";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS } from "@/lib/maps-config";
@@ -16,11 +17,15 @@ const HIGHLIGHTS = [
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-20%] size-[680px] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute bottom-[-30%] right-[-10%] size-[520px] rounded-full bg-sky-500/5 blur-[120px]" />
+    <div className="relative flex min-h-[100dvh] flex-col">
+      {/* Spinning dotted globe, fixed behind everything */}
+      <GlobeBackground className="pointer-events-none fixed inset-0 -z-20 block h-full w-full" />
+
+      {/* Readability scrim + accent glow layered over the globe */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(11,11,12,0.82),rgba(11,11,12,0.35)_45%,transparent_68%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-background" />
+        <div className="absolute left-1/2 top-1/2 size-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[130px]" />
       </div>
 
       <SiteHeader />

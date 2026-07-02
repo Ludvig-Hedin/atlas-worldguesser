@@ -5,7 +5,13 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { LatLng } from "@/lib/types";
 import { CARTO_DARK_STYLE } from "@/lib/map-style";
+import { circlePolygon } from "@/lib/geo";
 import { cn } from "@/lib/utils";
+
+export interface HintCircle {
+  center: LatLng;
+  radiusMeters: number;
+}
 
 function guessPin(): HTMLDivElement {
   const el = document.createElement("div");
@@ -35,6 +41,7 @@ interface GuessMapProps {
   reveal?: boolean;
   initialView: [number, number, number];
   interactive?: boolean;
+  hintCircle?: HintCircle | null;
   className?: string;
 }
 
@@ -45,6 +52,7 @@ export function GuessMap({
   reveal = false,
   initialView,
   interactive = true,
+  hintCircle,
   className,
 }: GuessMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -93,6 +101,22 @@ export function GuessMap({
           "line-opacity": 0.9,
         },
       });
+      map.addSource("hint-circle", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "hint-fill",
+        type: "fill",
+        source: "hint-circle",
+        paint: { "fill-color": "#0a84ff", "fill-opacity": 0.12 },
+      });
+      map.addLayer({
+        id: "hint-line",
+        type: "line",
+        source: "hint-circle",
+        paint: { "line-color": "#0a84ff", "line-width": 2, "line-opacity": 0.75, "line-dasharray": [2, 2] },
+      });
     });
     mapRef.current = map;
 
@@ -122,6 +146,23 @@ export function GuessMap({
     }
     guessMarker.current.setLngLat([guess.lng, guess.lat]).addTo(map);
   }, [guess]);
+
+  // Draw / clear the hint circle.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      const src = map.getSource("hint-circle") as maplibregl.GeoJSONSource | undefined;
+      if (!src) return;
+      src.setData(
+        hintCircle
+          ? { type: "FeatureCollection", features: [circlePolygon(hintCircle.center, hintCircle.radiusMeters)] }
+          : { type: "FeatureCollection", features: [] },
+      );
+    };
+    if (loadedRef.current) apply();
+    else map.once("load", apply);
+  }, [hintCircle]);
 
   // Toggle interactivity (locked during reveal).
   useEffect(() => {

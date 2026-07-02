@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Lightbulb, Maximize2, Minimize2, MapPin } from "lucide-react";
-import { GuessMap } from "./guess-map";
+import { GuessMap, type HintCircle } from "./guess-map";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import type { LatLng } from "@/lib/types";
@@ -18,6 +18,7 @@ interface MapSheetProps {
   onTogglePinned: () => void;
   onHint?: () => void;
   hintUsed?: boolean;
+  hintCircle?: HintCircle | null;
 }
 
 export function MapSheet({
@@ -30,6 +31,7 @@ export function MapSheet({
   onTogglePinned,
   onHint,
   hintUsed,
+  hintCircle,
 }: MapSheetProps) {
   const [hover, setHover] = useState(false);
   const expanded = hover || pinned;
@@ -49,7 +51,7 @@ export function MapSheet({
         )}
       >
         <div className="relative h-[calc(100%-56px)]">
-          <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive />
+          <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive hintCircle={hintCircle} />
           <button
             type="button"
             onClick={onTogglePinned}

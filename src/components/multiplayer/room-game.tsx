@@ -11,6 +11,7 @@ import { RevealMap } from "./reveal-map";
 import { StreetViewCanvas } from "@/components/game/street-view-canvas";
 import { GameHUD } from "@/components/game/game-hud";
 import { MapSheet } from "@/components/game/map-sheet";
+import type { HintCircle } from "@/components/game/guess-map";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { continentOf, countryAtAsync } from "@/lib/geo";
@@ -25,7 +26,7 @@ export function RoomGame({ room }: { room: RoomState }) {
   const [guess, setGuess] = useState<LatLng | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [hintUsed, setHintUsed] = useState(false);
+  const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
 
   const mapCfg = getMapConfig(room.mapId);
   const me = room.standings.find((s) => s.userId === room.myUserId);
@@ -36,17 +37,18 @@ export function RoomGame({ room }: { room: RoomState }) {
   // Reset the pending guess + hint whenever the round or phase changes.
   useEffect(() => {
     setGuess(null);
-    setHintUsed(false);
+    setHintCircle(null);
   }, [room.currentRound, room.status]);
 
   const useHint = useCallback(() => {
     const p = room.panorama;
-    if (!p) return;
-    setHintUsed(true);
-    toast(`This place is in ${continentOf(p.lat, p.lng)}`, {
+    if (!p || hintCircle) return;
+    const radiusMeters = getMapConfig(room.mapId).scaleKm * 500;
+    setHintCircle({ center: { lat: p.lat, lng: p.lng }, radiusMeters });
+    toast(`Search area shown on the map · ${continentOf(p.lat, p.lng)}`, {
       icon: <Lightbulb className="size-4 text-primary-muted" />,
     });
-  }, [room.panorama]);
+  }, [room.panorama, hintCircle, room.mapId]);
 
   const submit = useCallback(async () => {
     if (iGuessed || submitting || room.status !== "active") return;
@@ -131,7 +133,8 @@ export function RoomGame({ room }: { room: RoomState }) {
             pinned={pinned}
             onTogglePinned={() => setPinned((p) => !p)}
             onHint={useHint}
-            hintUsed={hintUsed}
+            hintUsed={!!hintCircle}
+            hintCircle={hintCircle}
           />
         ))}
 

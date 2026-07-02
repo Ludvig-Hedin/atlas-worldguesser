@@ -6,7 +6,6 @@ import { GLOBE_POINTS } from "@/lib/globe-points";
 // One calm rotation roughly every two minutes.
 const RADIANS_PER_SECOND = (Math.PI * 2) / 120;
 const INITIAL_CENTER_LON = (-78 * Math.PI) / 180;
-const DENSITY = 16000; // point id cutoff — lower = sparser, cleaner
 const SCALE = 0.5; // globe radius as fraction of min(viewport w, h)
 
 /**
@@ -57,10 +56,8 @@ export function GlobeBackground({ className }: { className?: string }) {
       const baseDotRadius = Math.max(0.6, size / 470);
 
       for (const point of GLOBE_POINTS) {
-        if (point[0] >= DENSITY) continue;
-
-        const lat = point[1];
-        const lon = point[2];
+        const lat = point[0];
+        const lon = point[1];
         const relLon = lon - centerLon;
         const cosLat = Math.cos(lat);
 

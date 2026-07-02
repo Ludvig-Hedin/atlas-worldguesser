@@ -41,3 +41,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .cache/
+
+# local agent / scratch state (not part of the app)
+.claude/
+.agents/
+/temp/
+skills-lock.json

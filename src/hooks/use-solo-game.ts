@@ -65,6 +65,7 @@ export interface UseSoloGame {
   submit: () => Promise<void>;
   next: () => void;
   restart: (opts?: Partial<CreateOpts>) => void;
+  replaceCurrentLocation: (loc: GameLocation) => void;
   currentLocation: GameLocation;
   currentResult: RoundResult | null;
   totalScore: number;
@@ -130,6 +131,15 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
     [initial.mapId, initial.settings, initial.customLocations],
   );
 
+  const replaceCurrentLocation = useCallback((loc: GameLocation) => {
+    setGame((prev) => {
+      if (prev.phase !== "guessing") return prev;
+      const locations = prev.locations.slice();
+      locations[prev.round - 1] = loc;
+      return { ...prev, locations };
+    });
+  }, []);
+
   const currentResult = useMemo(
     () => game.results.find((r) => r.round === game.round) ?? null,
     [game.results, game.round],
@@ -147,6 +157,7 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
     submit,
     next,
     restart,
+    replaceCurrentLocation,
     currentLocation,
     currentResult,
     totalScore,
