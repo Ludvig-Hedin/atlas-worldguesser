@@ -3,7 +3,7 @@
  * Source: Natural Earth populated places (public domain); each point's country
  * resolved against the same polygons used for scoring. Generated — do not edit by hand.
  */
-import type { GameLocation } from "@/lib/types";
+import type { GameLocation } from "../lib/types";
 
 export interface SeedLocation {
   lat: number;
