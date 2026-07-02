@@ -14,7 +14,8 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { countryAtAsync } from "@/lib/geo";
 import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
-import { countryName, flagEmoji } from "@/lib/countries-meta";
+import { CountryGlyph } from "@/components/map-glyph";
+import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
 import type { LatLng } from "@/lib/types";
 
@@ -90,7 +91,7 @@ export function RoomGame({ room }: { room: RoomState }) {
         round={room.currentRound}
         totalRounds={room.totalRounds}
         mapName={mapCfg.name}
-        mapEmoji={mapCfg.emoji}
+        mapId={room.mapId}
         totalScore={me?.totalScore ?? 0}
         timeRemaining={timed && room.status === "active" ? Math.ceil(remaining) : null}
         movementLabel={movementLabel}
@@ -126,7 +127,7 @@ export function RoomGame({ room }: { room: RoomState }) {
           <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-popover/95 p-4 shadow-2xl backdrop-blur">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{flagEmoji(room.reveal.actual.countryCode)}</span>
+                <CountryGlyph className="size-4" />
                 <span className="font-semibold">{countryName(room.reveal.actual.countryCode)}</span>
               </div>
               <span className="text-xs text-muted-foreground">

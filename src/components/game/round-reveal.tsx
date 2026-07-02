@@ -7,7 +7,8 @@ import { AnimatedNumber } from "./animated-number";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Progress } from "@/components/ui/progress";
-import { countryName, flagEmoji } from "@/lib/countries-meta";
+import { CountryGlyph } from "@/components/map-glyph";
+import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { MAX_ROUND_SCORE, type RoundResult } from "@/lib/types";
 import type { MapConfig } from "@/lib/maps-config";
@@ -49,8 +50,8 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-2xl border border-border bg-popover/95 p-5 shadow-2xl backdrop-blur">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-3xl" aria-hidden>
-                {flagEmoji(result.actual.countryCode)}
+              <span className="flex size-10 items-center justify-center rounded-full bg-white/6">
+                <CountryGlyph className="size-5" />
               </span>
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Actual location</p>
@@ -62,7 +63,7 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
               <AnimatedNumber
                 value={result.score}
                 format={formatNumber}
-                className="text-2xl font-bold leading-tight tabular text-primary-muted"
+                className="text-2xl font-semibold leading-tight tabular text-primary-muted"
               />
             </div>
           </div>

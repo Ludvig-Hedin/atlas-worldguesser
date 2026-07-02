@@ -10,7 +10,8 @@ import { GuessMap } from "@/components/game/guess-map";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { countryName, flagEmoji } from "@/lib/countries-meta";
+import { MapGlyph, CountryGlyph } from "@/components/map-glyph";
+import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { getMapConfig } from "@/lib/maps-config";
 import { MAX_ROUND_SCORE, type RoundResult } from "@/lib/types";
@@ -53,7 +54,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{map.emoji}</span>
+          <MapGlyph mapId={data.mapId} className="size-6 text-primary-muted" />
           <div>
             <h1 className="text-lg font-semibold leading-tight">{map.name} replay</h1>
             {data.owner && (
@@ -116,7 +117,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 font-medium">
-              {flagEmoji(active.actual.countryCode)} {countryName(active.actual.countryCode)}
+              <CountryGlyph className="size-4" /> {countryName(active.actual.countryCode)}
             </span>
             <span className="font-semibold tabular text-primary-muted">{formatNumber(active.score)}</span>
           </div>
@@ -136,7 +137,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
             className="flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.03]"
           >
             <span className="w-5 text-xs font-semibold tabular text-muted-foreground">{r.round}</span>
-            <span className="text-lg">{flagEmoji(r.actual.countryCode)}</span>
+            <CountryGlyph className="size-4" />
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{countryName(r.actual.countryCode)}</span>
             <span className="text-xs text-muted-foreground">
               {r.guess ? formatDistance(r.distanceMeters) : "No guess"}

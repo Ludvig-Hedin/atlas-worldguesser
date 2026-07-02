@@ -46,7 +46,7 @@ export function LeaderboardClient() {
               >
                 <span
                   className={cn(
-                    "w-7 text-center text-sm font-bold tabular",
+                    "w-7 text-center text-sm font-semibold tabular",
                     r.rank <= 3 ? "text-gold" : "text-muted-foreground",
                   )}
                 >

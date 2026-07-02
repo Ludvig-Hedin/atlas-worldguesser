@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { Check, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
+import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { poolSize } from "@/lib/locations";
 import { pluralize } from "@/lib/format";
@@ -59,9 +60,7 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
                     <Check className="size-3" />
                   </motion.span>
                 )}
-                <span className="text-2xl" aria-hidden>
-                  {m.emoji}
-                </span>
+                <MapGlyph mapId={m.id} className="size-6 text-primary-muted" />
                 <span className="font-semibold">{m.name}</span>
                 <span className="text-xs text-muted-foreground">{m.tagline}</span>
                 <span className="mt-1 text-[11px] text-subtle">{pluralize(poolSize(m.id), "location")}</span>

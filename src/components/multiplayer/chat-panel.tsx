@@ -36,7 +36,7 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
     <div className={cn("flex min-h-0 flex-col", className)}>
       <div className="flex-1 space-y-2 overflow-y-auto pr-1">
         {messages?.length === 0 && (
-          <p className="py-6 text-center text-xs text-muted-foreground">No messages yet — say hi 👋</p>
+          <p className="py-6 text-center text-xs text-muted-foreground">No messages yet — say hello.</p>
         )}
         {messages?.map((m) => {
           const isMe = m.userId === myUserId;

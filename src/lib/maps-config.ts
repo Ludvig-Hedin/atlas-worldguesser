@@ -12,7 +12,6 @@ export interface MapConfig {
   countryCodes: string[] | null;
   /** Default guess-map view: [centerLng, centerLat, zoom]. */
   view: [number, number, number];
-  emoji: string;
 }
 
 export const EUROPE_CODES = [
@@ -30,7 +29,6 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 2000,
     countryCodes: null,
     view: [10, 25, 1.2],
-    emoji: "🌍",
   },
   europe: {
     id: "europe",
@@ -40,7 +38,6 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 800,
     countryCodes: EUROPE_CODES,
     view: [12, 52, 3.1],
-    emoji: "🇪🇺",
   },
   usa: {
     id: "usa",
@@ -50,7 +47,6 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 700,
     countryCodes: ["US"],
     view: [-97, 39, 3.2],
-    emoji: "🗽",
   },
   countries: {
     id: "countries",
@@ -60,7 +56,6 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 1500,
     countryCodes: null,
     view: [10, 25, 1.2],
-    emoji: "🚩",
   },
   custom: {
     id: "custom",
@@ -70,7 +65,6 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 1500,
     countryCodes: null,
     view: [10, 25, 1.2],
-    emoji: "✨",
   },
 };
 

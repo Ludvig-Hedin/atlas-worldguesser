@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Clock, Globe2 } from "lucide-react";
 import { AnimatedNumber } from "./animated-number";
+import { MapGlyph } from "@/components/map-glyph";
 import { formatClock, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ interface GameHUDProps {
   round: number;
   totalRounds: number;
   mapName: string;
-  mapEmoji: string;
+  mapId: string;
   totalScore: number;
   timeRemaining: number | null;
   movementLabel: string;
@@ -20,7 +21,7 @@ export function GameHUD({
   round,
   totalRounds,
   mapName,
-  mapEmoji,
+  mapId,
   totalScore,
   timeRemaining,
   movementLabel,
@@ -38,7 +39,7 @@ export function GameHUD({
         </Link>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1 text-xs font-medium text-white/85 backdrop-blur">
-            <span aria-hidden>{mapEmoji}</span>
+            <MapGlyph mapId={mapId} className="size-3.5 text-primary-muted" />
             <span>{mapName}</span>
             <span className="text-white/40">·</span>
             <span className="text-white/60">{movementLabel}</span>

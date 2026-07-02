@@ -37,12 +37,12 @@ const AvatarFallback = React.forwardRef<
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
 const GRADIENTS = [
-  "linear-gradient(135deg,#10b981,#0ea5e9)",
-  "linear-gradient(135deg,#f5c451,#f43f5e)",
-  "linear-gradient(135deg,#8b5cf6,#ec4899)",
-  "linear-gradient(135deg,#06b6d4,#3b82f6)",
-  "linear-gradient(135deg,#f97316,#eab308)",
-  "linear-gradient(135deg,#22c55e,#84cc16)",
+  "linear-gradient(135deg,#0a84ff,#5e5ce6)",
+  "linear-gradient(135deg,#5e5ce6,#bf5af2)",
+  "linear-gradient(135deg,#0a84ff,#40c8e0)",
+  "linear-gradient(135deg,#ff9f0a,#ff375f)",
+  "linear-gradient(135deg,#bf5af2,#ff375f)",
+  "linear-gradient(135deg,#40c8e0,#0a84ff)",
 ];
 
 /** A deterministic gradient avatar with initials — for users without a photo. */

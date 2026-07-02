@@ -1,5 +1,6 @@
 import { Lock } from "lucide-react";
 import { ACHIEVEMENTS, type AchievementTier } from "@/lib/achievements";
+import { AchievementIcon } from "@/components/achievement-icon";
 import { cn } from "@/lib/utils";
 
 const TIER_RING: Record<AchievementTier, string> = {
@@ -31,8 +32,14 @@ export function AchievementGrid({ owned }: { owned: string[] }) {
                 has ? cn("bg-card ring-1", TIER_RING[a.tier]) : "bg-card/40 opacity-60",
               )}
             >
-              <span className="text-2xl" aria-hidden>
-                {has ? a.icon : <Lock className="size-5 text-subtle" />}
+              <span
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-full",
+                  has ? "bg-primary/12 text-primary-muted" : "bg-white/5",
+                )}
+                aria-hidden
+              >
+                {has ? <AchievementIcon name={a.icon} className="size-[18px]" /> : <Lock className="size-4 text-subtle" />}
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium leading-tight">{a.name}</p>

@@ -23,7 +23,7 @@ function targetEl(): HTMLDivElement {
   const el = document.createElement("div");
   el.innerHTML = `<div style="position:relative;width:22px;height:22px">
     <span style="position:absolute;inset:0;border-radius:9999px;background:rgba(245,196,81,.35);animation:atlasPulse 1.8s ease-out infinite"></span>
-    <span style="position:absolute;inset:5px;border-radius:9999px;background:#f5c451;border:2px solid #04140d"></span>
+    <span style="position:absolute;inset:5px;border-radius:9999px;background:#f5c451;border:2px solid #0b0b0c"></span>
   </div>`;
   return el;
 }
@@ -31,7 +31,7 @@ function targetEl(): HTMLDivElement {
 function guessEl(initial: string): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText =
-    "display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px 9999px 9999px 2px;background:#10b981;color:#04140d;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #04140d;box-shadow:0 2px 4px rgba(0,0,0,.5)";
+    "display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px 9999px 9999px 2px;background:#0a84ff;color:#0b0b0c;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #ffffff;box-shadow:0 2px 6px rgba(0,0,0,.5)";
   el.textContent = initial.toUpperCase();
   return el;
 }

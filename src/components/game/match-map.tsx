@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 function numberedPin(n: number, color: string): HTMLDivElement {
   const el = document.createElement("div");
-  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:9999px;background:${color};color:#04140d;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #04140d;box-shadow:0 2px 4px rgba(0,0,0,.5)`;
+  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:9999px;background:${color};color:#0b0b0c;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #ffffff;box-shadow:0 2px 4px rgba(0,0,0,.5)`;
   el.textContent = String(n);
   return el;
 }
@@ -51,7 +51,7 @@ export function MatchMap({ results, initialView, className }: MatchMapProps) {
         bounds.extend([r.actual.lng, r.actual.lat]);
         if (r.guess) {
           markers.push(
-            new maplibregl.Marker({ element: numberedPin(i + 1, "#10b981"), anchor: "center" })
+            new maplibregl.Marker({ element: numberedPin(i + 1, "#0a84ff"), anchor: "center" })
               .setLngLat([r.guess.lng, r.guess.lat])
               .addTo(map),
           );

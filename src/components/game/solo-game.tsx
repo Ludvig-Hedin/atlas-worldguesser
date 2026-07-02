@@ -108,7 +108,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
         round={game.round}
         totalRounds={settings.rounds}
         mapName={mapConfig.name}
-        mapEmoji={mapConfig.emoji}
+        mapId={mapId}
         totalScore={totalScore}
         timeRemaining={deadline ? Math.ceil(remaining) : null}
         movementLabel={movementLabel}

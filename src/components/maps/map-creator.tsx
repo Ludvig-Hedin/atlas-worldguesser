@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CARTO_DARK_STYLE } from "@/lib/map-style";
 import { countryAtAsync } from "@/lib/geo";
-import { countryName, flagEmoji } from "@/lib/countries-meta";
+import { CountryGlyph } from "@/components/map-glyph";
+import { countryName } from "@/lib/countries-meta";
 import { hashString } from "@/lib/utils";
 
 interface Point {
@@ -26,7 +27,7 @@ interface Point {
 function pinEl(n: number): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText =
-    "display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px 9999px 9999px 2px;background:#10b981;color:#04140d;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #04140d;box-shadow:0 2px 4px rgba(0,0,0,.5)";
+    "display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px 9999px 9999px 2px;background:#0a84ff;color:#ffffff;font:600 11px/1 ui-sans-serif,system-ui;border:2px solid #ffffff;box-shadow:0 2px 6px rgba(0,0,0,.5)";
   el.textContent = String(n);
   return el;
 }
@@ -147,7 +148,7 @@ function Creator() {
           {points.map((p, i) => (
             <div key={p.id} className="flex items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-2 text-sm">
               <span className="w-4 text-xs text-muted-foreground">{i + 1}</span>
-              <span>{flagEmoji(p.countryCode)}</span>
+              <CountryGlyph className="size-3.5" />
               <span className="min-w-0 flex-1 truncate">{countryName(p.countryCode)}</span>
               <button
                 type="button"

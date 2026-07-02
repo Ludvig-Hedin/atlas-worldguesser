@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/site-header";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
+import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
 
@@ -73,9 +74,10 @@ export default function Home() {
               href={`/play?map=${m.id}&quick=1`}
               className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 transition-all hover:border-border-strong hover:bg-card"
             >
-              <span className="text-3xl transition-transform group-hover:scale-110" aria-hidden>
-                {m.emoji}
-              </span>
+              <MapGlyph
+                mapId={m.id}
+                className="size-7 text-primary-muted transition-transform group-hover:scale-110"
+              />
               <span className="text-sm font-semibold">{m.name}</span>
               <span className="text-[11px] text-muted-foreground">{m.tagline}</span>
             </Link>

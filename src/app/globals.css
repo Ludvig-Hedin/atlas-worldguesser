@@ -2,7 +2,7 @@
 
 /*
   Atlas — design system
-  Dark-first, near-monochrome (zinc) with a single restrained emerald accent.
+  Dark-first, near-monochrome with a single restrained Apple-blue accent.
   Almost no hard borders: hairlines at low opacity + subtle elevation.
 */
 
@@ -21,9 +21,9 @@
   --muted-foreground: #a1a1aa;
   --subtle: #71717a;
 
-  --primary: #10b981;
-  --primary-foreground: #04140d;
-  --primary-muted: #34d399;
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  --primary-muted: #6cb2ff;
 
   --secondary: #1f1f23;
   --secondary-foreground: #ededed;
@@ -36,10 +36,10 @@
 
   --gold: #f5c451;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --input: rgba(255, 255, 255, 0.06);
-  --ring: #10b981;
+  --ring: #0a84ff;
 }
 
 @theme inline {

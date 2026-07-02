@@ -11,8 +11,8 @@ function guessPin(): HTMLDivElement {
   const el = document.createElement("div");
   el.innerHTML = `
     <svg width="30" height="38" viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))">
-      <path d="M15 37c6-8 13-13.5 13-22C28 6.7 22.2 1 15 1S2 6.7 2 15c0 8.5 7 14 13 22Z" fill="#10b981" stroke="#04140d" stroke-width="1.5"/>
-      <circle cx="15" cy="15" r="5" fill="#04140d"/>
+      <path d="M15 37c6-8 13-13.5 13-22C28 6.7 22.2 1 15 1S2 6.7 2 15c0 8.5 7 14 13 22Z" fill="#0a84ff" stroke="#ffffff" stroke-width="1.5"/>
+      <circle cx="15" cy="15" r="5" fill="#ffffff"/>
     </svg>`;
   el.style.cursor = "pointer";
   return el;
@@ -23,7 +23,7 @@ function actualPin(): HTMLDivElement {
   el.innerHTML = `
     <div style="position:relative;width:22px;height:22px">
       <span style="position:absolute;inset:0;border-radius:9999px;background:rgba(245,196,81,.35);animation:atlasPulse 1.8s ease-out infinite"></span>
-      <span style="position:absolute;inset:5px;border-radius:9999px;background:#f5c451;border:2px solid #04140d"></span>
+      <span style="position:absolute;inset:5px;border-radius:9999px;background:#f5c451;border:2px solid #0b0b0c"></span>
     </div>`;
   return el;
 }

@@ -12,6 +12,7 @@ import { ChatPanel } from "./chat-panel";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
+import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig } from "@/lib/maps-config";
 import type { Movement } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -86,7 +87,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                         m.id === room.mapId ? "border-primary/50 bg-primary/10" : "border-border hover:bg-white/[0.03]",
                       )}
                     >
-                      <span className="text-xl">{m.emoji}</span>
+                      <MapGlyph mapId={m.id} className="size-5 text-primary-muted" />
                       <span className="text-xs font-medium">{m.name}</span>
                     </button>
                   ))}
@@ -123,7 +124,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
             </>
           ) : (
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Badge variant="muted">{map.emoji} {map.name}</Badge>
+              <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {map.name}</Badge>
               <Badge variant="muted">{MOVEMENTS.find((m) => m.id === room.settings.movement)?.label}</Badge>
               <Badge variant="muted">{room.settings.rounds} rounds</Badge>
               <Badge variant="muted">{TIME_LABELS[room.settings.timeLimitSec] ?? "None"} timer</Badge>
@@ -140,7 +141,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
             onClick={() => setReady({ roomId: room._id, ready: !me?.ready })}
           >
             <Check className="size-4" />
-            {me?.ready ? "Ready ✓" : "I'm ready"}
+            {me?.ready ? "Ready" : "I'm ready"}
           </Button>
           {room.amHost && (
             <Button size="lg" className="flex-1" onClick={doStart} disabled={starting || room.standings.length < 1}>

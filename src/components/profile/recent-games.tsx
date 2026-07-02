@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { MapGlyph } from "@/components/map-glyph";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber, timeAgo } from "@/lib/format";
 import { getMapConfig } from "@/lib/maps-config";
@@ -32,9 +33,7 @@ export function RecentGames({ games }: { games: RecentItem[] }) {
         const pct = g.maxScore > 0 ? Math.round((g.totalScore / g.maxScore) * 100) : 0;
         const inner = (
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-xl" aria-hidden>
-              {map.emoji}
-            </span>
+            <MapGlyph mapId={g.mapId} className="size-5 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{map.name}</span>

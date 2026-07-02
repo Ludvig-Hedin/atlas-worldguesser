@@ -8,6 +8,7 @@ import { Home, RotateCcw, Trophy } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { IdentityAvatar } from "@/components/ui/avatar";
+import { MapGlyph } from "@/components/map-glyph";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/format";
@@ -29,7 +30,9 @@ export function RoomResults({ room }: { room: RoomState }) {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center gap-2 text-center"
       >
-        <Badge variant="muted">{map.emoji} {map.name} · Final results</Badge>
+        <Badge variant="muted" className="gap-1.5">
+          <MapGlyph mapId={room.mapId} className="size-3" /> {map.name} · Final results
+        </Badge>
         {competitive && winner && (
           <>
             <Trophy className="mt-2 size-8 text-gold" />
@@ -54,7 +57,7 @@ export function RoomResults({ room }: { room: RoomState }) {
               s.userId === room.myUserId && "ring-1 ring-primary/40",
             )}
           >
-            <span className="w-6 text-center text-lg font-bold tabular text-muted-foreground">{i + 1}</span>
+            <span className="w-6 text-center text-lg font-semibold tabular text-muted-foreground">{i + 1}</span>
             <IdentityAvatar name={s.username} />
             <span className="min-w-0 flex-1 truncate font-medium">{s.username}</span>
             <span className="text-lg font-semibold tabular text-primary-muted">{formatNumber(s.totalScore)}</span>

@@ -17,7 +17,18 @@ export const CARTO_DARK_STYLE: StyleSpecification = {
     },
   },
   layers: [
-    { id: "bg", type: "background", paint: { "background-color": "#0b0b0c" } },
-    { id: "carto", type: "raster", source: "carto", paint: { "raster-opacity": 0.92 } },
+    { id: "bg", type: "background", paint: { "background-color": "#12161c" } },
+    {
+      id: "carto",
+      type: "raster",
+      source: "carto",
+      paint: {
+        "raster-opacity": 1,
+        // Lift the very dark tiles so continents read clearly against water.
+        "raster-brightness-min": 0.16,
+        "raster-contrast": 0.06,
+        "raster-saturation": -0.2,
+      },
+    },
   ],
 };

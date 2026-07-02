@@ -2,14 +2,16 @@
 
 import { motion } from "motion/react";
 import Link from "next/link";
-import { Home, RotateCcw, Settings2, Sparkles } from "lucide-react";
+import { Home, RotateCcw, Settings2 } from "lucide-react";
 import { MatchMap } from "./match-map";
+import { AchievementIcon } from "@/components/achievement-icon";
 import { AnimatedNumber } from "./animated-number";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ACHIEVEMENT_MAP } from "@/lib/achievements";
-import { countryName, flagEmoji } from "@/lib/countries-meta";
+import { MapGlyph, CountryGlyph } from "@/components/map-glyph";
+import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { getMapConfig } from "@/lib/maps-config";
 import { maxMatchScore } from "@/lib/scoring";
@@ -39,15 +41,16 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-2 text-center"
         >
-          <Badge variant={applied.won ? "primary" : "muted"}>
-            {applied.won ? "Great run" : "Match complete"} · {map.emoji} {map.name}
+          <Badge variant={applied.won ? "primary" : "muted"} className="gap-1.5">
+            <MapGlyph mapId={game.mapId} className="size-3" />
+            {applied.won ? "Great run" : "Match complete"} · {map.name}
           </Badge>
           <div className="flex items-end justify-center gap-2">
             <AnimatedNumber
               value={applied.totalScore}
               format={formatNumber}
               durationMs={1100}
-              className="text-5xl font-bold tabular tracking-tight sm:text-6xl"
+              className="text-5xl font-semibold tabular tracking-tight sm:text-6xl"
             />
             <span className="pb-1.5 text-lg font-medium text-muted-foreground">/ {formatNumber(max)}</span>
           </div>
@@ -68,8 +71,8 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
               if (!a) return null;
               return (
                 <Badge key={id} variant="gold" className="gap-1.5 py-1">
-                  <Sparkles className="size-3" />
-                  {a.icon} {a.name}
+                  <AchievementIcon name={a.icon} className="size-3" />
+                  {a.name}
                 </Badge>
               );
             })}
@@ -86,9 +89,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/6 text-xs font-semibold tabular text-muted-foreground">
                 {r.round}
               </span>
-              <span className="text-xl" aria-hidden>
-                {flagEmoji(r.actual.countryCode)}
-              </span>
+              <CountryGlyph className="size-4" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{countryName(r.actual.countryCode)}</p>
                 <p className="text-xs text-muted-foreground">
