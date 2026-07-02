@@ -13,7 +13,9 @@ export function useCountdown(deadline: number | null, onExpire?: () => void) {
   );
   const firedRef = useRef(false);
   const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  });
 
   useEffect(() => {
     firedRef.current = false;

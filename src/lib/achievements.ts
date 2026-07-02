@@ -112,9 +112,13 @@ const RULES: Rule[] = [
   },
 ];
 
-export const ACHIEVEMENTS: AchievementDef[] = RULES.map(
-  ({ test: _test, ...def }) => def,
-);
+export const ACHIEVEMENTS: AchievementDef[] = RULES.map((r) => ({
+  id: r.id,
+  name: r.name,
+  description: r.description,
+  icon: r.icon,
+  tier: r.tier,
+}));
 
 export const ACHIEVEMENT_MAP: Record<string, AchievementDef> = Object.fromEntries(
   ACHIEVEMENTS.map((a) => [a.id, a]),

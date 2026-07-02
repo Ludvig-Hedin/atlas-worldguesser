@@ -1,6 +1,6 @@
 import type { LatLng } from "./types";
 import { MAX_ROUND_SCORE } from "./types";
-import { clamp } from "./utils";
+import { clamp } from "./math";
 
 const EARTH_RADIUS_METERS = 6_371_008.8;
 

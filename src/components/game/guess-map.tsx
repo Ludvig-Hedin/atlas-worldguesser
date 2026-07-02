@@ -53,7 +53,9 @@ export function GuessMap({
   const actualMarker = useRef<maplibregl.Marker | null>(null);
   const loadedRef = useRef(false);
   const onGuessRef = useRef(onGuess);
-  onGuessRef.current = onGuess;
+  useEffect(() => {
+    onGuessRef.current = onGuess;
+  });
 
   // Initialise the map once.
   useEffect(() => {

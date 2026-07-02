@@ -3,6 +3,7 @@ import { ArrowRight, Globe2, MapPin, Timer, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/site-header";
+import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
 import { OFFICIAL_MAPS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
 
@@ -56,6 +57,12 @@ export default function Home() {
           <p className="mt-4 text-xs text-subtle">
             Running in demo mode — add a Google Maps key for real Street View.
           </p>
+        )}
+
+        {features.convex && (
+          <div className="mt-10 flex w-full justify-center">
+            <MultiplayerEntry />
+          </div>
         )}
 
         {/* Mode grid */}

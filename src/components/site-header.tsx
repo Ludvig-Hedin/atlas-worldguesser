@@ -13,12 +13,20 @@ export function SiteHeader() {
         <Globe2 className="size-5 text-primary-muted" />
         Atlas
       </Link>
-      <nav className="flex items-center gap-1.5">
-        {features.auth && (
+      <nav className="flex items-center gap-0.5 sm:gap-1.5">
+        {features.convex && (
           <Button variant="ghost" size="sm" asChild>
             <Link href="/leaderboard">Leaderboard</Link>
           </Button>
         )}
+        {features.auth && (
+          <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+            <Link href="/friends">Friends</Link>
+          </Button>
+        )}
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/profile">Stats</Link>
+        </Button>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/play">Play</Link>
         </Button>

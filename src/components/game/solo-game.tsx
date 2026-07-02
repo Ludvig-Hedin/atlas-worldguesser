@@ -8,6 +8,8 @@ import { GameHUD } from "./game-hud";
 import { MapSheet } from "./map-sheet";
 import { RoundReveal } from "./round-reveal";
 import { MatchResults } from "./match-results";
+import { SoloCloudSync } from "./solo-cloud-sync";
+import { features } from "@/lib/env";
 import { useSoloGame } from "@/hooks/use-solo-game";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
@@ -90,7 +92,10 @@ export function SoloGame({ mapId, settings, onExit }: SoloGameProps) {
 
   if (game.phase === "finished" && applied) {
     return (
-      <MatchResults game={game} applied={applied} onPlayAgain={handlePlayAgain} onNewGame={onExit} />
+      <>
+        {features.convex && <SoloCloudSync game={game} />}
+        <MatchResults game={game} applied={applied} onPlayAgain={handlePlayAgain} onNewGame={onExit} />
+      </>
     );
   }
 

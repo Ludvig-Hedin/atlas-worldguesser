@@ -6,6 +6,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { EnsureUser } from "@/components/auth/ensure-user";
 import { clerkPublishableKey, convexUrl, features } from "@/lib/env";
 
 // Single Convex client instance for the browser session (only when configured).
@@ -28,6 +29,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     return (
       <ClerkProvider publishableKey={clerkPublishableKey}>
         <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
+          <EnsureUser />
           {inner}
         </ConvexProviderWithClerk>
       </ClerkProvider>

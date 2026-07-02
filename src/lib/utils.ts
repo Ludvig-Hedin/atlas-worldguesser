@@ -1,14 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export { clamp } from "./math";
+
 /** Merge conditional class names, de-duplicating conflicting Tailwind utilities. */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-/** Clamp a number into an inclusive range. */
-export function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }
 
 /** Deterministic small hash → 32-bit int (used for seeded RNG & avatars). */

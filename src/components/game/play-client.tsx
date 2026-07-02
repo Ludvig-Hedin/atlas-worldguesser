@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Globe2 } from "lucide-react";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
+import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
 import { DEFAULT_SETTINGS } from "@/lib/maps-config";
 import type { GameModeId, GameSettings } from "@/lib/types";
 
@@ -56,6 +57,9 @@ export function PlayClient({ initialMapId, quickStart }: PlayClientProps) {
             <p className="mt-1 text-sm text-muted-foreground">Set it up, then guess where in the world you are.</p>
           </div>
           <PlaySetup onStart={start} initialMapId={initialMapId} />
+          <div className="mt-8 flex justify-center">
+            <MultiplayerEntry />
+          </div>
         </div>
       </main>
     </div>

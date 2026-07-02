@@ -68,7 +68,15 @@ with `bun run build:geo` (downloads public-domain Natural Earth sources).
 - ✅ Core solo gameplay — modes (World / Europe / USA / Countries), difficulty
   (Moving / No Move / NMPZ), rounds, timer, scoring, reveal, match results,
   XP/levels, achievements, streaks, guest history.
-- ⏳ Auth + cloud profiles, realtime multiplayer, social, replays, leaderboards.
+- ✅ Auth (Clerk) + cloud profiles, stats sync, global leaderboard.
+- ✅ Realtime multiplayer — private rooms (code + invite link), lobby with
+  host controls & ready status, synchronized live rounds, server-authoritative
+  scoring, live scoreboard, chat, match results, rematch.
+- ✅ Social — friends (requests / accept / remove) and per-user profiles.
+- ✅ Replays — every finished game is replayable round-by-round.
+
+Auth, multiplayer, leaderboards, friends and replays require Convex + Clerk
+(see Configuration); the app degrades gracefully to solo play without them.
 
 ## Notes
 
