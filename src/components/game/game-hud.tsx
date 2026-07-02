@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Globe2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { AnimatedNumber } from "./animated-number";
+import { AtlasMark } from "@/components/atlas-mark";
 import { MapGlyph } from "@/components/map-glyph";
 import { formatClock, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,7 @@ export function GameHUD({
           className="flex size-9 items-center justify-center rounded-lg bg-black/40 text-primary-muted backdrop-blur transition-colors hover:bg-black/60"
           aria-label="Home"
         >
-          <Globe2 className="size-4" />
+          <AtlasMark className="size-4" />
         </Link>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1 text-xs font-medium text-white/85 backdrop-blur">

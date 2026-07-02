@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Globe2 } from "lucide-react";
+import { AtlasMark } from "@/components/atlas-mark";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
@@ -46,7 +46,7 @@ export function PlayClient({ initialMapId, quickStart }: PlayClientProps) {
     <div className="flex min-h-[100dvh] flex-col">
       <header className="flex items-center justify-between px-5 py-4">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <Globe2 className="size-5 text-primary-muted" />
+          <AtlasMark className="size-5 text-primary-muted" />
           Atlas
         </Link>
       </header>

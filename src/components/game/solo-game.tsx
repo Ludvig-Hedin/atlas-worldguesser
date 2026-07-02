@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { Globe2, Lightbulb } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { toast } from "sonner";
+import { AtlasMark } from "@/components/atlas-mark";
 import { continentOf } from "@/lib/geo";
 import { StreetViewCanvas } from "./street-view-canvas";
 import { GameHUD } from "./game-hud";
@@ -99,7 +100,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
     return (
       <div className="flex h-[100dvh] w-full items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-3 text-white/60">
-          <Globe2 className="size-6 animate-pulse text-primary-muted" />
+          <AtlasMark className="size-6 animate-pulse text-primary-muted" />
           <p className="text-sm">Dropping you somewhere…</p>
         </div>
       </div>
