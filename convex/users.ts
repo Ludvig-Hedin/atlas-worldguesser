@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { settingsValidator } from "./schema";
+import { rateLimit } from "./rateLimit";
+import { clampSettings } from "./gameLogic";
 import { foldGame } from "../src/lib/progression";
 import { levelForXp } from "../src/lib/xp";
 import type { RoundResult } from "../src/lib/types";
@@ -189,6 +191,11 @@ export const recordSoloResult = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, "soloRecord", user._id);
+    if (args.results.length === 0 || args.results.length > 20) {
+      throw new Error("Invalid game");
+    }
+    const settings = clampSettings(args.settings);
     const now = Date.now();
 
     const owned = await ctx.db
@@ -223,15 +230,15 @@ export const recordSoloResult = mutation({
       await ctx.db.insert("achievements", { userId: user._id, achievementId: id, unlockedAt: now });
     }
 
-    const maxScore = args.settings.rounds * 5000;
+    const maxScore = settings.rounds * 5000;
     await ctx.db.insert("games", {
       userId: user._id,
       mode: "solo",
       mapId: args.mapId,
-      settings: args.settings,
+      settings,
       totalScore: out.totalScore,
       maxScore,
-      rounds: args.settings.rounds,
+      rounds: settings.rounds,
       avgDistanceMeters: out.avgDistanceMeters,
       perfectRounds: out.perfectRounds,
       won: out.won,

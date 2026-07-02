@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { features } from "@/lib/env";
 import { demoScene } from "@/lib/demo-scene";
 import type { GameLocation, Movement } from "@/lib/types";
@@ -20,10 +20,13 @@ interface Props {
 export function StreetViewCanvas({ location, movement }: Props) {
   const [fallback, setFallback] = useState(!features.googleMaps);
 
-  // Retry Google coverage for each new location.
+  // Retry Google coverage only when the location actually changes (by value,
+  // not object identity) so we never re-trigger the billed lookup on rerender.
   useEffect(() => {
     if (features.googleMaps) setFallback(false);
-  }, [location]);
+  }, [location.lat, location.lng]);
+
+  const handleUnavailable = useCallback(() => setFallback(true), []);
 
   const nmpz = movement === "noMoveNoPanZoom";
   const scene = demoScene(location);
@@ -34,7 +37,7 @@ export function StreetViewCanvas({ location, movement }: Props) {
       {fallback ? (
         <DemoPanorama scene={scene} seed={seed} disablePan={nmpz} />
       ) : (
-        <GoogleStreetView location={location} movement={movement} onUnavailable={() => setFallback(true)} />
+        <GoogleStreetView location={location} movement={movement} onUnavailable={handleUnavailable} />
       )}
       {/* NMPZ: block all look-around / zoom over the real panorama. */}
       {nmpz && !fallback && <div className="absolute inset-0 z-10 cursor-not-allowed" aria-hidden />}

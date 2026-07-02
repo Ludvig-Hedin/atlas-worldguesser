@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type QueryCtx, type MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { currentUser, requireUser } from "./users";
+import { rateLimit } from "./rateLimit";
 
 async function findPair(
   ctx: QueryCtx | MutationCtx,
@@ -23,6 +24,7 @@ export const sendRequest = mutation({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
     const me = await requireUser(ctx);
+    await rateLimit(ctx, "friendRequest", me._id);
     const target = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("usernameLower", username.toLowerCase()))

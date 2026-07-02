@@ -12,15 +12,23 @@ import { settingsValidator, latLng } from "./schema";
 import { requireUser, currentUser } from "./users";
 import {
   ANTIPODE_METERS,
+  clampSettings,
   computeGuessScore,
   pickMatchLocations,
   randomRoomCode,
 } from "./gameLogic";
+import { rateLimit } from "./rateLimit";
 import { foldGame } from "../src/lib/progression";
 import type { RoundResult } from "../src/lib/types";
 
 const REVEAL_MS = 6000;
 const DEFAULT_ROUND_CAP_SEC = 90;
+
+function assertMultiplayerEnabled() {
+  if (process.env.DISABLE_MULTIPLAYER === "true") {
+    throw new Error("Multiplayer is temporarily disabled");
+  }
+}
 
 function roundDurationMs(settings: Doc<"rooms">["settings"]): number {
   const sec = settings.timeLimitSec > 0 ? settings.timeLimitSec : DEFAULT_ROUND_CAP_SEC;
@@ -49,8 +57,11 @@ async function membersOf(ctx: QueryCtx | MutationCtx, roomId: Id<"rooms">) {
 
 export const create = mutation({
   args: { mapId: v.string(), settings: settingsValidator },
-  handler: async (ctx, { mapId, settings }) => {
+  handler: async (ctx, { mapId, settings: rawSettings }) => {
+    assertMultiplayerEnabled();
     const user = await requireUser(ctx);
+    await rateLimit(ctx, "roomCreate", user._id);
+    const settings = clampSettings(rawSettings);
     const now = Date.now();
 
     let code = randomRoomCode();
@@ -92,7 +103,9 @@ export const create = mutation({
 export const join = mutation({
   args: { code: v.string() },
   handler: async (ctx, { code }) => {
+    assertMultiplayerEnabled();
     const user = await requireUser(ctx);
+    await rateLimit(ctx, "roomJoin", user._id);
     const room = await ctx.db
       .query("rooms")
       .withIndex("by_code", (q) => q.eq("code", code.toUpperCase()))
@@ -161,11 +174,12 @@ export const leave = mutation({
 
 export const updateSettings = mutation({
   args: { roomId: v.id("rooms"), mapId: v.string(), settings: settingsValidator },
-  handler: async (ctx, { roomId, mapId, settings }) => {
+  handler: async (ctx, { roomId, mapId, settings: rawSettings }) => {
     const user = await requireUser(ctx);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can change settings");
     if (room.status !== "lobby") throw new Error("Match already started");
+    const settings = clampSettings(rawSettings);
     const seed = Math.floor(Math.random() * 0xffffffff);
     await ctx.db.patch(roomId, {
       mapId,
@@ -219,6 +233,7 @@ export const submitGuess = mutation({
   },
   handler: async (ctx, { roomId, guess, guessCountryCode }) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, "guess", user._id);
     const room = await ctx.db.get(roomId);
     if (!room || room.status !== "active") throw new Error("No active round");
     const member = await memberOf(ctx, roomId, user._id);

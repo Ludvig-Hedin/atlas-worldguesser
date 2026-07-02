@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { currentUser, requireUser } from "./users";
+import { rateLimit } from "./rateLimit";
 
 const locationInput = v.object({
   lat: v.number(),
@@ -29,6 +30,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, "mapCreate", user._id);
     const name = args.name.trim().slice(0, 40);
     if (name.length < 3) throw new Error("Give your map a name (3+ characters)");
     if (args.locations.length < 5) throw new Error("Add at least 5 locations");

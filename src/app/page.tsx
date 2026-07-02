@@ -59,7 +59,7 @@ export default function Home() {
           </p>
         )}
 
-        {features.convex && (
+        {features.multiplayer && (
           <div className="mt-10 flex w-full justify-center">
             <MultiplayerEntry />
           </div>

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireUser } from "./users";
+import { rateLimit } from "./rateLimit";
 
 async function assertMember(ctx: MutationCtx, roomId: Id<"rooms">, userId: Id<"users">) {
   const member = await ctx.db
@@ -16,6 +17,7 @@ export const send = mutation({
   handler: async (ctx, { roomId, text }) => {
     const user = await requireUser(ctx);
     await assertMember(ctx, roomId, user._id);
+    await rateLimit(ctx, "chat", user._id);
     const clean = text.trim().slice(0, 300);
     if (!clean) return;
     await ctx.db.insert("chatMessages", {

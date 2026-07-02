@@ -11,6 +11,18 @@ export { scaleMetersForMap, haversineMeters, roundScore };
 
 export const ANTIPODE_METERS = Math.PI * 6_371_008.8;
 
+export const MAX_ROUNDS = 20;
+export const MAX_TIME_LIMIT_SEC = 600;
+
+/** Clamp untrusted client settings to safe bounds (prevents huge matches). */
+export function clampSettings<S extends { rounds: number; timeLimitSec: number }>(s: S): S {
+  return {
+    ...s,
+    rounds: Math.max(1, Math.min(MAX_ROUNDS, Math.floor(s.rounds || 1))),
+    timeLimitSec: Math.max(0, Math.min(MAX_TIME_LIMIT_SEC, Math.floor(s.timeLimitSec || 0))),
+  };
+}
+
 export interface MatchLocation {
   lat: number;
   lng: number;

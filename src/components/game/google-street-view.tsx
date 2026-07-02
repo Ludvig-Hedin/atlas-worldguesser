@@ -38,7 +38,18 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
   const [ready, setReady] = useState(false);
   const [loadingPano, setLoadingPano] = useState(true);
 
-  // Initialise the panorama + service once.
+  // Keep the latest callback without making it an effect dependency (which would
+  // re-trigger the billed panorama lookup on every parent rerender).
+  const onUnavailableRef = useRef(onUnavailable);
+  useEffect(() => {
+    onUnavailableRef.current = onUnavailable;
+  });
+
+  // The location key we've already resolved a panorama for. Guarantees exactly
+  // one Street View Metadata call per distinct location (no per-render billing).
+  const loadedKeyRef = useRef<string | null>(null);
+
+  // Initialise the panorama + service exactly once.
   useEffect(() => {
     let cancelled = false;
     loadGoogleMaps()
@@ -52,12 +63,11 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         setReady(true);
       })
       .catch(() => {
-        if (!cancelled) onUnavailable();
+        if (!cancelled) onUnavailableRef.current();
       });
     return () => {
       cancelled = true;
     };
-    // movement handled in its own effect; init once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,16 +76,21 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
     if (ready && panoRef.current) panoRef.current.setOptions(optionsFor(movement));
   }, [movement, ready]);
 
-  // Resolve and load the panorama for the current location.
+  // Resolve and load the panorama once per distinct location.
   useEffect(() => {
     if (!ready || !svcRef.current || !panoRef.current) return;
+    const key = `${location.lat.toFixed(5)},${location.lng.toFixed(5)}`;
+    if (loadedKeyRef.current === key) return; // already resolved — skip the billed call
+    loadedKeyRef.current = key;
+
     let cancelled = false;
     setLoadingPano(true);
     findPanorama(svcRef.current, location.lat, location.lng)
       .then((res) => {
         if (cancelled) return;
         if (!res) {
-          onUnavailable();
+          loadedKeyRef.current = null;
+          onUnavailableRef.current();
           return;
         }
         const pano = panoRef.current!;
@@ -85,12 +100,15 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         setLoadingPano(false);
       })
       .catch(() => {
-        if (!cancelled) onUnavailable();
+        if (!cancelled) {
+          loadedKeyRef.current = null;
+          onUnavailableRef.current();
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [ready, location, onUnavailable]);
+  }, [ready, location.lat, location.lng, location.heading, location.pitch]);
 
   return (
     <div className="relative h-full w-full">

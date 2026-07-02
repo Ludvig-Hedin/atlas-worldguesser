@@ -181,4 +181,11 @@ export default defineSchema({
     lng: v.number(),
     countryCode: v.string(),
   }).index("by_map", ["mapId"]),
+
+  // Fixed-window rate limiting per (action, subject).
+  rateLimits: defineTable({
+    key: v.string(),
+    count: v.number(),
+    windowStart: v.number(),
+  }).index("by_key", ["key"]),
 });

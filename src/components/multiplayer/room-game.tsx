@@ -69,9 +69,11 @@ export function RoomGame({ room }: { room: RoomState }) {
     room.status === "roundResult" ? room.roundEndsAt : null,
   );
 
+  const panoLat = room.panorama?.lat;
+  const panoLng = room.panorama?.lng;
   const panoLocation = useMemo(
-    () => (room.panorama ? { ...room.panorama, countryCode: "" } : null),
-    [room.panorama],
+    () => (panoLat != null && panoLng != null ? { lat: panoLat, lng: panoLng, countryCode: "" } : null),
+    [panoLat, panoLng],
   );
 
   return (

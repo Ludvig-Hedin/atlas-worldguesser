@@ -10,6 +10,7 @@ import { RoomLobby } from "./room-lobby";
 import { RoomGame } from "./room-game";
 import { RoomResults } from "./room-results";
 import { Button } from "@/components/ui/button";
+import { features } from "@/lib/env";
 
 function FullscreenMessage({ children }: { children: React.ReactNode }) {
   return (
@@ -64,6 +65,18 @@ function RoomInner({ code }: { code: string }) {
 }
 
 export function RoomClient({ code }: { code: string }) {
+  if (!features.multiplayer) {
+    return (
+      <FullscreenMessage>
+        <Globe2 className="size-8 text-primary-muted" />
+        <h1 className="text-xl font-semibold">Multiplayer is disabled</h1>
+        <p className="max-w-xs text-sm text-muted-foreground">Private rooms are currently turned off.</p>
+        <Button asChild>
+          <Link href="/play">Play solo</Link>
+        </Button>
+      </FullscreenMessage>
+    );
+  }
   return (
     <>
       <AuthLoading>

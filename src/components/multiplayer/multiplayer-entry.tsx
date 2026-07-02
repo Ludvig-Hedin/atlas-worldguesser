@@ -12,7 +12,7 @@ import { DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
 
 export function MultiplayerEntry() {
-  if (!features.convex) return null;
+  if (!features.multiplayer) return null;
   return (
     <div className="w-full max-w-md rounded-2xl border border-border bg-card/60 p-5">
       <div className="mb-4 flex items-center gap-2">
