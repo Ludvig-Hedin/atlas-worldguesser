@@ -37,3 +37,14 @@ export async function countryAtAsync(pt: LatLng): Promise<string | null> {
   const fc = await loadCountries();
   return countryAt(pt, fc);
 }
+
+/** Rough continent for a coordinate — good enough for an in-game hint. */
+export function continentOf(lat: number, lng: number): string {
+  if (lat <= -60) return "Antarctica";
+  if (lng >= 112 && lat <= 0) return "Oceania";
+  if (lat >= 35 && lng >= -25 && lng <= 40) return "Europe";
+  if (lng >= 45 && lat >= 5) return "Asia";
+  if (lat >= -37 && lng >= -20 && lng <= 52) return "Africa";
+  if (lng <= -30) return lat >= 13 ? "North America" : "South America";
+  return "Asia";
+}

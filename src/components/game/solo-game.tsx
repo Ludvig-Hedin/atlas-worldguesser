@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { Globe2 } from "lucide-react";
+import { Globe2, Lightbulb } from "lucide-react";
+import { toast } from "sonner";
+import { continentOf } from "@/lib/geo";
 import { StreetViewCanvas } from "./street-view-canvas";
 import { GameHUD } from "./game-hud";
 import { MapSheet } from "./map-sheet";
@@ -34,7 +36,20 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
   const [pinned, setPinned] = useState(false);
   const [applied, setApplied] = useState<ApplyResult | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hintUsed, setHintUsed] = useState(false);
   const recordedRef = useRef<string | null>(null);
+
+  // Reset the hint each round.
+  useEffect(() => {
+    setHintUsed(false);
+  }, [game.round]);
+
+  const useHint = useCallback(() => {
+    setHintUsed(true);
+    toast(`This place is in ${continentOf(currentLocation.lat, currentLocation.lng)}`, {
+      icon: <Lightbulb className="size-4 text-primary-muted" />,
+    });
+  }, [currentLocation]);
 
   // The game is fully client-driven (random seed) — avoid SSR/hydration mismatch.
   useEffect(() => setMounted(true), []);
@@ -123,6 +138,8 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
           initialView={mapConfig.view}
           pinned={pinned}
           onTogglePinned={() => setPinned((p) => !p)}
+          onHint={useHint}
+          hintUsed={hintUsed}
         />
       )}
 

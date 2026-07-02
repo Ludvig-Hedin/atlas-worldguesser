@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
-import { Loader2 } from "lucide-react";
+import { Lightbulb, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { Scoreboard } from "./scoreboard";
@@ -12,7 +13,7 @@ import { GameHUD } from "@/components/game/game-hud";
 import { MapSheet } from "@/components/game/map-sheet";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
-import { countryAtAsync } from "@/lib/geo";
+import { continentOf, countryAtAsync } from "@/lib/geo";
 import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
@@ -24,6 +25,7 @@ export function RoomGame({ room }: { room: RoomState }) {
   const [guess, setGuess] = useState<LatLng | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pinned, setPinned] = useState(false);
+  const [hintUsed, setHintUsed] = useState(false);
 
   const mapCfg = getMapConfig(room.mapId);
   const me = room.standings.find((s) => s.userId === room.myUserId);
@@ -31,10 +33,20 @@ export function RoomGame({ room }: { room: RoomState }) {
   const timed = room.settings.timeLimitSec > 0;
   const movementLabel = MOVEMENTS.find((m) => m.id === room.settings.movement)?.label ?? "Moving";
 
-  // Reset the pending guess whenever the round or phase changes.
+  // Reset the pending guess + hint whenever the round or phase changes.
   useEffect(() => {
     setGuess(null);
+    setHintUsed(false);
   }, [room.currentRound, room.status]);
+
+  const useHint = useCallback(() => {
+    const p = room.panorama;
+    if (!p) return;
+    setHintUsed(true);
+    toast(`This place is in ${continentOf(p.lat, p.lng)}`, {
+      icon: <Lightbulb className="size-4 text-primary-muted" />,
+    });
+  }, [room.panorama]);
 
   const submit = useCallback(async () => {
     if (iGuessed || submitting || room.status !== "active") return;
@@ -118,6 +130,8 @@ export function RoomGame({ room }: { room: RoomState }) {
             initialView={mapCfg.view}
             pinned={pinned}
             onTogglePinned={() => setPinned((p) => !p)}
+            onHint={useHint}
+            hintUsed={hintUsed}
           />
         ))}
 

@@ -35,7 +35,7 @@ export function StreetViewCanvas({ location, movement }: Props) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
       {fallback ? (
-        <DemoPanorama scene={scene} seed={seed} disablePan={nmpz} />
+        <DemoPanorama scene={scene} seed={seed} disablePan={nmpz} hasGoogleKey={features.googleMaps} />
       ) : (
         <GoogleStreetView location={location} movement={movement} onUnavailable={handleUnavailable} />
       )}

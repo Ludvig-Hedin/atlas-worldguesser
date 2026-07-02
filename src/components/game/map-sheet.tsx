@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Maximize2, Minimize2, MapPin } from "lucide-react";
+import { Lightbulb, Maximize2, Minimize2, MapPin } from "lucide-react";
 import { GuessMap } from "./guess-map";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -16,6 +16,8 @@ interface MapSheetProps {
   initialView: [number, number, number];
   pinned: boolean;
   onTogglePinned: () => void;
+  onHint?: () => void;
+  hintUsed?: boolean;
 }
 
 export function MapSheet({
@@ -26,6 +28,8 @@ export function MapSheet({
   initialView,
   pinned,
   onTogglePinned,
+  onHint,
+  hintUsed,
 }: MapSheetProps) {
   const [hover, setHover] = useState(false);
   const expanded = hover || pinned;
@@ -64,6 +68,19 @@ export function MapSheet({
           )}
         </div>
         <div className="flex h-[56px] items-center gap-2 p-2">
+          {onHint && (
+            <Button
+              variant="secondary"
+              size="md"
+              className="px-3"
+              disabled={hintUsed}
+              onClick={onHint}
+              aria-label="Reveal a hint"
+            >
+              <Lightbulb className="size-4" />
+              Hint
+            </Button>
+          )}
           <Button
             className="flex-1"
             size="md"

@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { ImageOff } from "lucide-react";
 import type { DemoScene } from "@/lib/demo-scene";
 import { cn, seededRandom } from "@/lib/utils";
+import { PanoramaControls } from "./panorama-controls";
 
 /** Build a filled ridge polygon spanning [0..width], repeated once for seamless wrap. */
 function ridgePath(seed: number, width: number, height: number, baseline: number, amp: number) {
@@ -23,6 +24,8 @@ interface DemoPanoramaProps {
   seed: number;
   /** Disable panning (NMPZ difficulty). */
   disablePan?: boolean;
+  /** Whether a Google key exists (changes the fallback caption). */
+  hasGoogleKey?: boolean;
   className?: string;
 }
 
@@ -30,7 +33,7 @@ const W = 1200;
 const H = 600;
 const BASE = 360;
 
-export function DemoPanorama({ scene, seed, disablePan, className }: DemoPanoramaProps) {
+export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className }: DemoPanoramaProps) {
   const [heading, setHeading] = useState(0.12);
   const drag = useRef<{ x: number; start: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,9 +113,18 @@ export function DemoPanorama({ scene, seed, disablePan, className }: DemoPanoram
       {/* Vignette for depth */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_20%,transparent_40%,rgba(0,0,0,0.45)_100%)]" />
 
+      <PanoramaControls
+        headingDeg={heading * 360}
+        interactive={!disablePan}
+        showZoom={false}
+        onResetNorth={() => setHeading(0)}
+      />
+
       <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/70 backdrop-blur">
         <ImageOff className="size-3" />
-        Demo panorama — add a Google Maps key for real Street View
+        {hasGoogleKey
+          ? "No Street View here — showing a demo view"
+          : "Demo panorama — add a Google Maps key for real Street View"}
       </div>
     </div>
   );

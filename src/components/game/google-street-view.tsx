@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { findPanorama, loadGoogleMaps } from "@/lib/google-maps";
 import type { GameLocation, Movement } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PanoramaControls } from "./panorama-controls";
 
 function optionsFor(movement: Movement): google.maps.StreetViewPanoramaOptions {
   const moving = movement === "moving";
@@ -37,6 +38,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
   const svcRef = useRef<google.maps.StreetViewService | null>(null);
   const [ready, setReady] = useState(false);
   const [loadingPano, setLoadingPano] = useState(true);
+  const [heading, setHeading] = useState(0);
 
   // Keep the latest callback without making it an effect dependency (which would
   // re-trigger the billed panorama lookup on every parent rerender).
@@ -59,6 +61,9 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         panoRef.current = new g.maps.StreetViewPanorama(holderRef.current, {
           visible: true,
           ...optionsFor(movement),
+        });
+        panoRef.current.addListener("pov_changed", () => {
+          if (panoRef.current) setHeading(panoRef.current.getPov().heading);
         });
         setReady(true);
       })
@@ -110,9 +115,30 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
     };
   }, [ready, location.lat, location.lng, location.heading, location.pitch]);
 
+  const canPanZoom = movement !== "noMoveNoPanZoom";
+
   return (
     <div className="relative h-full w-full">
       <div ref={holderRef} className="h-full w-full [&_.gm-style-cc]:hidden" />
+      {ready && !loadingPano && (
+        <PanoramaControls
+          headingDeg={heading}
+          interactive={canPanZoom}
+          showZoom={canPanZoom}
+          onResetNorth={() => {
+            const p = panoRef.current;
+            if (p) p.setPov({ heading: 0, pitch: p.getPov().pitch });
+          }}
+          onZoomIn={() => {
+            const p = panoRef.current;
+            if (p) p.setZoom(Math.min(5, p.getZoom() + 1));
+          }}
+          onZoomOut={() => {
+            const p = panoRef.current;
+            if (p) p.setZoom(Math.max(0, p.getZoom() - 1));
+          }}
+        />
+      )}
       {(!ready || loadingPano) && (
         <div className="absolute inset-0">
           <Skeleton className="h-full w-full rounded-none" />
