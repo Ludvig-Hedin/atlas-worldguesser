@@ -11,7 +11,7 @@ function guessPin(): HTMLDivElement {
   const el = document.createElement("div");
   el.innerHTML = `
     <svg width="30" height="38" viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))">
-      <path d="M15 37c6-8 13-13.5 13-22C28 6.7 22.2 1 15 1S2 6.7 2 15c0 8.5 7 14 13 22Z" fill="#0a84ff" stroke="#ffffff" stroke-width="1.5"/>
+      <path d="M15 37c6-8 13-13.5 13-22C28 6.7 22.2 1 15 1S2 6.7 2 15c0 8.5 7 14 13 22Z" fill="#0a84ff" stroke="#0b0b0c" stroke-width="1.25"/>
       <circle cx="15" cy="15" r="5" fill="#ffffff"/>
     </svg>`;
   el.style.cursor = "pointer";
@@ -68,7 +68,7 @@ export function GuessMap({
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
-      maxZoom: 16,
+      maxZoom: 18,
       renderWorldCopies: true,
     });
     map.touchZoomRotate.disableRotation();

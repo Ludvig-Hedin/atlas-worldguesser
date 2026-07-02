@@ -5,13 +5,14 @@ import { findPanorama, loadGoogleMaps } from "@/lib/google-maps";
 import type { GameLocation, Movement } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PanoramaControls } from "./panorama-controls";
+import { CompassStrip } from "./compass-strip";
 
 function optionsFor(movement: Movement): google.maps.StreetViewPanoramaOptions {
   const moving = movement === "moving";
   const nmpz = movement === "noMoveNoPanZoom";
   return {
     addressControl: false,
-    showRoadLabels: false,
+    showRoadLabels: true,
     motionTracking: false,
     motionTrackingControl: false,
     fullscreenControl: false,
@@ -124,23 +125,20 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
     <div className="relative h-full w-full">
       <div ref={holderRef} className="h-full w-full [&_.gm-style-cc]:hidden" />
       {ready && !loadingPano && (
-        <PanoramaControls
-          headingDeg={heading}
-          interactive={canPanZoom}
-          showZoom={canPanZoom}
-          onResetNorth={() => {
-            const p = panoRef.current;
-            if (p) p.setPov({ heading: 0, pitch: p.getPov().pitch });
-          }}
-          onZoomIn={() => {
-            const p = panoRef.current;
-            if (p) p.setZoom(Math.min(5, p.getZoom() + 1));
-          }}
-          onZoomOut={() => {
-            const p = panoRef.current;
-            if (p) p.setZoom(Math.max(0, p.getZoom() - 1));
-          }}
-        />
+        <>
+          <CompassStrip heading={heading} />
+          <PanoramaControls
+            showZoom={canPanZoom}
+            onZoomIn={() => {
+              const p = panoRef.current;
+              if (p) p.setZoom(Math.min(5, p.getZoom() + 1));
+            }}
+            onZoomOut={() => {
+              const p = panoRef.current;
+              if (p) p.setZoom(Math.max(0, p.getZoom() - 1));
+            }}
+          />
+        </>
       )}
       {(!ready || loadingPano) && (
         <div className="absolute inset-0">

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { ImageOff } from "lucide-react";
 import type { DemoScene } from "@/lib/demo-scene";
 import { cn, seededRandom } from "@/lib/utils";
-import { PanoramaControls } from "./panorama-controls";
+import { CompassStrip } from "./compass-strip";
 
 /** Build a filled ridge polygon spanning [0..width], repeated once for seamless wrap. */
 function ridgePath(seed: number, width: number, height: number, baseline: number, amp: number) {
@@ -113,12 +113,7 @@ export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className 
       {/* Vignette for depth */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_20%,transparent_40%,rgba(0,0,0,0.45)_100%)]" />
 
-      <PanoramaControls
-        headingDeg={heading * 360}
-        interactive={!disablePan}
-        showZoom={false}
-        onResetNorth={() => setHeading(0)}
-      />
+      <CompassStrip heading={heading * 360} />
 
       <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/70 backdrop-blur">
         <ImageOff className="size-3" />

@@ -34,13 +34,17 @@ interface CreateOpts {
   customLocations?: GameLocation[];
 }
 
+/** Hometown easter egg — a small chance any round drops here. */
+const AKERS: GameLocation = { lat: 59.217, lng: 17.006, countryCode: "SE" };
+
 function createGame({ mapId, settings, seed, customLocations }: CreateOpts): SoloGame {
   const resolvedSeed = seed ?? hashString(crypto.randomUUID());
   const rng = seededRandom(resolvedSeed);
-  const locations =
+  const picked =
     customLocations && customLocations.length > 0
       ? sampleLocations(customLocations, settings.rounds, rng)
       : pickLocations(mapId, settings.rounds, rng);
+  const locations = picked.map((loc) => (rng() < 0.03 ? AKERS : loc));
   return {
     id: crypto.randomUUID(),
     mapId,

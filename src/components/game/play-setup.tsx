@@ -67,7 +67,7 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
                 )}
                 <MapGlyph mapId={m.id} className="size-6 text-primary-muted" />
                 <span className="font-semibold">{m.name}</span>
-                <span className="text-xs text-muted-foreground">{m.tagline}</span>
+                <span className="line-clamp-2 min-h-8 text-xs text-muted-foreground">{m.tagline}</span>
                 <span className="mt-1 text-[11px] text-subtle">{pluralize(poolSize(m.id), "location")}</span>
               </button>
             );

@@ -124,7 +124,7 @@ export function findPanorama(
   svService: google.maps.StreetViewService,
   lat: number,
   lng: number,
-  radius = 12_000,
+  radius = 50_000,
 ): Promise<PanoResolution | null> {
   const key = panoKey(lat, lng);
   if (panoCache.has(key)) return Promise.resolve(panoCache.get(key)!);

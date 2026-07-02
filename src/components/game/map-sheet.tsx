@@ -42,7 +42,7 @@ export function MapSheet({
     >
       <div
         className={cn(
-          "overflow-hidden rounded-2xl border border-border-strong bg-card shadow-2xl transition-[width,height] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          "overflow-hidden rounded-2xl border border-border-strong bg-card shadow-2xl [transition:width_360ms_cubic-bezier(0.16,1,0.3,1),height_360ms_cubic-bezier(0.16,1,0.3,1)] [will-change:width,height]",
           expanded
             ? "h-[48vh] w-[90vw] sm:h-[440px] sm:w-[560px]"
             : "h-[132px] w-[210px] sm:h-[168px] sm:w-[268px]",

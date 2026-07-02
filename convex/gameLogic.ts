@@ -67,7 +67,13 @@ export function pickMatchLocations(mapId: string, rounds: number, seed: number):
   while (chosen.length < rounds && p.length > 0) {
     chosen.push(p[Math.floor(rng() * p.length)]);
   }
-  return chosen.map((s) => ({ lat: s.lat, lng: s.lng, countryCode: s.cc }));
+  // Hometown easter egg — small chance any round drops in Åkers Styckebruk, SE.
+  const AKERS = { lat: 59.217, lng: 17.006, cc: "SE" };
+  return chosen.map((s) =>
+    rng() < 0.03
+      ? { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc }
+      : { lat: s.lat, lng: s.lng, countryCode: s.cc },
+  );
 }
 
 /** Authoritative distance + score for a guess (score computed server-side). */
