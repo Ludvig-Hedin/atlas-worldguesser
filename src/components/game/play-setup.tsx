@@ -13,10 +13,10 @@ import type { GameModeId, GameSettings, Movement } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const TIME_LABELS: Record<number, string> = {
-  0: "No limit",
+  0: "None",
   30: "30s",
-  60: "1 min",
-  120: "2 min",
+  60: "1m",
+  120: "2m",
 };
 
 interface PlaySetupProps {
@@ -34,7 +34,12 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
     onStart({ mapId, settings: { rounds, timeLimitSec, movement } });
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex w-full max-w-lg flex-col gap-6"
+    >
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">Choose a map</h2>
         <div className="grid grid-cols-2 gap-2.5">
@@ -46,10 +51,10 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
                 type="button"
                 onClick={() => setMapId(m.id)}
                 className={cn(
-                  "group relative flex flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-all",
+                  "group relative flex flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-all duration-200 active:scale-[0.98]",
                   active
                     ? "border-primary/50 bg-primary/10"
-                    : "border-border bg-card hover:border-border-strong hover:bg-white/[0.03]",
+                    : "border-border bg-card hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.03]",
                 )}
               >
                 {active && (
@@ -81,7 +86,7 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
         <p className="text-xs text-subtle">{MOVEMENTS.find((m) => m.id === movement)?.description}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-muted-foreground">Rounds</h2>
           <Segmented
@@ -108,6 +113,6 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
         <Play className="size-4" />
         Start game
       </Button>
-    </div>
+    </motion.div>
   );
 }

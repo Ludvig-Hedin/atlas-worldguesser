@@ -72,7 +72,7 @@ export default function Home() {
             <Link
               key={m.id}
               href={`/play?map=${m.id}&quick=1`}
-              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 transition-all hover:border-border-strong hover:bg-card"
+              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:bg-card active:scale-[0.97]"
             >
               <MapGlyph
                 mapId={m.id}
@@ -95,10 +95,6 @@ export default function Home() {
           ))}
         </div>
       </main>
-
-      <footer className="px-4 py-8 text-center text-xs text-subtle">
-        Built with Next.js, MapLibre, and Convex · Atlas
-      </footer>
     </div>
   );
 }

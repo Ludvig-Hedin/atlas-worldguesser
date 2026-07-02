@@ -22,10 +22,11 @@ export const metadata: Metadata = {
     "A fast, beautiful geography guessing game. Drop into a random street, read the clues, and pin your guess on the map.",
   applicationName: "Atlas",
   authors: [{ name: "Ludvig Hedin" }],
-  metadataBase: new URL("https://atlas.game"),
+  metadataBase: new URL("https://geoatlas.xyz"),
   openGraph: {
     title: "Atlas — Guess the World",
     description: "Drop into a random street and guess where you are.",
+    url: "https://geoatlas.xyz",
     siteName: "Atlas",
     type: "website",
   },

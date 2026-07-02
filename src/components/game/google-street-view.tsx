@@ -36,6 +36,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
   const holderRef = useRef<HTMLDivElement>(null);
   const panoRef = useRef<google.maps.StreetViewPanorama | null>(null);
   const svcRef = useRef<google.maps.StreetViewService | null>(null);
+  const povListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const [ready, setReady] = useState(false);
   const [loadingPano, setLoadingPano] = useState(true);
   const [heading, setHeading] = useState(0);
@@ -62,7 +63,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
           visible: true,
           ...optionsFor(movement),
         });
-        panoRef.current.addListener("pov_changed", () => {
+        povListenerRef.current = panoRef.current.addListener("pov_changed", () => {
           if (panoRef.current) setHeading(panoRef.current.getPov().heading);
         });
         setReady(true);
@@ -72,6 +73,8 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
       });
     return () => {
       cancelled = true;
+      povListenerRef.current?.remove();
+      povListenerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

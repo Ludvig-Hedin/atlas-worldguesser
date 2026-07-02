@@ -49,8 +49,8 @@ export function Segmented<T extends string | number>({
             title={opt.hint}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative flex-1 rounded-lg text-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              size === "sm" ? "px-2.5 py-1.5 text-[13px]" : "px-3 py-2 text-sm",
+              "relative flex-1 whitespace-nowrap rounded-lg text-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]",
+              size === "sm" ? "px-2 py-2 text-[13px]" : "px-3 py-2.5 text-sm",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground/80",
             )}
           >
