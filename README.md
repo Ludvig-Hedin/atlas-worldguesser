@@ -44,6 +44,21 @@ integration is optional and independent:
 - **Clerk** (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, …) — authentication. Solo play
   never requires an account.
 
+## Deploy (Vercel + Convex)
+
+1. Provision Convex: `npx convex dev` once locally (creates `convex/_generated`
+   and a dev deployment), then `npx convex deploy` for production.
+2. On Vercel, set the build command so Convex deploys alongside the frontend:
+   ```
+   npx convex deploy --cmd 'next build'
+   ```
+3. Add env vars in Vercel: `NEXT_PUBLIC_CONVEX_URL`, `CONVEX_DEPLOY_KEY`, the
+   Clerk keys, and (optionally) the Google Maps browser key. In the Convex
+   dashboard set `CLERK_JWT_ISSUER_DOMAIN` and add a JWT template named `convex`.
+
+The app deploys and runs without any of these — it simply serves solo demo mode
+until the keys are present.
+
 ## Architecture
 
 - **Solo** runs entirely client-side: a deterministic, seedable engine
