@@ -72,8 +72,12 @@ with `bun run build:geo` (downloads public-domain Natural Earth sources).
 - ✅ Realtime multiplayer — private rooms (code + invite link), lobby with
   host controls & ready status, synchronized live rounds, server-authoritative
   scoring, live scoreboard, chat, match results, rematch.
-- ✅ Social — friends (requests / accept / remove) and per-user profiles.
+- ✅ Social — friends (requests / accept / remove), recent players, per-user profiles.
+- ✅ Custom maps — build a map by dropping pins, share it public/private, play it solo.
 - ✅ Replays — every finished game is replayable round-by-round.
+
+> Replays capture each round's guess vs. actual location and score. Recording the
+> live camera path within a "moving" round is a planned enhancement.
 
 Auth, multiplayer, leaderboards, friends and replays require Convex + Clerk
 (see Configuration); the app degrades gracefully to solo play without them.

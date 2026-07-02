@@ -5,7 +5,7 @@ import { countryAtAsync } from "@/lib/geo";
 import { scaleMetersForMap } from "@/lib/maps-config";
 import { haversineMeters, roundScore } from "@/lib/scoring";
 import type { GameLocation, GameSettings, LatLng, RoundResult } from "@/lib/types";
-import { pickLocations } from "@/lib/locations";
+import { pickLocations, sampleLocations } from "@/lib/locations";
 import { hashString, seededRandom } from "@/lib/utils";
 
 /** Farthest two points on Earth can be (antipodal), used when no guess is made. */
@@ -30,12 +30,17 @@ interface CreateOpts {
   mapId: string;
   settings: GameSettings;
   seed?: number;
+  /** Explicit location pool (custom maps); falls back to the official pool. */
+  customLocations?: GameLocation[];
 }
 
-function createGame({ mapId, settings, seed }: CreateOpts): SoloGame {
+function createGame({ mapId, settings, seed, customLocations }: CreateOpts): SoloGame {
   const resolvedSeed = seed ?? hashString(crypto.randomUUID());
   const rng = seededRandom(resolvedSeed);
-  const locations = pickLocations(mapId, settings.rounds, rng);
+  const locations =
+    customLocations && customLocations.length > 0
+      ? sampleLocations(customLocations, settings.rounds, rng)
+      : pickLocations(mapId, settings.rounds, rng);
   return {
     id: crypto.randomUUID(),
     mapId,
@@ -107,11 +112,18 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
 
   const restart = useCallback(
     (opts?: Partial<CreateOpts>) => {
-      setGame(createGame({ mapId: initial.mapId, settings: initial.settings, ...opts }));
+      setGame(
+        createGame({
+          mapId: initial.mapId,
+          settings: initial.settings,
+          customLocations: initial.customLocations,
+          ...opts,
+        }),
+      );
       setGuess(null);
       setSubmitting(false);
     },
-    [initial.mapId, initial.settings],
+    [initial.mapId, initial.settings, initial.customLocations],
   );
 
   const currentResult = useMemo(

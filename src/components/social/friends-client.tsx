@@ -36,23 +36,30 @@ export function FriendsClient() {
 
 function FriendsInner() {
   const data = useQuery(api.friends.list);
+  const recent = useQuery(api.friends.recentPlayers);
   const sendRequest = useMutation(api.friends.sendRequest);
   const respond = useMutation(api.friends.respond);
   const remove = useMutation(api.friends.remove);
   const [username, setUsername] = useState("");
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const name = username.trim();
-    if (!name) return;
+  const addByName = async (name: string) => {
     try {
       await sendRequest({ username: name });
-      setUsername("");
       toast.success(`Request sent to ${name}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send request");
     }
   };
+
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = username.trim();
+    if (!name) return;
+    await addByName(name);
+    setUsername("");
+  };
+
+  const friendNames = new Set(data?.friends.map((f) => f.username));
 
   if (data === undefined) return <Skeleton className="h-40 w-full rounded-2xl" />;
 
@@ -125,6 +132,26 @@ function FriendsInner() {
               <span className="text-xs text-subtle">Pending…</span>
             </div>
           ))}
+        </section>
+      )}
+
+      {recent && recent.filter((p) => !friendNames.has(p.username)).length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Recent players</h2>
+          {recent
+            .filter((p) => !friendNames.has(p.username))
+            .map((p) => (
+              <div key={p._id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                <IdentityAvatar name={p.username} src={p.avatarUrl} />
+                <Link href={`/profile/${p.username}`} className="flex-1 truncate font-medium hover:underline">
+                  {p.username}
+                </Link>
+                <Button size="sm" variant="secondary" onClick={() => addByName(p.username)}>
+                  <UserPlus className="size-3.5" />
+                  Add
+                </Button>
+              </div>
+            ))}
         </section>
       )}
     </div>

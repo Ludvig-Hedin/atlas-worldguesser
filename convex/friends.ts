@@ -65,6 +65,40 @@ export const remove = mutation({
   },
 });
 
+/** Distinct players you've recently shared a multiplayer room with. */
+export const recentPlayers = query({
+  args: {},
+  handler: async (ctx) => {
+    const me = await currentUser(ctx);
+    if (!me) return [];
+    const games = await ctx.db
+      .query("games")
+      .withIndex("by_user", (q) => q.eq("userId", me._id))
+      .order("desc")
+      .take(20);
+    const roomIds = [
+      ...new Set(games.filter((g) => g.mode === "multi" && g.roomId).map((g) => g.roomId!)),
+    ].slice(0, 8);
+
+    const seen = new Set<Id<"users">>([me._id]);
+    const players: { _id: Id<"users">; username: string; avatarUrl?: string }[] = [];
+    for (const roomId of roomIds) {
+      const members = await ctx.db
+        .query("roomMembers")
+        .withIndex("by_room", (q) => q.eq("roomId", roomId))
+        .collect();
+      for (const m of members) {
+        if (seen.has(m.userId)) continue;
+        seen.add(m.userId);
+        const u = await ctx.db.get(m.userId);
+        if (u) players.push({ _id: u._id, username: u.username, avatarUrl: u.avatarUrl });
+      }
+      if (players.length >= 12) break;
+    }
+    return players;
+  },
+});
+
 export const list = query({
   args: {},
   handler: async (ctx) => {

@@ -10,6 +10,7 @@ import type * as chat from "../chat.js";
 import type * as friends from "../friends.js";
 import type * as games from "../games.js";
 import type * as leaderboard from "../leaderboard.js";
+import type * as maps from "../maps.js";
 import type * as rooms from "../rooms.js";
 import type * as users from "../users.js";
 
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   games: typeof games;
   leaderboard: typeof leaderboard;
+  maps: typeof maps;
   rooms: typeof rooms;
   users: typeof users;
 }>;

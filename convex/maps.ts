@@ -1,0 +1,131 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import { currentUser, requireUser } from "./users";
+
+const locationInput = v.object({
+  lat: v.number(),
+  lng: v.number(),
+  countryCode: v.string(),
+});
+
+function slugify(name: string): string {
+  const base = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const suffix = Math.floor(Math.random() * 9000 + 1000);
+  return `${base || "map"}-${suffix}`;
+}
+
+export const create = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+    isPublic: v.boolean(),
+    locations: v.array(locationInput),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const name = args.name.trim().slice(0, 40);
+    if (name.length < 3) throw new Error("Give your map a name (3+ characters)");
+    if (args.locations.length < 5) throw new Error("Add at least 5 locations");
+    if (args.locations.length > 200) throw new Error("Maps can have at most 200 locations");
+
+    const slug = slugify(name);
+    const mapId = await ctx.db.insert("maps", {
+      slug,
+      name,
+      description: args.description?.trim().slice(0, 200) || undefined,
+      ownerId: user._id,
+      ownerName: user.username,
+      isPublic: args.isPublic,
+      locationCount: args.locations.length,
+      createdAt: Date.now(),
+    });
+    for (const loc of args.locations) {
+      await ctx.db.insert("mapLocations", {
+        mapId,
+        lat: loc.lat,
+        lng: loc.lng,
+        countryCode: loc.countryCode,
+      });
+    }
+    return { mapId, slug };
+  },
+});
+
+export const remove = mutation({
+  args: { mapId: v.id("maps") },
+  handler: async (ctx, { mapId }) => {
+    const user = await requireUser(ctx);
+    const map = await ctx.db.get(mapId);
+    if (!map || map.ownerId !== user._id) throw new Error("Not your map");
+    const locs = await ctx.db.query("mapLocations").withIndex("by_map", (q) => q.eq("mapId", mapId)).collect();
+    for (const l of locs) await ctx.db.delete(l._id);
+    await ctx.db.delete(mapId);
+  },
+});
+
+function summary(map: Doc<"maps">) {
+  return {
+    _id: map._id,
+    slug: map.slug,
+    name: map.name,
+    description: map.description,
+    ownerName: map.ownerName,
+    ownerId: map.ownerId,
+    isPublic: map.isPublic,
+    locationCount: map.locationCount,
+    createdAt: map.createdAt,
+  };
+}
+
+export const listPublic = query({
+  args: {},
+  handler: async (ctx) => {
+    const maps = await ctx.db
+      .query("maps")
+      .withIndex("by_public", (q) => q.eq("isPublic", true))
+      .order("desc")
+      .take(60);
+    return maps.map(summary);
+  },
+});
+
+export const listMine = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await currentUser(ctx);
+    if (!user) return [];
+    const maps = await ctx.db
+      .query("maps")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .order("desc")
+      .collect();
+    return maps.map(summary);
+  },
+});
+
+/** Map + its locations, for playing. Private maps are visible only to the owner. */
+export const getWithLocations = query({
+  args: { mapId: v.id("maps") },
+  handler: async (ctx, { mapId }) => {
+    const map = await ctx.db.get(mapId);
+    if (!map) return null;
+    if (!map.isPublic) {
+      const user = await currentUser(ctx);
+      if (!user || user._id !== map.ownerId) return null;
+    }
+    const locations = await ctx.db
+      .query("mapLocations")
+      .withIndex("by_map", (q) => q.eq("mapId", mapId))
+      .collect();
+    return {
+      map: summary(map),
+      locations: locations.map((l) => ({ lat: l.lat, lng: l.lng, countryCode: l.countryCode })),
+    };
+  },
+});

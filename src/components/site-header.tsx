@@ -15,6 +15,11 @@ export function SiteHeader() {
       </Link>
       <nav className="flex items-center gap-0.5 sm:gap-1.5">
         {features.convex && (
+          <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+            <Link href="/maps">Maps</Link>
+          </Button>
+        )}
+        {features.convex && (
           <Button variant="ghost" size="sm" asChild>
             <Link href="/leaderboard">Leaderboard</Link>
           </Button>

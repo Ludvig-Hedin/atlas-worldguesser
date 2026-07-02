@@ -26,19 +26,29 @@ export function poolSize(mapId: string): number {
 }
 
 /**
- * Pick `count` unique locations for a round set, using an injectable RNG so
- * daily challenges and replays can be reproduced from a seed.
+ * Sample `count` locations from a pool, allowing repeats only if the pool is
+ * smaller than requested. Uses an injectable RNG for deterministic replays.
+ */
+export function sampleLocations(
+  pool: readonly GameLocation[],
+  count: number,
+  rng: () => number = Math.random,
+): GameLocation[] {
+  const chosen = sample(pool, count, rng);
+  while (chosen.length < count && pool.length > 0) {
+    chosen.push(pool[Math.floor(rng() * pool.length)]);
+  }
+  return chosen;
+}
+
+/**
+ * Pick `count` locations for an official map's round set.
  */
 export function pickLocations(
   mapId: string,
   count: number,
   rng: () => number = Math.random,
 ): GameLocation[] {
-  const pool = getMapPool(mapId);
-  const chosen = sample(pool, count, rng);
-  // If the pool is smaller than requested (tiny custom maps), allow repeats.
-  while (chosen.length < count && pool.length > 0) {
-    chosen.push(pool[Math.floor(rng() * pool.length)]);
-  }
-  return chosen.map(toGameLocation);
+  const pool = getMapPool(mapId).map(toGameLocation);
+  return sampleLocations(pool, count, rng);
 }

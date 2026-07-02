@@ -16,16 +16,17 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useLocalProfile } from "@/hooks/use-local-profile";
 import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
 import type { ApplyResult } from "@/lib/local-profile";
-import type { GameSettings } from "@/lib/types";
+import type { GameLocation, GameSettings } from "@/lib/types";
 
 interface SoloGameProps {
   mapId: string;
   settings: GameSettings;
   onExit: () => void;
+  customLocations?: GameLocation[];
 }
 
-export function SoloGame({ mapId, settings, onExit }: SoloGameProps) {
-  const engine = useSoloGame({ mapId, settings });
+export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameProps) {
+  const engine = useSoloGame({ mapId, settings, customLocations });
   const { game, guess, setGuess, submit, next, restart, currentLocation, currentResult, totalScore, submitting } =
     engine;
   const { record } = useLocalProfile();

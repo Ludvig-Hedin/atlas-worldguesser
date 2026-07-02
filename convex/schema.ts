@@ -159,4 +159,26 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_friend", ["friendId"])
     .index("by_pair", ["userId", "friendId"]),
+
+  // User-created custom maps.
+  maps: defineTable({
+    slug: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    ownerId: v.id("users"),
+    ownerName: v.string(),
+    isPublic: v.boolean(),
+    locationCount: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_owner", ["ownerId"])
+    .index("by_public", ["isPublic"]),
+
+  mapLocations: defineTable({
+    mapId: v.id("maps"),
+    lat: v.number(),
+    lng: v.number(),
+    countryCode: v.string(),
+  }).index("by_map", ["mapId"]),
 });
