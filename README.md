@@ -103,3 +103,4 @@ Auth, multiplayer, leaderboards, friends and replays require Convex + Clerk
   determined client can still inspect panorama data — an inherent tradeoff of
   rendering Street View in the browser.
 - Contact: ludvig@ludvighedin.com
+# atlas-worldguesser
