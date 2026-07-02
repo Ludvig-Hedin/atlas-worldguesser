@@ -127,6 +127,8 @@ export default defineSchema({
     roomId: v.id("rooms"),
     round: v.number(),
     userId: v.id("users"),
+    /** Whether an actual pin was placed (false = timed out without guessing). */
+    guessed: v.boolean(),
     lat: v.number(),
     lng: v.number(),
     distanceMeters: v.number(),

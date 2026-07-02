@@ -241,6 +241,7 @@ export const submitGuess = mutation({
       roomId,
       round,
       userId: user._id,
+      guessed: guess !== null,
       lat: guess?.lat ?? 0,
       lng: guess?.lng ?? 0,
       distanceMeters,
@@ -304,7 +305,7 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
       results.push({
         round: r,
         actual: { lat: actual.lat, lng: actual.lng, countryCode: actual.countryCode },
-        guess: g ? { lat: g.lat, lng: g.lng } : null,
+        guess: g && g.guessed ? { lat: g.lat, lng: g.lng } : null,
         distanceMeters: g?.distanceMeters ?? ANTIPODE_METERS,
         score: g?.score ?? 0,
         timeMs: 0,
@@ -463,9 +464,9 @@ export const getByCode = query({
             return {
               userId: m.userId,
               username: m.username,
-              guess: g ? { lat: g.lat, lng: g.lng } : null,
+              guess: g && g.guessed ? { lat: g.lat, lng: g.lng } : null,
               score: g?.score ?? 0,
-              distanceMeters: g?.distanceMeters ?? null,
+              distanceMeters: g && g.guessed ? g.distanceMeters : null,
               countryCorrect: g?.countryCorrect ?? false,
             };
           }),
