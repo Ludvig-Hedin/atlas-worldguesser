@@ -121,6 +121,34 @@
 - [ ] Browser pass: 3 themes × key pages (contrast), 4 map types on guess map, 5 languages (no raw keys, layout holds for long strings).
 - [ ] Independent review (`/caveman-review` or local reviewer) on the diff; fix blocking issues. Commit. Update docs (`AGENTS.md`/README notes on preferences).
 
+## Status (2026-07-03)
+
+All four features implemented and verified (`tsc` clean, `next build` green — 15
+routes, 94 tests pass). Committed in isolated commits:
+- `feat(theme)` — light/dark palettes, theme tokens, `PreferencesProvider`.
+- `feat(maps)` — 4 basemaps wired into all maps.
+- `feat(i18n)` — selector + settings menu; core screens translated into 5 languages.
+
+**Deferred / not committed by this task (a concurrent agent is actively building
+survival mode, a daily challenge, presence/live-stats and team multiplayer,
+rewriting ~20 files):**
+- `src/app/layout.tsx` (no-flash script + `themeColor`) and
+  `src/components/providers.tsx` (provider mount) carry this task's wiring **plus**
+  the other agent's preconnect/presence edits. They are functional in the working
+  tree (build passes) but left uncommitted because committing them would drag in
+  the other agent's still-untracked `presence-ping.tsx` and break the committed
+  tree. Commit these two together when the presence work lands.
+- Multiplayer `room-game.tsx` / `room-results.tsx` / `scoreboard.tsx` — their i18n
+  edits are in the working tree but not staged (files also contain the in-flight
+  team-mode code).
+- Full-string translation of the marketing homepage and the hot gameplay files
+  (play setup/flow, in-game HUD, round reveal, results, daily, room lobby) is
+  deferred to avoid clobbering the concurrent feature work. These surfaces fall
+  back to English via the i18n fallback, so nothing is broken — run the extraction
+  sweep on them once that work settles. Three profile sub-components
+  (`recent-games`, `stats-grid`, `achievement-grid`) are Server Components; add
+  `"use client"` before localizing them.
+
 ## Self-Review notes
 
 - Spec coverage: Task 1–2 (provider/no-flash), Task 3 (light theme + HUD), Task 4 (all maps), Task 5–7 (i18n incl. homepage), Task 6 (selectors). All spec sections mapped.
