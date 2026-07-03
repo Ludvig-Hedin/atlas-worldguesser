@@ -1,24 +1,20 @@
 import { WORLD_LOCATIONS, COUNTRY_LOCATIONS, toGameLocation, type SeedLocation } from "@/data/locations";
-import { EUROPE_CODES } from "./maps-config";
-import type { GameLocation, GameModeId } from "./types";
+import { getMapConfig } from "./maps-config";
+import type { GameLocation } from "./types";
 import { sample } from "./utils";
 
-const EUROPE_SET = new Set(EUROPE_CODES);
-
-/** The candidate pool of seed locations for a given map. */
+/**
+ * The candidate pool of seed locations for a given map. Driven entirely off the
+ * map's `countryCodes` filter (null = worldwide), so any region/continent/single
+ * country map is a config addition in `maps-config.ts` — no change needed here.
+ * `countries` is the one true special case (its own one-place-per-nation pool).
+ */
 export function getMapPool(mapId: string): SeedLocation[] {
-  switch (mapId as GameModeId) {
-    case "europe":
-      return WORLD_LOCATIONS.filter((l) => EUROPE_SET.has(l.cc));
-    case "usa":
-      return WORLD_LOCATIONS.filter((l) => l.cc === "US");
-    case "countries":
-      return COUNTRY_LOCATIONS;
-    case "world":
-    case "custom":
-    default:
-      return WORLD_LOCATIONS;
-  }
+  if (mapId === "countries") return COUNTRY_LOCATIONS;
+  const codes = getMapConfig(mapId).countryCodes;
+  if (!codes) return WORLD_LOCATIONS;
+  const set = new Set(codes);
+  return WORLD_LOCATIONS.filter((l) => set.has(l.cc));
 }
 
 export function poolSize(mapId: string): number {
@@ -36,7 +32,9 @@ export function sampleLocations(
 ): GameLocation[] {
   const chosen = sample(pool, count, rng);
   while (chosen.length < count && pool.length > 0) {
-    chosen.push(pool[Math.floor(rng() * pool.length)]);
+    // Clamp against an rng() that returns exactly 1.0 (injected RNGs may) to
+    // avoid pushing `undefined` past the end of the pool.
+    chosen.push(pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]);
   }
   return chosen;
 }

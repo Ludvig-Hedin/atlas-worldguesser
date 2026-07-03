@@ -2,36 +2,41 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Check, Play } from "lucide-react";
+import { Check, Flame, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
+import { RulesSelect } from "@/components/game/rules-select";
 import { MapGlyph } from "@/components/map-glyph";
-import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS } from "@/lib/maps-config";
+import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { poolSize } from "@/lib/locations";
 import { pluralize } from "@/lib/format";
+import { useT } from "@/hooks/use-t";
+import type { SoloMode } from "@/hooks/use-solo-game";
 import type { GameModeId, GameSettings, Movement } from "@/lib/types";
+import type { TKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const TIME_LABELS: Record<number, string> = {
-  0: "None",
-  30: "30s",
-  60: "1m",
-  120: "2m",
+const TIME_LABEL_KEYS: Record<number, TKey> = {
+  0: "setup.timeNone",
+  30: "setup.time30",
+  60: "setup.time60",
+  120: "setup.time120",
 };
 
 interface PlaySetupProps {
-  onStart: (config: { mapId: GameModeId; settings: GameSettings }) => void;
+  onStart: (config: { mapId: GameModeId; settings: GameSettings; mode: SoloMode }) => void;
   initialMapId?: GameModeId;
 }
 
 export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
+  const t = useT();
   const [mapId, setMapId] = useState<GameModeId>(initialMapId);
   const [movement, setMovement] = useState<Movement>(DEFAULT_SETTINGS.movement);
   const [rounds, setRounds] = useState<number>(DEFAULT_SETTINGS.rounds);
   const [timeLimitSec, setTimeLimitSec] = useState<number>(DEFAULT_SETTINGS.timeLimitSec);
 
-  const start = () =>
-    onStart({ mapId, settings: { rounds, timeLimitSec, movement } });
+  const startWith = (mode: SoloMode) =>
+    onStart({ mapId, settings: { rounds, timeLimitSec, movement }, mode });
 
   return (
     <motion.div
@@ -41,7 +46,7 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
       className="mx-auto flex w-full max-w-lg flex-col gap-6"
     >
       <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Choose a map</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{t("setup.chooseMap")}</h2>
         <div className="grid grid-cols-2 gap-2.5">
           {OFFICIAL_MAPS.map((m) => {
             const active = m.id === mapId;
@@ -76,43 +81,49 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Movement</h2>
-        <Segmented
-          ariaLabel="Movement difficulty"
-          value={movement}
-          onChange={setMovement}
-          options={MOVEMENTS.map((m) => ({ value: m.id, label: m.label, hint: m.description }))}
-        />
-        <p className="text-xs text-subtle">{MOVEMENTS.find((m) => m.id === movement)?.description}</p>
+        <h2 className="text-sm font-medium text-muted-foreground">{t("setup.rules")}</h2>
+        <RulesSelect value={movement} onChange={setMovement} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Rounds</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t("setup.rounds")}</h2>
           <Segmented
             size="sm"
-            ariaLabel="Rounds"
+            ariaLabel={t("setup.rounds")}
             value={rounds}
             onChange={setRounds}
             options={ROUND_OPTIONS.map((r) => ({ value: r, label: String(r) }))}
           />
         </div>
         <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Round timer</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t("setup.roundTimer")}</h2>
           <Segmented
             size="sm"
-            ariaLabel="Round timer"
+            ariaLabel={t("setup.roundTimer")}
             value={timeLimitSec}
             onChange={setTimeLimitSec}
-            options={TIME_OPTIONS.map((t) => ({ value: t, label: TIME_LABELS[t] }))}
+            options={TIME_OPTIONS.map((opt) => ({ value: opt, label: t(TIME_LABEL_KEYS[opt]) }))}
           />
         </div>
       </div>
 
-      <Button size="lg" className="w-full" onClick={start}>
-        <Play className="size-4" />
-        Start game
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button size="lg" className="w-full" onClick={() => startWith("classic")}>
+          <Play className="size-4" />
+          {t("setup.startGame")}
+        </Button>
+        <Button
+          size="lg"
+          variant="secondary"
+          className="w-full"
+          onClick={() => startWith("survival")}
+        >
+          <Flame className="size-4" />
+          {t("setup.survivalStreak")}
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">{t("setup.survivalExplainer")}</p>
+      </div>
     </motion.div>
   );
 }

@@ -2,7 +2,10 @@
 
 import { motion } from "motion/react";
 import Link from "next/link";
+import { SignInButton } from "@clerk/nextjs";
+import { useConvexAuth, useMutation } from "convex/react";
 import { Home, RotateCcw, Settings2 } from "lucide-react";
+import { api } from "@convex/_generated/api";
 import { MatchMap } from "./match-map";
 import { AchievementIcon } from "@/components/achievement-icon";
 import { AnimatedNumber } from "./animated-number";
@@ -10,8 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ACHIEVEMENT_MAP } from "@/lib/achievements";
+import { BUILDINGS } from "@/lib/buildings";
 import { MapGlyph, CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
+import { useT } from "@/hooks/use-t";
+import { features } from "@/lib/env";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { getMapConfig } from "@/lib/maps-config";
 import { maxMatchScore } from "@/lib/scoring";
@@ -28,9 +34,14 @@ interface MatchResultsProps {
 }
 
 export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchResultsProps) {
+  const t = useT();
   const map = getMapConfig(game.mapId);
-  const max = maxMatchScore(game.settings.rounds);
-  const pct = Math.round((applied.totalScore / max) * 100);
+  const isSurvival = game.mode === "survival";
+  // Survival plays a variable number of rounds; base the "max" on rounds
+  // actually played, not the classic settings.rounds.
+  const survived = game.results.filter((r) => r.countryCorrect).length;
+  const max = maxMatchScore(isSurvival ? game.results.length : game.settings.rounds);
+  const pct = max > 0 ? Math.round((applied.totalScore / max) * 100) : 0;
   const level = levelProgress(applied.profile.stats.xp);
 
   return (
@@ -41,9 +52,11 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-2 text-center"
         >
-          <Badge variant={applied.won ? "primary" : "muted"} className="gap-1.5">
+          <Badge variant={isSurvival ? "gold" : applied.won ? "primary" : "muted"} className="gap-1.5">
             <MapGlyph mapId={game.mapId} className="size-3" />
-            {applied.won ? "Great run" : "Match complete"} · {map.name}
+            {isSurvival
+              ? t("match.survivalBadge", { count: survived })
+              : `${applied.won ? t("match.greatRun") : t("match.matchComplete")} · ${map.name}`}
           </Badge>
           <div className="flex items-end justify-center gap-2">
             <AnimatedNumber
@@ -79,6 +92,32 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           </motion.div>
         )}
 
+        {applied.newBuildings.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap justify-center gap-2"
+          >
+            {applied.newBuildings.map((id) => {
+              const b = BUILDINGS[id];
+              if (!b) return null;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 shadow-1"
+                >
+                  <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-overlay">
+                    <img src={b.image} alt="" className="size-full object-contain p-0.5" />
+                  </span>
+                  <span className="text-xs font-medium">{t("match.newBuilding", { name: b.name })}</span>
+                  {features.auth && <BuildingClaimAction buildingId={id} />}
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+
         <div className="h-56 overflow-hidden rounded-2xl border border-border sm:h-72">
           <MatchMap results={game.results} initialView={map.view} />
         </div>
@@ -93,7 +132,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{countryName(r.actual.countryCode)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {r.guess ? formatDistance(r.distanceMeters) : "No guess"}
+                  {r.guess ? formatDistance(r.distanceMeters) : t("mp.noGuess")}
                 </p>
               </div>
               <div className="w-24 shrink-0">
@@ -108,7 +147,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium">Level {level.level}</span>
+            <span className="font-medium">{t("match.level", { level: level.level })}</span>
             <span className="text-muted-foreground tabular">
               {formatNumber(level.into)} / {formatNumber(level.span)} XP
             </span>
@@ -119,20 +158,54 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button size="lg" className="flex-1" onClick={onPlayAgain}>
             <RotateCcw className="size-4" />
-            Play again
+            {t("match.playAgain")}
           </Button>
           <Button size="lg" variant="secondary" className="flex-1" onClick={onNewGame}>
             <Settings2 className="size-4" />
-            New game
+            {t("match.newGame")}
           </Button>
           <Button size="lg" variant="ghost" asChild>
             <Link href="/">
               <Home className="size-4" />
-              Home
+              {t("match.home")}
             </Link>
           </Button>
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Quick action on a newly-unlocked building badge. Only ever mounted when
+ * `features.auth` is true (see the `{features.auth && ...}` guard above) —
+ * that's the only provider-tree branch where Convex/Clerk context actually
+ * exists, so it's safe to call these hooks unconditionally here.
+ */
+function BuildingClaimAction({ buildingId }: { buildingId: string }) {
+  const t = useT();
+  const { isAuthenticated } = useConvexAuth();
+  const setAvatar = useMutation(api.users.setAvatar);
+
+  if (isAuthenticated) {
+    return (
+      <button
+        type="button"
+        onClick={() => void setAvatar({ buildingId })}
+        className="text-xs font-medium text-primary-muted underline-offset-2 hover:underline"
+      >
+        {t("match.setAsAvatar")}
+      </button>
+    );
+  }
+  return (
+    <SignInButton mode="modal">
+      <button
+        type="button"
+        className="text-xs font-medium text-primary-muted underline-offset-2 hover:underline"
+      >
+        {t("match.signInToClaim")}
+      </button>
+    </SignInButton>
   );
 }

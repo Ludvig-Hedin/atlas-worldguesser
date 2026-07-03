@@ -23,7 +23,14 @@ export const getReplay = query({
       rounds: g.rounds,
       replay: g.replay,
       createdAt: g.createdAt,
-      owner: owner ? { username: owner.username, avatarUrl: owner.avatarUrl } : null,
+      owner: owner
+        ? {
+            username: owner.username,
+            avatarUrl: owner.avatarUrl,
+            avatarBuildingId: owner.avatarBuildingId,
+            avatarColor: owner.avatarColor,
+          }
+        : null,
     };
   },
 });

@@ -4,7 +4,7 @@
  * solo and multiplayer stay perfectly consistent.
  */
 import { haversineMeters, roundScore } from "../src/lib/scoring";
-import { EUROPE_CODES, scaleMetersForMap } from "../src/lib/maps-config";
+import { getMapConfig, scaleMetersForMap } from "../src/lib/maps-config";
 import { WORLD_LOCATIONS, COUNTRY_LOCATIONS, type SeedLocation } from "../src/data/locations";
 
 export { scaleMetersForMap, haversineMeters, roundScore };
@@ -29,19 +29,14 @@ export interface MatchLocation {
   countryCode: string;
 }
 
-const EUROPE_SET = new Set(EUROPE_CODES);
-
+// Mirror of `getMapPool` in src/lib/locations.ts, driven off the same shared
+// `countryCodes` config so solo and multiplayer resolve identical pools.
 function pool(mapId: string): SeedLocation[] {
-  switch (mapId) {
-    case "europe":
-      return WORLD_LOCATIONS.filter((l) => EUROPE_SET.has(l.cc));
-    case "usa":
-      return WORLD_LOCATIONS.filter((l) => l.cc === "US");
-    case "countries":
-      return COUNTRY_LOCATIONS;
-    default:
-      return WORLD_LOCATIONS;
-  }
+  if (mapId === "countries") return COUNTRY_LOCATIONS;
+  const codes = getMapConfig(mapId).countryCodes;
+  if (!codes) return WORLD_LOCATIONS;
+  const set = new Set(codes);
+  return WORLD_LOCATIONS.filter((l) => set.has(l.cc));
 }
 
 function mulberry32(seed: number) {
@@ -67,15 +62,19 @@ export function pickMatchLocations(mapId: string, rounds: number, seed: number):
   while (chosen.length < rounds && p.length > 0) {
     chosen.push(p[Math.floor(rng() * p.length)]);
   }
-  // Hometown easter egg — small chance any round drops in Åkers Styckebruk, SE.
-  // World map only: a Sweden drop inside Europe/USA maps breaks their region
-  // contract (matches the solo engine's behavior).
+  // Hometown easter eggs — small chance any round drops in Åkers Styckebruk or
+  // Grundbro, SE. World map only: a Sweden drop inside Europe/USA maps breaks
+  // their region contract (matches the solo engine's behavior). Each egg gets
+  // an independent 3% roll off the same draw.
   const AKERS = { lat: 59.217, lng: 17.006, cc: "SE" };
-  return chosen.map((s) =>
-    mapId === "world" && rng() < 0.03
-      ? { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc }
-      : { lat: s.lat, lng: s.lng, countryCode: s.cc },
-  );
+  const GRUNDBRO = { lat: 59.3089, lng: 17.0899, cc: "SE" };
+  return chosen.map((s) => {
+    if (mapId !== "world") return { lat: s.lat, lng: s.lng, countryCode: s.cc };
+    const r = rng();
+    if (r < 0.03) return { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc };
+    if (r < 0.06) return { lat: GRUNDBRO.lat, lng: GRUNDBRO.lng, countryCode: GRUNDBRO.cc };
+    return { lat: s.lat, lng: s.lng, countryCode: s.cc };
+  });
 }
 
 /** Authoritative distance + score for a guess (score computed server-side). */

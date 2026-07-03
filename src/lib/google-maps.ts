@@ -5,36 +5,30 @@ let loadPromise: Promise<typeof google> | null = null;
 
 const SCRIPT_TIMEOUT_MS = 15_000;
 const PANO_TIMEOUT_MS = 10_000;
+// One retry after a timeout/network error — a single dropped packet on a
+// flaky connection shouldn't drop a player straight to demo mode.
+const MAX_SCRIPT_ATTEMPTS = 2;
 
-/**
- * Load the Google Maps JS API exactly once. Resolves with the `google` global.
- * Rejects (so the caller falls back to demo mode) if no key is configured, the
- * kill switch is set, or the script fails/times out. Never retries in a loop.
- */
-export function loadGoogleMaps(): Promise<typeof google> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("Google Maps can only load in the browser"));
-  }
-  if (googleMapsDisabled) {
-    return Promise.reject(new Error("Google Maps disabled by kill switch"));
-  }
-  if (!googleMapsBrowserKey) {
-    return Promise.reject(new Error("No Google Maps browser key configured"));
-  }
-  if (window.google?.maps) return Promise.resolve(window.google);
-  if (loadPromise) return loadPromise;
-
-  loadPromise = new Promise<typeof google>((resolve, reject) => {
+function loadGoogleMapsScript(attempt: number): Promise<typeof google> {
+  return new Promise<typeof google>((resolve, reject) => {
     const callbackName = "__atlasGmapsReady";
     let settled = false;
-    const timeout = window.setTimeout(() => {
+
+    const fail = (err: Error) => {
       if (settled) return;
       settled = true;
-      // Remove the stalled tag so a retry doesn't double-include the API.
+      window.clearTimeout(timeout);
       script.remove();
-      loadPromise = null;
-      reject(new Error("Google Maps load timed out"));
-    }, SCRIPT_TIMEOUT_MS);
+      if (attempt < MAX_SCRIPT_ATTEMPTS) {
+        loadPromise = loadGoogleMapsScript(attempt + 1);
+        loadPromise.then(resolve, reject);
+      } else {
+        loadPromise = null;
+        reject(err);
+      }
+    };
+
+    const timeout = window.setTimeout(() => fail(new Error("Google Maps load timed out")), SCRIPT_TIMEOUT_MS);
 
     (window as unknown as Record<string, unknown>)[callbackName] = () => {
       if (settled) return;
@@ -51,16 +45,30 @@ export function loadGoogleMaps(): Promise<typeof google> {
     });
     script.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
     script.async = true;
-    script.onerror = () => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeout);
-      script.remove();
-      loadPromise = null;
-      reject(new Error("Failed to load Google Maps JS API"));
-    };
+    script.onerror = () => fail(new Error("Failed to load Google Maps JS API"));
     document.head.appendChild(script);
   });
+}
+
+/**
+ * Load the Google Maps JS API. Resolves with the `google` global. Rejects (so
+ * the caller falls back to demo mode) if no key is configured, the kill
+ * switch is set, or the script still fails/times out after one retry.
+ */
+export function loadGoogleMaps(): Promise<typeof google> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google Maps can only load in the browser"));
+  }
+  if (googleMapsDisabled) {
+    return Promise.reject(new Error("Google Maps disabled by kill switch"));
+  }
+  if (!googleMapsBrowserKey) {
+    return Promise.reject(new Error("No Google Maps browser key configured"));
+  }
+  if (window.google?.maps) return Promise.resolve(window.google);
+  if (loadPromise) return loadPromise;
+
+  loadPromise = loadGoogleMapsScript(1);
   return loadPromise;
 }
 
@@ -76,8 +84,8 @@ const panoCache = new Map<string, PanoResolution | null>();
 const inFlight = new Map<string, Promise<PanoResolution | null>>();
 const PANO_CACHE_MAX = 500;
 
-function panoKey(lat: number, lng: number): string {
-  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+function panoKey(lat: number, lng: number, radius: number): string {
+  return `${lat.toFixed(5)},${lng.toFixed(5)},${radius}`;
 }
 
 function resolvePano(
@@ -85,16 +93,16 @@ function resolvePano(
   lat: number,
   lng: number,
   radius: number,
-): Promise<PanoResolution | null> {
+): Promise<{ pano: PanoResolution | null; timedOut: boolean }> {
   return new Promise((resolve) => {
     let settled = false;
-    const done = (value: PanoResolution | null) => {
+    const done = (pano: PanoResolution | null, timedOut: boolean) => {
       if (settled) return;
       settled = true;
-      resolve(value);
+      resolve({ pano, timedOut });
     };
     // Single attempt, hard timeout — never a retry loop.
-    const timeout = setTimeout(() => done(null), PANO_TIMEOUT_MS);
+    const timeout = setTimeout(() => done(null, true), PANO_TIMEOUT_MS);
     svService.getPanorama(
       {
         location: { lat, lng },
@@ -110,9 +118,9 @@ function resolvePano(
           data.location.latLng
         ) {
           const heading = data.tiles?.centerHeading ?? 0;
-          done({ panoId: data.location.pano, location: data.location.latLng, heading });
+          done({ panoId: data.location.pano, location: data.location.latLng, heading }, false);
         } else {
-          done(null);
+          done(null, false);
         }
       },
     );
@@ -129,19 +137,23 @@ export function findPanorama(
   lng: number,
   radius = 50_000,
 ): Promise<PanoResolution | null> {
-  const key = panoKey(lat, lng);
+  const key = panoKey(lat, lng, radius);
   if (panoCache.has(key)) return Promise.resolve(panoCache.get(key)!);
   const existing = inFlight.get(key);
   if (existing) return existing;
 
   const request = resolvePano(svService, lat, lng, radius)
-    .then((result) => {
-      if (panoCache.size >= PANO_CACHE_MAX) {
-        const oldest = panoCache.keys().next().value;
-        if (oldest !== undefined) panoCache.delete(oldest);
+    .then(({ pano, timedOut }) => {
+      // Don't cache a transient timeout as permanent "no coverage" — one flaky
+      // moment shouldn't poison a real location (→ reroll/demo) for the session.
+      if (!timedOut) {
+        if (panoCache.size >= PANO_CACHE_MAX) {
+          const oldest = panoCache.keys().next().value;
+          if (oldest !== undefined) panoCache.delete(oldest);
+        }
+        panoCache.set(key, pano);
       }
-      panoCache.set(key, result);
-      return result;
+      return pano;
     })
     .finally(() => {
       inFlight.delete(key);

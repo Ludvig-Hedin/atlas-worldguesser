@@ -7,9 +7,11 @@ import { ANTIPODE_METERS, clampSettings, computeGuessScore } from "./gameLogic";
 import { foldGame } from "../src/lib/progression";
 import { levelForXp } from "../src/lib/xp";
 import { ACHIEVEMENTS } from "../src/lib/achievements";
+import { BUILDINGS, AVATAR_COLORS } from "../src/lib/buildings";
 import type { RoundResult } from "../src/lib/types";
 
 const VALID_ACHIEVEMENT_IDS = new Set(ACHIEVEMENTS.map((a) => a.id));
+const VALID_BUILDING_IDS = new Set(Object.keys(BUILDINGS));
 const statsShape = {
   gamesPlayed: v.number(),
   roundsPlayed: v.number(),
@@ -64,11 +66,29 @@ export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<Doc<"use
   return user;
 }
 
+/**
+ * Increment the denormalized total-users counter. Called only when a brand-new
+ * user row is inserted (see appStats in schema.ts). Read by presence.homeStats.
+ */
+async function bumpUserCount(ctx: MutationCtx): Promise<void> {
+  // .first() (not .unique()) so a stray duplicate counter row can't make every
+  // new-user signup throw; matches presence.homeStats' defensive read.
+  const stat = await ctx.db
+    .query("appStats")
+    .withIndex("by_key", (q) => q.eq("key", "global"))
+    .first();
+  if (stat) await ctx.db.patch(stat._id, { totalUsers: stat.totalUsers + 1 });
+  else await ctx.db.insert("appStats", { key: "global", totalUsers: 1 });
+}
+
 function publicProfile(user: Doc<"users">) {
   return {
     _id: user._id,
     username: user.username,
     avatarUrl: user.avatarUrl,
+    avatarBuildingId: user.avatarBuildingId,
+    avatarColor: user.avatarColor,
+    unlockedBuildings: user.unlockedBuildings ?? [],
     xp: user.xp,
     level: levelForXp(user.xp),
     stats: user.stats,
@@ -133,7 +153,7 @@ export const ensureUser = mutation({
       (identity.email ? identity.email.split("@")[0] : "player");
     const username = await uniqueUsername(ctx, base);
 
-    return await ctx.db.insert("users", {
+    const userId = await ctx.db.insert("users", {
       clerkId: identity.subject,
       username,
       usernameLower: username.toLowerCase(),
@@ -144,6 +164,8 @@ export const ensureUser = mutation({
       stats: EMPTY_STATS,
       streaks: EMPTY_STREAKS,
     });
+    await bumpUserCount(ctx);
+    return userId;
   },
 });
 
@@ -203,7 +225,7 @@ export const profileByUsername = query({
   },
 });
 
-const roundArg = v.object({
+export const roundArg = v.object({
   round: v.number(),
   actual: v.object({ lat: v.number(), lng: v.number(), countryCode: v.string() }),
   guess: v.union(v.object({ lat: v.number(), lng: v.number() }), v.null()),
@@ -212,6 +234,151 @@ const roundArg = v.object({
   guessCountryCode: v.union(v.string(), v.null()),
   countryCorrect: v.boolean(),
 });
+
+type SoloRoundArg = {
+  round: number;
+  actual: { lat: number; lng: number; countryCode: string };
+  guess: { lat: number; lng: number } | null;
+  distanceMeters: number;
+  score: number;
+  guessCountryCode: string | null;
+  countryCorrect: boolean;
+};
+type SoloSettings = {
+  rounds: number;
+  timeLimitSec: number;
+  movement: "moving" | "noMove" | "noMoveNoPanZoom";
+};
+
+/**
+ * Shared core for finishing a solo-style game (classic solo + daily challenge):
+ * validates untrusted rounds, recomputes distance/score server-side, folds
+ * progression (stats/streaks/XP/achievements), and writes the games history row.
+ * Returns the fold output + normalized results so callers can build extras
+ * (e.g. a daily leaderboard row). Does NOT rate-limit — each caller does that.
+ */
+export async function applySoloResults(
+  ctx: MutationCtx,
+  user: Doc<"users">,
+  mapId: string,
+  settings: SoloSettings,
+  rawResults: SoloRoundArg[],
+  now: number,
+  opts?: { maxRounds?: number },
+) {
+  const maxRounds = opts?.maxRounds ?? 20;
+  if (rawResults.length === 0 || rawResults.length > maxRounds) {
+    throw new Error("Invalid game");
+  }
+  // Clients can send arbitrary numbers (validators accept NaN/Infinity), and
+  // these feed XP + the global leaderboard. Reject anything a real round
+  // can't produce — mirrors the clamping importGuestProfile already does.
+  for (const r of rawResults) {
+    const validLatLng = (p: { lat: number; lng: number } | null) =>
+      p === null ||
+      (Number.isFinite(p.lat) && Number.isFinite(p.lng) && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180);
+    if (
+      !validLatLng(r.actual) ||
+      !validLatLng(r.guess) ||
+      !Number.isFinite(r.distanceMeters) ||
+      r.distanceMeters < 0 ||
+      r.distanceMeters > ANTIPODE_METERS * 1.01 ||
+      !Number.isFinite(r.score) ||
+      r.score < 0 ||
+      r.score > 5000 ||
+      // "" is legal (custom-map locations without a resolved country).
+      !/^([A-Za-z]{2})?$/.test(r.actual.countryCode)
+    ) {
+      throw new Error("Invalid game");
+    }
+  }
+  const clamped = clampSettings(settings);
+
+  const owned = await ctx.db
+    .query("achievements")
+    .withIndex("by_user", (q) => q.eq("userId", user._id))
+    .collect();
+  const ownedIds = owned.map((a) => a.achievementId);
+
+  // Recompute distance + score server-side from guess/actual instead of
+  // trusting the client's numbers (XP + the global leaderboard hang off these).
+  const results: RoundResult[] = rawResults.map((r) => {
+    const { distanceMeters, score } = computeGuessScore(r.guess, r.actual, mapId);
+    // Only a plausible ISO alpha-2 code is stored / counted for the bonus.
+    const guessCC =
+      r.guessCountryCode && /^[A-Za-z]{2}$/.test(r.guessCountryCode)
+        ? r.guessCountryCode.toUpperCase()
+        : null;
+    return {
+      round: r.round,
+      actual: {
+        lat: r.actual.lat,
+        lng: r.actual.lng,
+        countryCode: r.actual.countryCode.toUpperCase(),
+      },
+      guess: r.guess,
+      distanceMeters,
+      score,
+      timeMs: 0,
+      guessCountryCode: guessCC,
+      countryCorrect: !!guessCC && guessCC === r.actual.countryCode.toUpperCase(),
+    };
+  });
+
+  const out = foldGame({
+    stats: { ...user.stats, xp: user.xp },
+    streaks: user.streaks,
+    ownedAchievements: ownedIds,
+    unlockedBuildings: user.unlockedBuildings ?? [],
+    results,
+    now,
+  });
+
+  const { xp, ...statsNoXp } = out.stats;
+  const unlockedBuildings = out.newBuildings.length
+    ? [...new Set([...(user.unlockedBuildings ?? []), ...out.newBuildings])]
+    : undefined;
+  await ctx.db.patch(user._id, {
+    xp,
+    stats: statsNoXp,
+    streaks: out.streaks,
+    lastActiveAt: now,
+    ...(unlockedBuildings ? { unlockedBuildings } : {}),
+  });
+
+  for (const id of out.newAchievements) {
+    await ctx.db.insert("achievements", { userId: user._id, achievementId: id, unlockedAt: now });
+  }
+
+  // Derive from the actual results so the stored game can't self-contradict
+  // when the claimed settings.rounds differs from the rounds submitted.
+  const maxScore = results.length * 5000;
+  await ctx.db.insert("games", {
+    userId: user._id,
+    mode: "solo",
+    mapId,
+    settings: clamped,
+    totalScore: out.totalScore,
+    maxScore,
+    rounds: results.length,
+    avgDistanceMeters: out.avgDistanceMeters,
+    perfectRounds: out.perfectRounds,
+    won: out.won,
+    // Store the server-recomputed rounds, not the client's claimed numbers.
+    replay: results.map((r) => ({
+      round: r.round,
+      actual: r.actual,
+      guess: r.guess,
+      distanceMeters: r.distanceMeters,
+      score: r.score,
+      guessCountryCode: r.guessCountryCode,
+      countryCorrect: r.countryCorrect,
+    })),
+    createdAt: now,
+  });
+
+  return { out, results, maxScore };
+}
 
 /** Sync a finished solo game to the cloud profile (stats, streaks, XP, achievements, history). */
 export const recordSoloResult = mutation({
@@ -223,116 +390,60 @@ export const recordSoloResult = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await rateLimit(ctx, "soloRecord", user._id);
-    if (args.results.length === 0 || args.results.length > 20) {
-      throw new Error("Invalid game");
-    }
-    // Clients can send arbitrary numbers (validators accept NaN/Infinity), and
-    // these feed XP + the global leaderboard. Reject anything a real round
-    // can't produce — mirrors the clamping importGuestProfile already does.
-    for (const r of args.results) {
-      const validLatLng = (p: { lat: number; lng: number } | null) =>
-        p === null ||
-        (Number.isFinite(p.lat) && Number.isFinite(p.lng) && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180);
-      if (
-        !validLatLng(r.actual) ||
-        !validLatLng(r.guess) ||
-        !Number.isFinite(r.distanceMeters) ||
-        r.distanceMeters < 0 ||
-        r.distanceMeters > ANTIPODE_METERS * 1.01 ||
-        !Number.isFinite(r.score) ||
-        r.score < 0 ||
-        r.score > 5000 ||
-        // "" is legal (custom-map locations without a resolved country).
-        !/^([A-Za-z]{2})?$/.test(r.actual.countryCode)
-      ) {
-        throw new Error("Invalid game");
-      }
-    }
-    const settings = clampSettings(args.settings);
-    const now = Date.now();
-
-    const owned = await ctx.db
-      .query("achievements")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-    const ownedIds = owned.map((a) => a.achievementId);
-
-    // Recompute distance + score server-side from guess/actual instead of
-    // trusting the client's numbers (XP + the global leaderboard hang off
-    // these). A modified client can still fabricate `actual` — solo is
-    // client-authoritative by design — but score-stuffing on real rounds dies.
-    const results: RoundResult[] = args.results.map((r) => {
-      const { distanceMeters, score } = computeGuessScore(r.guess, r.actual, args.mapId);
-      // Only a plausible ISO alpha-2 code is stored / counted for the bonus.
-      const guessCC =
-        r.guessCountryCode && /^[A-Za-z]{2}$/.test(r.guessCountryCode)
-          ? r.guessCountryCode.toUpperCase()
-          : null;
-      return {
-        round: r.round,
-        actual: {
-          lat: r.actual.lat,
-          lng: r.actual.lng,
-          countryCode: r.actual.countryCode.toUpperCase(),
-        },
-        guess: r.guess,
-        distanceMeters,
-        score,
-        timeMs: 0,
-        guessCountryCode: guessCC,
-        countryCorrect: !!guessCC && guessCC === r.actual.countryCode.toUpperCase(),
-      };
-    });
-
-    const out = foldGame({
-      stats: { ...user.stats, xp: user.xp },
-      streaks: user.streaks,
-      ownedAchievements: ownedIds,
-      results,
-      now,
-    });
-
-    const { xp, ...statsNoXp } = out.stats;
-    await ctx.db.patch(user._id, { xp, stats: statsNoXp, streaks: out.streaks, lastActiveAt: now });
-
-    for (const id of out.newAchievements) {
-      await ctx.db.insert("achievements", { userId: user._id, achievementId: id, unlockedAt: now });
-    }
-
-    // Derive from the actual results so the stored game can't self-contradict
-    // when the claimed settings.rounds differs from the rounds submitted.
-    const maxScore = results.length * 5000;
-    await ctx.db.insert("games", {
-      userId: user._id,
-      mode: "solo",
-      mapId: args.mapId,
-      settings,
-      totalScore: out.totalScore,
-      maxScore,
-      rounds: results.length,
-      avgDistanceMeters: out.avgDistanceMeters,
-      perfectRounds: out.perfectRounds,
-      won: out.won,
-      // Store the server-recomputed rounds, not the client's claimed numbers.
-      replay: results.map((r) => ({
-        round: r.round,
-        actual: r.actual,
-        guess: r.guess,
-        distanceMeters: r.distanceMeters,
-        score: r.score,
-        guessCountryCode: r.guessCountryCode,
-        countryCorrect: r.countryCorrect,
-      })),
-      createdAt: now,
-    });
-
+    const { out } = await applySoloResults(
+      ctx,
+      user,
+      args.mapId,
+      args.settings,
+      args.results,
+      Date.now(),
+    );
     return {
       xpGained: out.xpGained,
       newAchievements: out.newAchievements,
+      newBuildings: out.newBuildings,
       leveledUp: out.leveledUp,
       won: out.won,
       totalScore: out.totalScore,
     };
+  },
+});
+
+/**
+ * Equip a building avatar and/or set the background color. buildingId is
+ * authorized against the user's own historical unlockedBuildings (not the
+ * live BUILDINGS catalog) so a building removed from the catalog later
+ * doesn't retroactively block someone who legitimately earned it — the
+ * client-side IdentityAvatar falls back to the default gradient if the id
+ * is no longer recognized. clearBuilding is explicit rather than relying on
+ * patch-with-undefined semantics for "reset to default".
+ */
+export const setAvatar = mutation({
+  args: {
+    buildingId: v.optional(v.string()),
+    clearBuilding: v.optional(v.boolean()),
+    color: v.optional(v.string()),
+  },
+  handler: async (ctx, { buildingId, clearBuilding, color }) => {
+    const user = await requireUser(ctx);
+    const patch: Record<string, unknown> = {};
+
+    if (clearBuilding) {
+      patch.avatarBuildingId = undefined;
+    } else if (buildingId !== undefined) {
+      if (!(user.unlockedBuildings ?? []).includes(buildingId)) {
+        throw new Error("Building not unlocked yet");
+      }
+      patch.avatarBuildingId = buildingId;
+    }
+
+    if (color !== undefined) {
+      if (!AVATAR_COLORS.includes(color)) throw new Error("Invalid color");
+      patch.avatarColor = color;
+    }
+
+    if (Object.keys(patch).length) await ctx.db.patch(user._id, patch);
+    return { avatarBuildingId: patch.avatarBuildingId, avatarColor: patch.avatarColor };
   },
 });
 
@@ -350,6 +461,7 @@ export const importGuestProfile = mutation({
     stats: v.object(statsShape),
     streaks: v.object(streaksShape),
     achievements: v.array(v.string()),
+    unlockedBuildings: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -395,6 +507,13 @@ export const importGuestProfile = mutation({
       owned.add(id);
       await ctx.db.insert("achievements", { userId: user._id, achievementId: id, unlockedAt: now });
       importedAchievements++;
+    }
+
+    const unlockedBuildings = [
+      ...new Set((args.unlockedBuildings ?? []).filter((id) => VALID_BUILDING_IDS.has(id))),
+    ];
+    if (unlockedBuildings.length) {
+      await ctx.db.patch(user._id, { unlockedBuildings });
     }
 
     return { merged: true, gamesPlayed: stats.gamesPlayed, importedAchievements };

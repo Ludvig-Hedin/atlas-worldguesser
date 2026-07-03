@@ -22,6 +22,8 @@ export interface LocalProfile {
   stats: PlayerStats;
   streaks: Streaks;
   achievements: string[];
+  /** Country codes with a building avatar unlocked (guest-local, merged into the cloud account on sign-in). */
+  unlockedBuildings: string[];
   recent: RecentGame[];
 }
 
@@ -31,6 +33,7 @@ export function emptyProfile(): LocalProfile {
     stats: { ...EMPTY_STATS },
     streaks: { ...EMPTY_STREAKS },
     achievements: [],
+    unlockedBuildings: [],
     recent: [],
   };
 }
@@ -47,6 +50,7 @@ export function loadProfile(): LocalProfile {
       stats: { ...EMPTY_STATS, ...parsed.stats },
       streaks: { ...EMPTY_STREAKS, ...parsed.streaks },
       achievements: parsed.achievements ?? [],
+      unlockedBuildings: parsed.unlockedBuildings ?? [],
       recent: parsed.recent ?? [],
     };
   } catch {
@@ -74,6 +78,7 @@ export function guestImportPayload(profile: LocalProfile) {
     stats: statsNoXp,
     streaks: profile.streaks,
     achievements: profile.achievements,
+    unlockedBuildings: profile.unlockedBuildings,
   };
 }
 
@@ -92,6 +97,7 @@ export interface ApplyResult {
   profile: LocalProfile;
   xpGained: number;
   newAchievements: string[];
+  newBuildings: string[];
   leveledUp: boolean;
   won: boolean;
   totalScore: number;
@@ -107,6 +113,7 @@ export function applyGame(
     stats: profile.stats,
     streaks: profile.streaks,
     ownedAchievements: profile.achievements,
+    unlockedBuildings: profile.unlockedBuildings,
     results: game.results,
     now,
   });
@@ -131,10 +138,12 @@ export function applyGame(
       stats: out.stats,
       streaks: out.streaks,
       achievements: [...profile.achievements, ...out.newAchievements],
+      unlockedBuildings: [...profile.unlockedBuildings, ...out.newBuildings],
       recent,
     },
     xpGained: out.xpGained,
     newAchievements: out.newAchievements,
+    newBuildings: out.newBuildings,
     leveledUp: out.leveledUp,
     won: out.won,
     totalScore: out.totalScore,

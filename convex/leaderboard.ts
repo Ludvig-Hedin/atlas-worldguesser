@@ -10,6 +10,8 @@ function row(u: Doc<"users">, rank: number) {
     _id: u._id,
     username: u.username,
     avatarUrl: u.avatarUrl,
+    avatarBuildingId: u.avatarBuildingId,
+    avatarColor: u.avatarColor,
     xp: u.xp,
     level: levelForXp(u.xp),
     gamesPlayed: u.stats.gamesPlayed,

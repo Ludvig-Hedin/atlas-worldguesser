@@ -1,9 +1,27 @@
-import { Building2, Flag, Globe2, Landmark, MapPin, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  Building2,
+  Compass,
+  Flag,
+  Globe2,
+  Landmark,
+  MapPin,
+  Mountain,
+  Sparkles,
+  Sun,
+  Trees,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MAP_ICONS: Record<string, LucideIcon> = {
   world: Globe2,
   europe: Landmark,
+  asia: Mountain,
+  africa: Sun,
+  northamerica: Compass,
+  southamerica: Trees,
+  oceania: Waves,
   usa: Building2,
   countries: Flag,
   custom: Sparkles,

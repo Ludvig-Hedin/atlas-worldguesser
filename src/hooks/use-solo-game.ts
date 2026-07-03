@@ -13,9 +13,16 @@ export const ANTIPODE_METERS = Math.PI * 6_371_008.8;
 
 export type Phase = "guessing" | "reveal" | "finished";
 
+/**
+ * `classic` = fixed `settings.rounds`. `survival` = endless country-streak: keep
+ * going while each guess names the correct country; the first miss ends the run.
+ */
+export type SoloMode = "classic" | "survival";
+
 export interface SoloGame {
   id: string;
   mapId: string;
+  mode: SoloMode;
   settings: GameSettings;
   seed: number;
   locations: GameLocation[];
@@ -30,27 +37,41 @@ interface CreateOpts {
   mapId: string;
   settings: GameSettings;
   seed?: number;
+  mode?: SoloMode;
   /** Explicit location pool (custom maps); falls back to the official pool. */
   customLocations?: GameLocation[];
 }
 
-/** Hometown easter egg — a small chance any round drops here. */
+/** Hometown easter eggs — a small chance any round drops here. */
 const AKERS: GameLocation = { lat: 59.217, lng: 17.006, countryCode: "SE" };
+const GRUNDBRO: GameLocation = { lat: 59.3089, lng: 17.0899, countryCode: "SE" };
 
-function createGame({ mapId, settings, seed, customLocations }: CreateOpts): SoloGame {
+/** Survival pre-picks a deep buffer up front; a run rarely reaches this many. */
+const SURVIVAL_BUFFER = 200;
+
+function createGame({ mapId, settings, seed, customLocations, mode = "classic" }: CreateOpts): SoloGame {
   const resolvedSeed = seed ?? hashString(crypto.randomUUID());
   const rng = seededRandom(resolvedSeed);
+  const count = mode === "survival" ? SURVIVAL_BUFFER : settings.rounds;
   const picked =
     customLocations && customLocations.length > 0
-      ? sampleLocations(customLocations, settings.rounds, rng)
-      : pickLocations(mapId, settings.rounds, rng);
+      ? sampleLocations(customLocations, count, rng)
+      : pickLocations(mapId, count, rng);
   // World map only — a Sweden drop inside USA/Europe/custom maps breaks the
-  // map's region contract.
+  // map's region contract. Each egg gets an independent 3% roll off the same draw.
   const locations =
-    mapId === "world" ? picked.map((loc) => (rng() < 0.03 ? AKERS : loc)) : picked;
+    mapId === "world"
+      ? picked.map((loc) => {
+          const r = rng();
+          if (r < 0.03) return AKERS;
+          if (r < 0.06) return GRUNDBRO;
+          return loc;
+        })
+      : picked;
   return {
     id: crypto.randomUUID(),
     mapId,
+    mode,
     settings,
     seed: resolvedSeed,
     locations,
@@ -72,6 +93,8 @@ export interface UseSoloGame {
   currentLocation: GameLocation;
   currentResult: RoundResult | null;
   totalScore: number;
+  /** Survival: how many rounds in a row the correct country was named. */
+  survivalStreak: number;
   submitting: boolean;
 }
 
@@ -96,13 +119,23 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
       const score = g ? roundScore(distance, scaleMetersForMap(game.mapId)) : 0;
       const timeMs = Date.now() - game.roundStartAt;
       // Country lookup lazy-loads a JSON chunk; if that fails (offline, stale
-      // deploy) score the round anyway — only the country bonus is lost.
+      // deploy) score the round anyway — only the country bonus is lost. Retry
+      // a few times: in survival a false "wrong country" from a transient blip
+      // would wrongly end the run. loadCountries caches on first success, so a
+      // healthy connection resolves on the first attempt.
       let guessCC: string | null = null;
       if (g) {
-        try {
-          guessCC = await countryAtAsync(g);
-        } catch {
-          guessCC = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            guessCC = await countryAtAsync(g);
+            break;
+          } catch {
+            guessCC = null;
+            // Brief backoff so a recovering connection can resolve the country
+            // chunk on a later attempt (a persistent immediate failure would
+            // otherwise burn all 3 tries in milliseconds → false wrong-country).
+            if (attempt < 2) await new Promise((r) => setTimeout(r, 200));
+          }
         }
       }
       const result: RoundResult = {
@@ -129,6 +162,16 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
   const next = useCallback(() => {
     setGame((prev) => {
       if (prev.phase !== "reveal") return prev;
+      if (prev.mode === "survival") {
+        // Survive only if the just-revealed round named the correct country.
+        // A miss (or exhausting the buffer) ends the run.
+        const last = prev.results[prev.results.length - 1];
+        const survived = !!last && last.countryCorrect;
+        if (!survived || prev.round >= prev.locations.length) {
+          return { ...prev, phase: "finished" };
+        }
+        return { ...prev, round: prev.round + 1, phase: "guessing", roundStartAt: Date.now() };
+      }
       if (prev.round >= prev.settings.rounds) return { ...prev, phase: "finished" };
       return { ...prev, round: prev.round + 1, phase: "guessing", roundStartAt: Date.now() };
     });
@@ -142,13 +185,14 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
           mapId: initial.mapId,
           settings: initial.settings,
           customLocations: initial.customLocations,
+          mode: initial.mode,
           ...opts,
         }),
       );
       setGuess(null);
       setSubmitting(false);
     },
-    [initial.mapId, initial.settings, initial.customLocations],
+    [initial.mapId, initial.settings, initial.customLocations, initial.mode],
   );
 
   const replaceCurrentLocation = useCallback((loc: GameLocation) => {
@@ -170,6 +214,11 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
     [game.results],
   );
 
+  const survivalStreak = useMemo(
+    () => game.results.filter((r) => r.countryCorrect).length,
+    [game.results],
+  );
+
   return {
     game,
     guess,
@@ -181,6 +230,7 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
     currentLocation,
     currentResult,
     totalScore,
+    survivalStreak,
     submitting,
   };
 }

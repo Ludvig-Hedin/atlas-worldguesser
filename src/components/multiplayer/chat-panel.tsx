@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
 interface ChatPanelProps {
@@ -16,6 +17,7 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
+  const t = useT();
   const messages = useQuery(api.chat.list, { roomId });
   const send = useMutation(api.chat.send);
   const [text, setText] = useState("");
@@ -33,7 +35,7 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
     // Restore the draft on failure (e.g. rate limited) instead of losing it.
     await send({ roomId, text: value }).catch(() => {
       setText(value);
-      toast.error("Message not sent — try again in a moment");
+      toast.error(t("chat.notSent"));
     });
   };
 
@@ -41,7 +43,7 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
     <div className={cn("flex min-h-0 flex-col", className)}>
       <div className="flex-1 space-y-2 overflow-y-auto pr-1">
         {messages?.length === 0 && (
-          <p className="py-6 text-center text-xs text-muted-foreground">No messages yet — say hello.</p>
+          <p className="py-6 text-center text-xs text-muted-foreground">{t("chat.noMessages")}</p>
         )}
         {messages?.map((m) => {
           const isMe = m.userId === myUserId;
@@ -69,12 +71,12 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Message…"
+            placeholder={t("chat.placeholder")}
             maxLength={300}
             className="h-9 w-full rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
-        <Button type="submit" size="icon-sm" variant="secondary" disabled={!text.trim()} aria-label="Send">
+        <Button type="submit" size="icon-sm" variant="secondary" disabled={!text.trim()} aria-label={t("chat.sendAria")}>
           <Send className="size-3.5" />
         </Button>
       </form>

@@ -20,6 +20,39 @@ export const EUROPE_CODES = [
   "NO", "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH", "GB", "UA",
 ];
 
+// Continent code sets mirror EUROPE_CODES: an ISO alpha-2 filter over the shared
+// seed dataset. Transcontinental countries (RU, TR, GE, AM, AZ, CY) are given a
+// single home in Asia so every seed country belongs to exactly one continent map.
+export const ASIA_CODES = [
+  "AF", "AM", "AZ", "BH", "BD", "BT", "BN", "KH", "CN", "CY", "GE", "HK", "IN",
+  "ID", "IR", "IQ", "IL", "JP", "JO", "KZ", "KW", "KG", "LA", "LB", "MY", "MV",
+  "MN", "MM", "NP", "KP", "OM", "PK", "PS", "PH", "QA", "RU", "SA", "SG", "KR",
+  "LK", "SY", "TW", "TJ", "TH", "TL", "TR", "TM", "AE", "UZ", "VN", "YE",
+];
+
+export const AFRICA_CODES = [
+  "DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CD", "CG",
+  "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE",
+  "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG",
+  "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG",
+  "EH", "ZM", "ZW",
+];
+
+export const NORTH_AMERICA_CODES = [
+  "US", "CA", "MX", "GT", "BZ", "SV", "HN", "NI", "CR", "PA", "CU", "DO", "HT",
+  "JM", "BS", "BB", "TT", "AG", "DM", "GD", "KN", "LC", "VC", "PR",
+];
+
+export const SOUTH_AMERICA_CODES = [
+  "AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PY", "PE", "SR", "UY",
+  "VE",
+];
+
+export const OCEANIA_CODES = [
+  "AU", "FJ", "KI", "MH", "FM", "NR", "NZ", "PW", "PG", "WS", "SB", "TO", "TV",
+  "VU", "NC", "PF", "GU",
+];
+
 export const MAPS: Record<GameModeId, MapConfig> = {
   world: {
     id: "world",
@@ -38,6 +71,51 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 800,
     countryCodes: EUROPE_CODES,
     view: [12, 52, 3.1],
+  },
+  asia: {
+    id: "asia",
+    slug: "asia",
+    name: "Asia",
+    tagline: "The largest continent",
+    scaleKm: 1800,
+    countryCodes: ASIA_CODES,
+    view: [100, 30, 2.3],
+  },
+  africa: {
+    id: "africa",
+    slug: "africa",
+    name: "Africa",
+    tagline: "Cairo to Cape Town",
+    scaleKm: 1800,
+    countryCodes: AFRICA_CODES,
+    view: [20, 3, 2.5],
+  },
+  northamerica: {
+    id: "northamerica",
+    slug: "northamerica",
+    name: "North America",
+    tagline: "Canada to Panama",
+    scaleKm: 1500,
+    countryCodes: NORTH_AMERICA_CODES,
+    view: [-100, 40, 2.2],
+  },
+  southamerica: {
+    id: "southamerica",
+    slug: "southamerica",
+    name: "South America",
+    tagline: "The southern continent",
+    scaleKm: 1400,
+    countryCodes: SOUTH_AMERICA_CODES,
+    view: [-60, -20, 2.6],
+  },
+  oceania: {
+    id: "oceania",
+    slug: "oceania",
+    name: "Oceania",
+    tagline: "Islands of the Pacific",
+    scaleKm: 1600,
+    countryCodes: OCEANIA_CODES,
+    view: [150, -22, 2.3],
   },
   usa: {
     id: "usa",
@@ -71,6 +149,11 @@ export const MAPS: Record<GameModeId, MapConfig> = {
 export const OFFICIAL_MAPS: MapConfig[] = [
   MAPS.world,
   MAPS.europe,
+  MAPS.asia,
+  MAPS.africa,
+  MAPS.northamerica,
+  MAPS.southamerica,
+  MAPS.oceania,
   MAPS.usa,
   MAPS.countries,
 ];
@@ -85,16 +168,49 @@ export function scaleMetersForMap(id: string): number {
   return getMapConfig(id).scaleKm * 1000;
 }
 
-/** Movement difficulty presets shown in the UI. */
-export const MOVEMENTS: { id: Movement; label: string; description: string }[] = [
-  { id: "moving", label: "Moving", description: "Walk, pan, and zoom freely" },
-  { id: "noMove", label: "No Move", description: "Look around, but stay put" },
+/**
+ * Movement difficulty presets shown in the UI.
+ * - `label`: short tag (kept for the in-game HUD and the read-only room badge).
+ * - `title`: plain-language name shown in the "Rules" checklist.
+ * - `caps`: what the player is actually allowed to do, mirroring the Street View
+ *   gating in `google-street-view.tsx` (`optionsFor`). Drives the checklist.
+ */
+export const MOVEMENTS: {
+  id: Movement;
+  label: string;
+  title: string;
+  description: string;
+  caps: { move: boolean; pan: boolean; zoom: boolean };
+}[] = [
+  {
+    id: "moving",
+    label: "Moving",
+    title: "Move freely",
+    description: "Walk the streets, look around, and zoom.",
+    caps: { move: true, pan: true, zoom: true },
+  },
+  {
+    id: "noMove",
+    label: "No Move",
+    title: "Stay put",
+    description: "Look around and zoom, but you can't walk.",
+    caps: { move: false, pan: true, zoom: true },
+  },
   {
     id: "noMoveNoPanZoom",
     label: "NMPZ",
-    description: "No move, pan, or zoom — pure instinct",
+    title: "Frozen view",
+    description: "One frozen frame — no moving, panning, or zooming.",
+    caps: { move: false, pan: false, zoom: false },
   },
 ];
+
+/** The three capabilities a movement preset can grant, in display order. */
+export const MOVEMENT_CAPS = [
+  { key: "move", label: "Move around" },
+  { key: "pan", label: "Pan & look" },
+  { key: "zoom", label: "Zoom in" },
+] as const;
 
 export const DEFAULT_SETTINGS: GameSettings = {
   rounds: 5,

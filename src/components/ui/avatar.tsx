@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn, hashString } from "@/lib/utils";
+import { BUILDINGS, DEFAULT_AVATAR_COLOR } from "@/lib/buildings";
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -45,18 +46,39 @@ const GRADIENTS = [
   "linear-gradient(135deg,#40c8e0,#0a84ff)",
 ];
 
-/** A deterministic gradient avatar with initials — for users without a photo. */
+/**
+ * A deterministic gradient avatar with initials — for users without a photo.
+ * When `buildingId` resolves to a curated iconic-building avatar, that takes
+ * over entirely (color fills the background chip behind it); otherwise falls
+ * through to the existing photo/gradient-initials behavior unchanged. An
+ * unrecognized buildingId (e.g. one retired from the catalog) silently falls
+ * back rather than rendering a broken image.
+ */
 function IdentityAvatar({
   name,
   src,
+  buildingId,
+  color,
   className,
 }: {
   name: string;
   src?: string | null;
+  buildingId?: string | null;
+  color?: string | null;
   className?: string;
 }) {
   const initials = name.trim().slice(0, 2).toUpperCase() || "??";
   const gradient = GRADIENTS[hashString(name) % GRADIENTS.length];
+  const building = buildingId ? BUILDINGS[buildingId] : undefined;
+
+  if (building) {
+    return (
+      <Avatar className={className} style={{ backgroundColor: color ?? DEFAULT_AVATAR_COLOR }}>
+        <AvatarImage src={building.image} alt={building.name} className="object-contain p-[12%]" />
+      </Avatar>
+    );
+  }
+
   return (
     <Avatar className={className}>
       {src ? <AvatarImage src={src} alt={name} /> : null}

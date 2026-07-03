@@ -83,7 +83,13 @@ export const recentPlayers = query({
     ].slice(0, 8);
 
     const seen = new Set<Id<"users">>([me._id]);
-    const players: { _id: Id<"users">; username: string; avatarUrl?: string }[] = [];
+    const players: {
+      _id: Id<"users">;
+      username: string;
+      avatarUrl?: string;
+      avatarBuildingId?: string;
+      avatarColor?: string;
+    }[] = [];
     for (const roomId of roomIds) {
       const members = await ctx.db
         .query("roomMembers")
@@ -93,7 +99,15 @@ export const recentPlayers = query({
         if (seen.has(m.userId)) continue;
         seen.add(m.userId);
         const u = await ctx.db.get(m.userId);
-        if (u) players.push({ _id: u._id, username: u.username, avatarUrl: u.avatarUrl });
+        if (u) {
+          players.push({
+            _id: u._id,
+            username: u.username,
+            avatarUrl: u.avatarUrl,
+            avatarBuildingId: u.avatarBuildingId,
+            avatarColor: u.avatarColor,
+          });
+        }
       }
       if (players.length >= 12) break;
     }
@@ -114,7 +128,16 @@ export const list = query({
 
     const hydrate = async (id: Id<"users">) => {
       const u = await ctx.db.get(id);
-      return u ? { _id: u._id, username: u.username, avatarUrl: u.avatarUrl, xp: u.xp } : null;
+      return u
+        ? {
+            _id: u._id,
+            username: u.username,
+            avatarUrl: u.avatarUrl,
+            avatarBuildingId: u.avatarBuildingId,
+            avatarColor: u.avatarColor,
+            xp: u.xp,
+          }
+        : null;
     };
 
     const friends: NonNullable<Awaited<ReturnType<typeof hydrate>>>[] = [];

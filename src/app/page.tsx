@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/site-header";
 import { GlobeBackground } from "@/components/globe-background";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
+import { LiveStats } from "@/components/live-stats";
 import { ResumeCta } from "@/components/resume-cta";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS } from "@/lib/maps-config";
@@ -73,7 +74,7 @@ export default function Home() {
 
       <main className="flex flex-1 flex-col">
         {/* Hero — full viewport so the globe has room to breathe */}
-        <section className="relative flex min-h-[calc(100dvh-4.25rem)] flex-col items-center justify-center px-4 pb-12 text-center animate-[fade-up_0.5s_ease-out]">
+        <section className="relative flex min-h-[calc(100svh-4.25rem)] flex-col items-center justify-center px-4 pb-12 text-center animate-[fade-up_0.5s_ease-out]">
           <Badge
             variant="muted"
             className="mb-6 gap-1.5 border-white/10 bg-white/[0.04] backdrop-blur-sm"
@@ -111,7 +112,9 @@ export default function Home() {
             </Button>
           </div>
 
-          <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)]">
+          {features.auth && <LiveStats />}
+
+          <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
             Quick play drops you on the World map — 5 rounds, move freely, no timer.
           </p>
 
@@ -122,14 +125,14 @@ export default function Home() {
           )}
 
           {features.multiplayer && (
-            <div className="mt-10 flex w-full justify-center">
+            <div className="mt-10 flex w-full justify-center max-w-xl">
               <MultiplayerEntry />
             </div>
           )}
         </section>
 
         {/* Below the fold — sits on solid ground so the globe fades out cleanly */}
-        <section className="relative z-10 border-t border-border bg-background/92 px-4 py-16 backdrop-blur-xl">
+        <section className="relative z-10 bg-gradient-to-t from-[#000000] to-transparent px-4 py-16">
           <div className="mx-auto flex max-w-3xl flex-col gap-14">
             {/* Pick a map */}
             <div>
@@ -141,7 +144,7 @@ export default function Home() {
                   <Link
                     key={m.id}
                     href={`/play?map=${m.id}&quick=1`}
-                    className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97]"
+                    className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97] backdrop-blur-sm"
                   >
                     <MapGlyph
                       mapId={m.id}
@@ -159,7 +162,7 @@ export default function Home() {
               {HIGHLIGHTS.map((h) => (
                 <div
                   key={h.title}
-                  className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                  className="rounded-2xl border border-border bg-card/40 p-5 shadow-1 backdrop-blur-sm"
                 >
                   <span className="flex size-9 items-center justify-center rounded-xl border border-border bg-primary/10 text-primary-muted">
                     <h.icon className="size-[18px]" />
@@ -177,7 +180,7 @@ export default function Home() {
                 {STEPS.map((s, i) => (
                   <li
                     key={s.title}
-                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1 backdrop-blur-sm"
                   >
                     <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-muted">
                       Step {i + 1}
@@ -211,7 +214,7 @@ export default function Home() {
                 {FAQ.map((f) => (
                   <div
                     key={f.q}
-                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1 backdrop-blur-sm"
                   >
                     <h3 className="text-sm font-semibold">{f.q}</h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.a}</p>

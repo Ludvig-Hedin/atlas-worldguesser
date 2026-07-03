@@ -6,6 +6,7 @@ import { AnimatedNumber } from "./animated-number";
 import { KeyboardLegend } from "./keyboard-legend";
 import { MapGlyph } from "@/components/map-glyph";
 import { useHasKeyboard } from "@/hooks/use-has-keyboard";
+import { useT } from "@/hooks/use-t";
 import { formatClock, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ export function GameHUD({
   movementLabel,
   survivalStreak = null,
 }: GameHUDProps) {
+  const t = useT();
   const lowTime = timeRemaining !== null && timeRemaining <= 10;
   const hasKeyboard = useHasKeyboard();
   return (
@@ -42,10 +44,10 @@ export function GameHUD({
         <Link
           href="/"
           className={cn(pill, "gap-1 pl-2 pr-3 text-sm font-medium text-foreground/90 hover:bg-hud-hover")}
-          aria-label="Back to menu"
+          aria-label={t("hud.backToMenu")}
         >
           <ChevronLeft className="size-4" />
-          Menu
+          {t("hud.menu")}
         </Link>
         {hasKeyboard && <KeyboardLegend />}
         <div className={cn(pill, "hidden gap-1.5 px-3 text-xs font-medium text-foreground/85 sm:flex")}>
@@ -71,7 +73,9 @@ export function GameHUD({
         )}
         <div className={cn(pill, "gap-2 px-3.5")}>
           <span className="text-[11px] font-medium uppercase tracking-wide text-foreground/50">
-            {survivalStreak !== null ? `Streak ${survivalStreak}` : `${round}/${totalRounds}`}
+            {survivalStreak !== null
+              ? t("hud.streak", { count: survivalStreak })
+              : t("hud.roundOf", { current: round, total: totalRounds })}
           </span>
           <AnimatedNumber
             value={totalScore}

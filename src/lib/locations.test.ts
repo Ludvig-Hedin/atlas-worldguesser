@@ -1,13 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { getMapPool, pickLocations, poolSize } from "./locations";
-import { EUROPE_CODES } from "./maps-config";
+import { pickMatchLocations } from "../../convex/gameLogic";
+import { getMapPool, pickLocations, poolSize, sampleLocations } from "./locations";
+import {
+  AFRICA_CODES,
+  ASIA_CODES,
+  EUROPE_CODES,
+  NORTH_AMERICA_CODES,
+  OCEANIA_CODES,
+  SOUTH_AMERICA_CODES,
+} from "./maps-config";
 import { seededRandom } from "./utils";
 
 const EU = new Set(EUROPE_CODES);
 
+/** Continent maps: filter over the seed dataset via `countryCodes`. */
+const CONTINENTS: { id: string; codes: string[] }[] = [
+  { id: "asia", codes: ASIA_CODES },
+  { id: "africa", codes: AFRICA_CODES },
+  { id: "northamerica", codes: NORTH_AMERICA_CODES },
+  { id: "southamerica", codes: SOUTH_AMERICA_CODES },
+  { id: "oceania", codes: OCEANIA_CODES },
+];
+
 describe("map pools", () => {
   it("has a non-empty world pool", () => {
     expect(poolSize("world")).toBeGreaterThan(100);
+  });
+
+  it("has a non-empty countries pool", () => {
+    expect(poolSize("countries")).toBeGreaterThan(100);
   });
 
   it("restricts the Europe pool to European countries", () => {
@@ -19,6 +40,29 @@ describe("map pools", () => {
   it("restricts the USA pool to the United States", () => {
     for (const loc of getMapPool("usa")) {
       expect(loc.cc).toBe("US");
+    }
+  });
+});
+
+describe.each(CONTINENTS)("continent map $id", ({ id, codes }) => {
+  const set = new Set(codes);
+
+  it("has a non-empty pool", () => {
+    expect(poolSize(id)).toBeGreaterThan(0);
+  });
+
+  it("only contains in-region countries", () => {
+    for (const loc of getMapPool(id)) {
+      expect(set.has(loc.cc)).toBe(true);
+    }
+  });
+
+  it("resolves the same pool on client and server (parity)", () => {
+    // getMapPool (client/solo) and pickMatchLocations (server/multiplayer) both
+    // drive off the shared countryCodes config; picks must stay in-region.
+    const picks = pickMatchLocations(id, 5, 123);
+    for (const p of picks) {
+      expect(set.has(p.countryCode)).toBe(true);
     }
   });
 });
@@ -42,5 +86,35 @@ describe("pickLocations", () => {
   it("respects the map filter", () => {
     const picks = pickLocations("usa", 5, seededRandom(3));
     for (const p of picks) expect(p.countryCode).toBe("US");
+  });
+});
+
+describe("sampleLocations pad-loop", () => {
+  // When count > pool.length the pad-loop repeats picks. An injected rng() that
+  // returns its 1.0 upper bound must not index past the end (undefined entry).
+  it("never yields undefined when rng() returns 1.0 and count exceeds the pool", () => {
+    const pool = pickLocations("usa", 2, seededRandom(1)); // 2 real GameLocations
+    const padded = sampleLocations(pool, 5, () => 1);
+    expect(padded).toHaveLength(5);
+    for (const p of padded) expect(p).toBeDefined();
+  });
+});
+
+describe("daily challenge locations", () => {
+  // The Daily Challenge derives its locations from the day number via
+  // pickMatchLocations; identical seeds MUST yield identical rounds so every
+  // player faces the same challenge.
+  it("are identical for the same day seed", () => {
+    const day = 20_321;
+    const a = pickMatchLocations("world", 5, day);
+    const b = pickMatchLocations("world", 5, day);
+    expect(a).toEqual(b);
+    expect(a).toHaveLength(5);
+  });
+
+  it("differ across days", () => {
+    const a = pickMatchLocations("world", 5, 20_321);
+    const b = pickMatchLocations("world", 5, 20_322);
+    expect(a).not.toEqual(b);
   });
 });

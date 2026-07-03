@@ -12,7 +12,17 @@ export interface Pov {
   zoom?: number;
 }
 
-export type GameModeId = "world" | "europe" | "usa" | "countries" | "custom";
+export type GameModeId =
+  | "world"
+  | "europe"
+  | "asia"
+  | "africa"
+  | "northamerica"
+  | "southamerica"
+  | "oceania"
+  | "usa"
+  | "countries"
+  | "custom";
 
 /** Movement restriction, ordered from easiest to hardest. */
 export type Movement = "moving" | "noMove" | "noMoveNoPanZoom";

@@ -8,21 +8,33 @@ import { Check, Copy, LogOut, Play } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { Scoreboard } from "./scoreboard";
+import { TeamScoreboard } from "./team-scoreboard";
 import { ChatPanel } from "./chat-panel";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
+import { RulesSelect } from "@/components/game/rules-select";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapGlyph } from "@/components/map-glyph";
+import { useT } from "@/hooks/use-t";
 import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig } from "@/lib/maps-config";
 import type { Movement } from "@/lib/types";
+import type { TKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const TIME_LABELS: Record<number, string> = { 0: "None", 30: "30s", 60: "1m", 120: "2m" };
+const TIME_LABEL_KEYS: Record<number, TKey> = {
+  0: "setup.timeNone",
+  30: "setup.time30",
+  60: "setup.time60",
+  120: "setup.time120",
+};
 
 export function RoomLobby({ room }: { room: RoomState }) {
+  const t = useT();
   const updateSettings = useMutation(api.rooms.updateSettings);
   const setReady = useMutation(api.rooms.setReady);
+  const setTeamMode = useMutation(api.rooms.setTeamMode);
+  const setTeam = useMutation(api.rooms.setTeam);
   const start = useMutation(api.rooms.start);
   const leave = useMutation(api.rooms.leave);
   const [starting, setStarting] = useState(false);
@@ -31,13 +43,23 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const readyCount = room.standings.filter((s) => s.ready).length;
   const map = getMapConfig(room.mapId);
 
+  const teamMode = room.teamMode;
+  const myTeam = me?.team ?? null;
+  const teamCounts = {
+    A: room.standings.filter((s) => s.team === "A").length,
+    B: room.standings.filter((s) => s.team === "B").length,
+  };
+  const bothTeamsFilled = teamCounts.A > 0 && teamCounts.B > 0;
+
   const patch = (mapId: string, settings: RoomState["settings"]) =>
-    updateSettings({ roomId: room._id, mapId, settings }).catch((e) => toast.error(e.message));
+    updateSettings({ roomId: room._id, mapId, settings }).catch((e) =>
+      toast.error(e instanceof Error ? e.message : t("lobby.couldNotUpdate")),
+    );
 
   const copyInvite = async () => {
     const url = `${window.location.origin}/room/${room.code}`;
     await navigator.clipboard.writeText(url).catch(() => {});
-    toast.success("Invite link copied");
+    toast.success(t("lobby.inviteCopied"));
   };
 
   const doStart = async () => {
@@ -45,7 +67,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
     try {
       await start({ roomId: room._id });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not start");
+      toast.error(e instanceof Error ? e.message : t("lobby.couldNotStart"));
       setStarting(false);
     }
   };
@@ -55,18 +77,18 @@ export function RoomLobby({ room }: { room: RoomState }) {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Room code</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("lobby.roomCode")}</p>
             <div className="flex items-center gap-3">
               <span className="font-mono text-3xl font-semibold tracking-[0.2em]">{room.code}</span>
-              <Button size="icon-sm" variant="secondary" onClick={copyInvite} aria-label="Copy invite link">
+              <Button size="icon-sm" variant="secondary" onClick={copyInvite} aria-label={t("lobby.copyInviteAria")}>
                 <Copy className="size-3.5" />
               </Button>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => leave({ roomId: room._id })} asChild>
+          <Button variant="ghost" size="sm" onClick={() => leave({ roomId: room._id }).catch(() => {})} asChild>
             <Link href="/">
               <LogOut className="size-4" />
-              Leave
+              {t("mp.leave")}
             </Link>
           </Button>
         </div>
@@ -76,7 +98,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
           {room.amHost ? (
             <>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-muted-foreground">Map</label>
+                <label className="text-sm font-medium text-muted-foreground">{t("lobby.map")}</label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {OFFICIAL_MAPS.map((m) => (
                     <button
@@ -95,16 +117,15 @@ export function RoomLobby({ room }: { room: RoomState }) {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-muted-foreground">Movement</label>
-                <Segmented
+                <label className="text-sm font-medium text-muted-foreground">{t("setup.rules")}</label>
+                <RulesSelect
                   value={room.settings.movement}
                   onChange={(movement: Movement) => patch(room.mapId, { ...room.settings, movement })}
-                  options={MOVEMENTS.map((m) => ({ value: m.id, label: m.label, hint: m.description }))}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-muted-foreground">Rounds</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t("setup.rounds")}</label>
                   <Segmented
                     size="sm"
                     value={room.settings.rounds}
@@ -113,28 +134,77 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-muted-foreground">Timer</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t("lobby.timer")}</label>
                   <Segmented
                     size="sm"
                     value={room.settings.timeLimitSec}
                     onChange={(timeLimitSec: number) => patch(room.mapId, { ...room.settings, timeLimitSec })}
-                    options={TIME_OPTIONS.map((t) => ({ value: t, label: TIME_LABELS[t] }))}
+                    options={TIME_OPTIONS.map((opt) => ({ value: opt, label: t(TIME_LABEL_KEYS[opt]) }))}
                   />
                 </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-muted-foreground">{t("team.format")}</label>
+                <Segmented
+                  size="sm"
+                  value={teamMode ? "teams" : "ffa"}
+                  onChange={(v: string) =>
+                    setTeamMode({ roomId: room._id, teamMode: v === "teams" }).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : t("team.couldNotChangeFormat")),
+                    )
+                  }
+                  options={[
+                    { value: "ffa", label: t("team.ffa") },
+                    { value: "teams", label: t("team.teams") },
+                  ]}
+                />
               </div>
             </>
           ) : (
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-muted-foreground">Host controls · only the host can change these</p>
+              <p className="text-xs text-muted-foreground">{t("lobby.hostControlsNote")}</p>
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {map.name}</Badge>
                 <Badge variant="muted">{MOVEMENTS.find((m) => m.id === room.settings.movement)?.label}</Badge>
-                <Badge variant="muted">{room.settings.rounds} rounds</Badge>
-                <Badge variant="muted">{TIME_LABELS[room.settings.timeLimitSec] ?? "None"} timer</Badge>
+                <Badge variant="muted">{t("lobby.roundsSuffix", { n: room.settings.rounds })}</Badge>
+                <Badge variant="muted">
+                  {t("lobby.timerSuffix", {
+                    label: t(TIME_LABEL_KEYS[room.settings.timeLimitSec] ?? "setup.timeNone"),
+                  })}
+                </Badge>
+                <Badge variant="muted">{teamMode ? t("team.teams") : t("team.ffa")}</Badge>
               </div>
             </div>
           )}
         </div>
+
+        {teamMode && (
+          <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
+            <p className="text-sm font-medium text-muted-foreground">{t("team.yourTeam")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["A", "B"] as const).map((team) => (
+                <button
+                  key={team}
+                  type="button"
+                  onClick={() =>
+                    setTeam({ roomId: room._id, team }).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : t("team.couldNotSwitch")),
+                    )
+                  }
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors",
+                    myTeam === team
+                      ? "border-primary/50 bg-primary/10 text-primary-muted"
+                      : "border-border hover:bg-elevated",
+                  )}
+                >
+                  {team === "A" ? t("team.teamA") : t("team.teamB")}
+                  <span className="text-xs text-muted-foreground">({teamCounts[team]})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
@@ -144,25 +214,31 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   variant={me?.ready ? "secondary" : "primary"}
                   size="lg"
                   className="flex-1"
-                  onClick={() => setReady({ roomId: room._id, ready: !me?.ready })}
+                  onClick={() => setReady({ roomId: room._id, ready: !me?.ready }).catch(() => {})}
                 >
                   <Check className="size-4" />
-                  {me?.ready ? "Ready" : "I'm ready"}
+                  {me?.ready ? t("mp.ready") : t("lobby.imReady")}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Let the host know you&apos;re set — they can start anytime.</TooltipContent>
+              <TooltipContent>{t("lobby.readyTooltip")}</TooltipContent>
             </Tooltip>
             {room.amHost && (
-              <Button size="lg" className="flex-1" onClick={doStart} disabled={starting || room.standings.length < 1}>
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={doStart}
+                disabled={starting || room.standings.length < 1 || (teamMode && !bothTeamsFilled)}
+              >
                 <Play className="size-4" />
-                Start match
+                {t("lobby.startMatch")}
               </Button>
             )}
           </div>
+          {room.amHost && teamMode && !bothTeamsFilled && (
+            <p className="text-xs text-muted-foreground">{t("team.bothTeamsNeeded")}</p>
+          )}
           {!room.amHost && (
-            <p className="text-xs text-muted-foreground">
-              Waiting for the host to start… Mark yourself ready so they know you&apos;re set.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("lobby.waitingForHostToStart")}</p>
           )}
         </div>
       </div>
@@ -170,13 +246,24 @@ export function RoomLobby({ room }: { room: RoomState }) {
       <aside className="flex flex-col gap-4">
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Players</h3>
-            <span className="text-xs text-muted-foreground">{readyCount}/{room.standings.length} ready</span>
+            <h3 className="text-sm font-semibold">{t("lobby.players")}</h3>
+            <span className="text-xs text-muted-foreground">
+              {t("lobby.readyCount", { ready: readyCount, total: room.standings.length })}
+            </span>
           </div>
-          <Scoreboard standings={room.standings} myUserId={room.myUserId} phase="lobby" />
+          {teamMode ? (
+            <TeamScoreboard
+              standings={room.standings}
+              myUserId={room.myUserId}
+              phase="lobby"
+              teamTotals={room.teamTotals}
+            />
+          ) : (
+            <Scoreboard standings={room.standings} myUserId={room.myUserId} phase="lobby" />
+          )}
         </div>
         <div className="flex h-72 flex-col rounded-2xl border border-border bg-card p-4">
-          <h3 className="mb-2 text-sm font-semibold">Chat</h3>
+          <h3 className="mb-2 text-sm font-semibold">{t("lobby.chat")}</h3>
           <ChatPanel roomId={room._id} myUserId={room.myUserId} className="flex-1" />
         </div>
       </aside>

@@ -7,6 +7,8 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { EnsureUser } from "@/components/auth/ensure-user";
+import { PresencePing } from "@/components/presence-ping";
+import { PreferencesProvider } from "@/components/preferences/preferences-provider";
 import { clerkPublishableKey, convexUrl, features } from "@/lib/env";
 
 // Single Convex client instance for the browser session (only when configured).
@@ -25,20 +27,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
     </TooltipProvider>
   );
 
+  let tree: ReactNode;
   if (features.auth && convexClient) {
-    return (
+    tree = (
       <ClerkProvider publishableKey={clerkPublishableKey}>
         <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
           <EnsureUser />
+          <PresencePing />
           {inner}
         </ConvexProviderWithClerk>
       </ClerkProvider>
     );
+  } else if (clerkPublishableKey) {
+    tree = <ClerkProvider publishableKey={clerkPublishableKey}>{inner}</ClerkProvider>;
+  } else {
+    tree = inner;
   }
 
-  if (clerkPublishableKey) {
-    return <ClerkProvider publishableKey={clerkPublishableKey}>{inner}</ClerkProvider>;
-  }
-
-  return inner;
+  // Preferences (theme/language/map type) wrap everything so every branch — and
+  // the fully key-less solo build — gets the same device-local settings.
+  return <PreferencesProvider>{tree}</PreferencesProvider>;
 }

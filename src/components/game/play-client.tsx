@@ -2,17 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { CalendarDays, ChevronRight } from "lucide-react";
 import { AtlasMark } from "@/components/atlas-mark";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
 import { DEFAULT_SETTINGS, getMapConfig } from "@/lib/maps-config";
 import { loadLastGame, saveLastGame } from "@/lib/last-game";
+import type { SoloMode } from "@/hooks/use-solo-game";
 import type { GameModeId, GameSettings } from "@/lib/types";
 
 interface Config {
   mapId: GameModeId;
   settings: GameSettings;
+  mode: SoloMode;
 }
 
 interface PlayClientProps {
@@ -23,7 +26,7 @@ interface PlayClientProps {
 
 export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps) {
   const [config, setConfig] = useState<Config | null>(
-    quickStart ? { mapId: initialMapId, settings: DEFAULT_SETTINGS } : null,
+    quickStart ? { mapId: initialMapId, settings: DEFAULT_SETTINGS, mode: "classic" } : null,
   );
   // A key that changes each time a game starts, so SoloGame remounts fresh.
   const [gameKey, setGameKey] = useState(0);
@@ -55,7 +58,7 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
     if (!resume || resumed.current) return;
     resumed.current = true;
     const last = loadLastGame();
-    if (last) start({ mapId: last.mapId, settings: last.settings });
+    if (last) start({ mapId: last.mapId, settings: last.settings, mode: "classic" });
   }, [resume, start]);
 
   if (config) {
@@ -64,6 +67,7 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
         key={gameKey}
         mapId={config.mapId}
         settings={config.settings}
+        mode={config.mode}
         onExit={() => setConfig(null)}
       />
     );
@@ -84,6 +88,21 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
             <p className="mt-1 text-sm text-muted-foreground">Set it up, then guess where in the world you are.</p>
           </div>
           <PlaySetup onStart={start} initialMapId={initialMapId} />
+          <Link
+            href="/daily"
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+              <CalendarDays className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Daily Challenge</p>
+              <p className="text-xs text-muted-foreground">
+                Same five places as everyone else. One shot a day.
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
           <div className="mt-8 flex justify-center">
             <MultiplayerEntry />
           </div>

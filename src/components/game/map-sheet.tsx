@@ -6,6 +6,7 @@ import { GuessMap, type HintCircle } from "./guess-map";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import type { LatLng } from "@/lib/types";
 import { clamp } from "@/lib/math";
 
@@ -33,6 +34,7 @@ export function MapSheet({
   hintUsed,
   hintCircle,
 }: MapSheetProps) {
+  const hasKeyboard = useHasKeyboard();
   const [fullscreen, setFullscreen] = useState(false);
   const [size, setSize] = useState(() => {
     const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
@@ -127,7 +129,9 @@ export function MapSheet({
           )}
           <Button className="flex-1" size="md" disabled={!guess || submitting} onClick={onSubmit}>
             {guess ? "Guess" : "Place a pin"}
-            {guess && <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>}
+            {guess && hasKeyboard && (
+              <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>
+            )}
           </Button>
         </div>
       </div>

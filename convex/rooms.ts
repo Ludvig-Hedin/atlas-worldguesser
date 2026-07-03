@@ -28,8 +28,20 @@ const DEFAULT_ROUND_CAP_SEC = 90;
 const GUESS_GRACE_MS = 2500;
 /** A member is considered connected if a heartbeat landed this recently. */
 const CONNECTED_WINDOW_MS = 45_000;
+/** Room capacity + per-team cap (supports up to 4v4). */
+const MAX_MEMBERS = 8;
+const MAX_TEAM = 4;
 
-function assertMultiplayerEnabled() {
+type Team = "A" | "B";
+
+/** Sum of each team's members' scores (0 for unassigned/FFA members). */
+function teamTotalsOf(members: Doc<"roomMembers">[]): { A: number; B: number } {
+  const totals = { A: 0, B: 0 };
+  for (const m of members) if (m.team) totals[m.team] += m.totalScore;
+  return totals;
+}
+
+export function assertMultiplayerEnabled() {
   if (process.env.DISABLE_MULTIPLAYER === "true") {
     throw new Error("Multiplayer is temporarily disabled");
   }
@@ -60,50 +72,67 @@ async function membersOf(ctx: QueryCtx | MutationCtx, roomId: Id<"rooms">) {
 
 // ── Lobby ────────────────────────────────────────────────────────────────
 
+/**
+ * Allocate a room (unique code, hidden answers, host member). Shared by
+ * rooms.create and parties.startRoom so the code-alloc + insert logic lives once.
+ */
+export async function createRoomForUser(
+  ctx: MutationCtx,
+  user: Doc<"users">,
+  mapId: string,
+  rawSettings: Doc<"rooms">["settings"],
+  teamMode?: boolean,
+): Promise<{ roomId: Id<"rooms">; code: string }> {
+  const settings = clampSettings(rawSettings);
+  const now = Date.now();
+
+  let code = randomRoomCode();
+  for (let i = 0; ; i++) {
+    const clash = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).unique();
+    if (!clash) break;
+    // Never insert a duplicate code — `.unique()` readers would throw for both rooms.
+    if (i >= 4) throw new Error("Could not allocate a room code — please try again");
+    code = randomRoomCode();
+  }
+
+  const seed = Math.floor(Math.random() * 0xffffffff);
+  const locations = pickMatchLocations(mapId, settings.rounds, seed);
+
+  const roomId = await ctx.db.insert("rooms", {
+    code,
+    hostId: user._id,
+    status: "lobby",
+    mapId,
+    settings,
+    teamMode: teamMode ?? false,
+    currentRound: 0,
+    locations,
+    createdAt: now,
+  });
+
+  await ctx.db.insert("roomMembers", {
+    roomId,
+    userId: user._id,
+    username: user.username,
+    ready: false,
+    connected: true,
+    totalScore: 0,
+    // In team mode the host seeds team A; others balance in as they join.
+    team: teamMode ? "A" : undefined,
+    joinedAt: now,
+    lastSeenAt: now,
+  });
+
+  return { roomId, code };
+}
+
 export const create = mutation({
-  args: { mapId: v.string(), settings: settingsValidator },
-  handler: async (ctx, { mapId, settings: rawSettings }) => {
+  args: { mapId: v.string(), settings: settingsValidator, teamMode: v.optional(v.boolean()) },
+  handler: async (ctx, { mapId, settings, teamMode }) => {
     assertMultiplayerEnabled();
     const user = await requireUser(ctx);
     await rateLimit(ctx, "roomCreate", user._id);
-    const settings = clampSettings(rawSettings);
-    const now = Date.now();
-
-    let code = randomRoomCode();
-    for (let i = 0; ; i++) {
-      const clash = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).unique();
-      if (!clash) break;
-      // Never insert a duplicate code — `.unique()` readers would throw for both rooms.
-      if (i >= 4) throw new Error("Could not allocate a room code — please try again");
-      code = randomRoomCode();
-    }
-
-    const seed = Math.floor(Math.random() * 0xffffffff);
-    const locations = pickMatchLocations(mapId, settings.rounds, seed);
-
-    const roomId = await ctx.db.insert("rooms", {
-      code,
-      hostId: user._id,
-      status: "lobby",
-      mapId,
-      settings,
-      currentRound: 0,
-      locations,
-      createdAt: now,
-    });
-
-    await ctx.db.insert("roomMembers", {
-      roomId,
-      userId: user._id,
-      username: user.username,
-      ready: false,
-      connected: true,
-      totalScore: 0,
-      joinedAt: now,
-      lastSeenAt: now,
-    });
-
-    return { roomId, code };
+    return await createRoomForUser(ctx, user, mapId, settings, teamMode);
   },
 });
 
@@ -126,6 +155,17 @@ export const join = mutation({
     }
     if (room.status !== "lobby") throw new Error("This match has already started");
 
+    // Capacity only blocks new joiners — reconnects (handled above) always get
+    // back in even at capacity.
+    const members = await membersOf(ctx, room._id);
+    if (members.length >= MAX_MEMBERS) throw new Error("This room is full");
+    let team: Team | undefined;
+    if (room.teamMode) {
+      const a = members.filter((m) => m.team === "A").length;
+      const b = members.filter((m) => m.team === "B").length;
+      team = a <= b ? "A" : "B";
+    }
+
     await ctx.db.insert("roomMembers", {
       roomId: room._id,
       userId: user._id,
@@ -133,6 +173,7 @@ export const join = mutation({
       ready: false,
       connected: true,
       totalScore: 0,
+      team,
       joinedAt: Date.now(),
       lastSeenAt: Date.now(),
     });
@@ -209,6 +250,46 @@ export const updateSettings = mutation({
   },
 });
 
+export const setTeamMode = mutation({
+  args: { roomId: v.id("rooms"), teamMode: v.boolean() },
+  handler: async (ctx, { roomId, teamMode }) => {
+    const user = await requireUser(ctx);
+    const room = await ctx.db.get(roomId);
+    if (!room || room.hostId !== user._id) throw new Error("Only the host can change teams");
+    if (room.status !== "lobby") throw new Error("Match already started");
+    const members = await membersOf(ctx, roomId);
+    if (teamMode) {
+      // Balance existing members into A/B by join order (alternating).
+      members.sort((a, b) => a.joinedAt - b.joinedAt);
+      for (let i = 0; i < members.length; i++) {
+        await ctx.db.patch(members[i]._id, { team: i % 2 === 0 ? "A" : "B" });
+      }
+    } else {
+      // Clear team assignments (patch to undefined unsets the optional field).
+      for (const m of members) await ctx.db.patch(m._id, { team: undefined });
+    }
+    await ctx.db.patch(roomId, { teamMode });
+  },
+});
+
+export const setTeam = mutation({
+  args: { roomId: v.id("rooms"), team: v.union(v.literal("A"), v.literal("B")) },
+  handler: async (ctx, { roomId, team }) => {
+    const user = await requireUser(ctx);
+    const room = await ctx.db.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.status !== "lobby") throw new Error("Match already started");
+    if (!room.teamMode) throw new Error("This match isn't in team mode");
+    const member = await memberOf(ctx, roomId, user._id);
+    if (!member) throw new Error("Not in this room");
+    if (member.team === team) return;
+    const members = await membersOf(ctx, roomId);
+    const onTeam = members.filter((m) => m.team === team && m.userId !== user._id).length;
+    if (onTeam >= MAX_TEAM) throw new Error(`Team ${team} is full`);
+    await ctx.db.patch(member._id, { team, lastSeenAt: Date.now() });
+  },
+});
+
 // ── Match flow ───────────────────────────────────────────────────────────
 
 async function startRound(ctx: MutationCtx, roomId: Id<"rooms">, round: number) {
@@ -241,6 +322,11 @@ export const start = mutation({
     if (!room || room.hostId !== user._id) throw new Error("Only the host can start");
     if (room.status !== "lobby") throw new Error("Already started");
     const members = await membersOf(ctx, roomId);
+    if (room.teamMode) {
+      const hasA = members.some((m) => m.team === "A");
+      const hasB = members.some((m) => m.team === "B");
+      if (!hasA || !hasB) throw new Error("Both teams need at least one player to start");
+    }
     for (const m of members) await ctx.db.patch(m._id, { totalScore: 0 });
     await startRound(ctx, roomId, 1);
   },
@@ -361,14 +447,31 @@ export const advance = internalMutation({
 
 async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
   const members = await membersOf(ctx, room._id);
-  const maxScore = members.reduce((m, x) => Math.max(m, x.totalScore), 0);
-  // maxScore > 0: in an all-AFK match everyone ends at 0 === 0, which would
-  // mark every player a "winner" and inflate win streaks from idle matches.
-  const competitive = members.length > 1 && maxScore > 0;
   const now = Date.now();
 
+  // Winner determination differs by mode. Teams: highest team total (sum of
+  // members); every member of the winning team wins. FFA: highest individual.
+  // Both guard against all-zero / non-competitive matches so idle games don't
+  // inflate win streaks.
+  let wonFor: (m: Doc<"roomMembers">) => boolean;
+  if (room.teamMode) {
+    const totals = teamTotalsOf(members);
+    const winningTeam: Team | null = totals.A === totals.B ? null : totals.A > totals.B ? "A" : "B";
+    // Require BOTH teams still present so a walkover (the opposing team all
+    // left) can't hand a phantom win + inflated streak — mirrors the FFA
+    // members>1 guard.
+    const hasA = members.some((m) => m.team === "A");
+    const hasB = members.some((m) => m.team === "B");
+    const competitive = winningTeam !== null && hasA && hasB;
+    wonFor = (m) => competitive && m.team === winningTeam;
+  } else {
+    const maxScore = members.reduce((m, x) => Math.max(m, x.totalScore), 0);
+    const competitive = members.length > 1 && maxScore > 0;
+    wonFor = (m) => competitive && m.totalScore === maxScore;
+  }
+
   for (const member of members) {
-    const won = competitive && member.totalScore === maxScore;
+    const won = wonFor(member);
 
     const results: RoundResult[] = [];
     for (let r = 1; r <= room.settings.rounds; r++) {
@@ -401,12 +504,22 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
         stats: { ...user.stats, xp: user.xp },
         streaks: user.streaks,
         ownedAchievements: owned.map((a) => a.achievementId),
+        unlockedBuildings: user.unlockedBuildings ?? [],
         results,
         now,
         wonOverride: won,
       });
       const { xp, ...statsNoXp } = out.stats;
-      await ctx.db.patch(user._id, { xp, stats: statsNoXp, streaks: out.streaks, lastActiveAt: now });
+      const unlockedBuildings = out.newBuildings.length
+        ? [...new Set([...(user.unlockedBuildings ?? []), ...out.newBuildings])]
+        : undefined;
+      await ctx.db.patch(user._id, {
+        xp,
+        stats: statsNoXp,
+        streaks: out.streaks,
+        lastActiveAt: now,
+        ...(unlockedBuildings ? { unlockedBuildings } : {}),
+      });
       for (const id of out.newAchievements) {
         await ctx.db.insert("achievements", { userId: user._id, achievementId: id, unlockedAt: now });
       }
@@ -501,17 +614,28 @@ export const getByCode = query({
     // re-sort live) before the reveal. If unintended, report round-start
     // totals while status === "active" by subtracting this round's guesses.
     const now = Date.now();
-    const standings = members
-      .map((m) => ({
-        userId: m.userId,
-        username: m.username,
-        totalScore: m.totalScore,
-        ready: m.ready,
-        connected: now - m.lastSeenAt < CONNECTED_WINDOW_MS,
-        isHost: m.userId === room.hostId,
-        hasGuessed: guessByUser.has(m.userId),
-      }))
-      .sort((a, b) => b.totalScore - a.totalScore);
+    // Live-joined (not denormalized onto roomMembers) so avatar/color changes
+    // mid-room show immediately, matching "free to change anytime".
+    const standings = (
+      await Promise.all(
+        members.map(async (m) => {
+          const u = await ctx.db.get(m.userId);
+          return {
+            userId: m.userId,
+            username: m.username,
+            avatarUrl: u?.avatarUrl,
+            avatarBuildingId: u?.avatarBuildingId,
+            avatarColor: u?.avatarColor,
+            totalScore: m.totalScore,
+            ready: m.ready,
+            connected: now - m.lastSeenAt < CONNECTED_WINDOW_MS,
+            isHost: m.userId === room.hostId,
+            hasGuessed: guessByUser.has(m.userId),
+            team: m.team ?? null,
+          };
+        }),
+      )
+    ).sort((a, b) => b.totalScore - a.totalScore);
 
     const revealing = room.status === "roundResult" || room.status === "finished";
     const actual = round > 0 ? room.locations[round - 1] : null;
@@ -529,6 +653,8 @@ export const getByCode = query({
       amHost: me ? room.hostId === me._id : false,
       amMember: me ? members.some((m) => m.userId === me._id) : false,
       myUserId: me?._id ?? null,
+      teamMode: room.teamMode ?? false,
+      teamTotals: teamTotalsOf(members),
       standings,
     };
 

@@ -3,6 +3,7 @@ import {
   newlyUnlocked,
   type AchievementContext,
 } from "./achievements";
+import { newlyUnlockedBuildings } from "./buildings";
 import { maxMatchScore } from "./scoring";
 import { levelForXp, xpForGame } from "./xp";
 import type { PlayerStats, RoundResult } from "./types";
@@ -39,6 +40,8 @@ export interface ProgressionInput {
   stats: PlayerStats;
   streaks: StreakState;
   ownedAchievements: string[];
+  /** Country codes with a building avatar already unlocked. */
+  unlockedBuildings: string[];
   results: RoundResult[];
   now: number;
   /** Override the "won" determination (e.g. multiplayer placement). */
@@ -49,6 +52,8 @@ export interface ProgressionOutput {
   stats: PlayerStats;
   streaks: StreakState;
   newAchievements: string[];
+  /** Country codes with a building newly unlocked by this game. */
+  newBuildings: string[];
   xpGained: number;
   leveledUp: boolean;
   won: boolean;
@@ -116,11 +121,13 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
     lastGame: { results, totalScore, perfectRounds, won },
   };
   const newAchievements = newlyUnlocked(ctx, ownedAchievements);
+  const newBuildings = newlyUnlockedBuildings(results, input.unlockedBuildings);
 
   return {
     stats,
     streaks,
     newAchievements,
+    newBuildings,
     xpGained,
     leveledUp,
     won,

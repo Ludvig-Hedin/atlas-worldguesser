@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-// One calm rotation roughly every two minutes.
-const RADIANS_PER_SECOND = (Math.PI * 2) / 130;
+// One rotation roughly every 50s on desktop. Mobile spins faster (see multiplier).
+const RADIANS_PER_SECOND = (Math.PI * 2) / 50;
+// Phones get a livelier spin — the globe is smaller there, so faster reads well.
+const MOBILE_SPEED_MULTIPLIER = 1.7; // → ~30s per rotation on small viewports
 const INITIAL_CENTER_LON = (-30 * Math.PI) / 180;
 const SCALE = 0.44; // globe radius as fraction of min(viewport w, h) — whole Earth, uncropped
 const CY = 0.5; // vertical center as fraction of height
@@ -28,6 +30,8 @@ export function GlobeBackground({ className }: { className?: string }) {
 
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let paused = media.matches;
+    const mobileMedia = window.matchMedia("(max-width: 640px)");
+    let speedMultiplier = mobileMedia.matches ? MOBILE_SPEED_MULTIPLIER : 1;
     let rotation = 0;
     let lastTime = performance.now();
     let width = 0;
@@ -99,7 +103,7 @@ export function GlobeBackground({ className }: { className?: string }) {
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
       if (!paused && !document.hidden) {
-        rotation += RADIANS_PER_SECOND * dt;
+        rotation += RADIANS_PER_SECOND * speedMultiplier * dt;
         draw();
       }
       raf = requestAnimationFrame(frame);
@@ -108,11 +112,15 @@ export function GlobeBackground({ className }: { className?: string }) {
     const onMotion = (e: MediaQueryListEvent) => {
       paused = e.matches;
     };
+    const onViewport = (e: MediaQueryListEvent) => {
+      speedMultiplier = e.matches ? MOBILE_SPEED_MULTIPLIER : 1;
+    };
     const onVisible = () => {
       lastTime = performance.now();
     };
 
     media.addEventListener("change", onMotion);
+    mobileMedia.addEventListener("change", onViewport);
     document.addEventListener("visibilitychange", onVisible);
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
@@ -136,6 +144,7 @@ export function GlobeBackground({ className }: { className?: string }) {
       cancelAnimationFrame(raf);
       ro.disconnect();
       media.removeEventListener("change", onMotion);
+      mobileMedia.removeEventListener("change", onViewport);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);

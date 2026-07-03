@@ -4,6 +4,13 @@ import "./globals.css";
 import { AppProviders } from "@/components/providers";
 import { StructuredData } from "@/components/structured-data";
 import { SITE_KEYWORDS, SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/lib/seo";
+import { convexUrl } from "@/lib/env";
+
+// Warm up the connections to third-party origins the game needs moments after
+// first paint (Street View panoramas, the Convex realtime socket) so their
+// DNS+TLS handshake isn't on the critical path when a round actually loads —
+// most noticeable on slow/high-latency connections.
+const CONVEX_ORIGIN = convexUrl ? new URL(convexUrl).origin : null;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,10 +73,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0b0c",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
+
+/**
+ * Sets the theme class on <html> before first paint so there is no light/dark
+ * flash. Reads the same localStorage key the PreferencesProvider owns; falls
+ * back to the OS preference for "system" and to dark on any error.
+ */
+const NO_FLASH_THEME_SCRIPT = `(function(){try{var s=localStorage.getItem('atlas:prefs:v1');var t=s?JSON.parse(s).theme:null;if(t!=='light'&&t!=='dark'&&t!=='system')t='system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';}catch(e){var el=document.documentElement;el.classList.add('dark');el.style.colorScheme='dark';}})();`;
 
 export default function RootLayout({
   children,
@@ -82,7 +99,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://maps.googleapis.com" />
+        <link rel="preconnect" href="https://maps.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+        {CONVEX_ORIGIN && <link rel="preconnect" href={CONVEX_ORIGIN} />}
+      </head>
       <body className="min-h-full">
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
         <StructuredData />
         <AppProviders>{children}</AppProviders>
       </body>

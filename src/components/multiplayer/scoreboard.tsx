@@ -3,6 +3,7 @@
 import { Check, Crown, Loader2, WifiOff } from "lucide-react";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useT } from "@/hooks/use-t";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Id } from "@convex/_generated/dataModel";
@@ -10,11 +11,16 @@ import type { Id } from "@convex/_generated/dataModel";
 export interface Standing {
   userId: Id<"users">;
   username: string;
+  avatarUrl?: string;
+  avatarBuildingId?: string;
+  avatarColor?: string;
   totalScore: number;
   isHost: boolean;
   connected: boolean;
   ready: boolean;
   hasGuessed: boolean;
+  /** Team assignment in team mode (null/absent = FFA/unassigned). */
+  team?: "A" | "B" | null;
 }
 
 interface ScoreboardProps {
@@ -25,6 +31,7 @@ interface ScoreboardProps {
 }
 
 export function Scoreboard({ standings, myUserId, phase, className }: ScoreboardProps) {
+  const t = useT();
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       {standings.map((s, i) => {
@@ -42,7 +49,13 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
                 {i + 1}
               </span>
             )}
-            <IdentityAvatar name={s.username} className="size-7" />
+            <IdentityAvatar
+              name={s.username}
+              src={s.avatarUrl}
+              buildingId={s.avatarBuildingId}
+              color={s.avatarColor}
+              className="size-7"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span
@@ -58,7 +71,7 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
                         <Crown className="size-3.5 text-gold" />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>Host</TooltipContent>
+                    <TooltipContent>{t("mp.host")}</TooltipContent>
                   </Tooltip>
                 )}
                 {!s.connected && (
@@ -68,7 +81,7 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
                         <WifiOff className="size-3.5 text-muted-foreground" />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>Disconnected</TooltipContent>
+                    <TooltipContent>{t("mp.disconnected")}</TooltipContent>
                   </Tooltip>
                 )}
               </div>
@@ -76,10 +89,10 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
             {phase === "lobby" ? (
               s.ready ? (
                 <span className="flex items-center gap-1 text-xs font-medium text-primary-muted">
-                  <Check className="size-3.5" /> Ready
+                  <Check className="size-3.5" /> {t("mp.ready")}
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">Not ready</span>
+                <span className="text-xs text-muted-foreground">{t("mp.notReady")}</span>
               )
             ) : (
               <div className="flex items-center gap-2">

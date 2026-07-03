@@ -15,23 +15,37 @@ import { SoloCloudSync } from "./solo-cloud-sync";
 import type { HintCircle } from "./guess-map";
 import { features } from "@/lib/env";
 import { pickLocations, sampleLocations } from "@/lib/locations";
-import { useSoloGame } from "@/hooks/use-solo-game";
+import { useSoloGame, type SoloGame as SoloGameState, type SoloMode } from "@/hooks/use-solo-game";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useLocalProfile } from "@/hooks/use-local-profile";
 import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
 import type { ApplyResult } from "@/lib/local-profile";
-import type { GameLocation, GameSettings } from "@/lib/types";
+import type { GameLocation, GameSettings, RoundResult } from "@/lib/types";
 
 interface SoloGameProps {
   mapId: string;
   settings: GameSettings;
   onExit: () => void;
   customLocations?: GameLocation[];
+  /** "classic" (fixed rounds) or "survival" (endless country streak). */
+  mode?: SoloMode;
+  /** Mirror the finished game to the global cloud profile. Default true. */
+  cloudSync?: boolean;
+  /** Fired once when the game finishes (e.g. daily-challenge submit). */
+  onComplete?: (results: RoundResult[], game: SoloGameState) => void;
 }
 
-export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameProps) {
-  const engine = useSoloGame({ mapId, settings, customLocations });
+export function SoloGame({
+  mapId,
+  settings,
+  onExit,
+  customLocations,
+  mode = "classic",
+  cloudSync = true,
+  onComplete,
+}: SoloGameProps) {
+  const engine = useSoloGame({ mapId, settings, customLocations, mode });
   const {
     game,
     guess,
@@ -43,6 +57,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
     currentLocation,
     currentResult,
     totalScore,
+    survivalStreak,
     submitting,
   } = engine;
   const { record } = useLocalProfile();
@@ -154,13 +169,14 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
     }
   });
 
-  // Record the finished game exactly once.
+  // Record the finished game exactly once (local profile + optional onComplete).
   useEffect(() => {
     if (game.phase === "finished" && recordedRef.current !== game.id) {
       recordedRef.current = game.id;
       setApplied(record({ id: game.id, mapId: game.mapId, results: game.results }));
+      onComplete?.(game.results, game);
     }
-  }, [game.phase, game.id, game.mapId, game.results, record]);
+  }, [game, record, onComplete]);
 
   const handlePlayAgain = useCallback(() => {
     setApplied(null);
@@ -205,7 +221,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
   if (game.phase === "finished" && applied) {
     return (
       <>
-        {features.convex && <SoloCloudSync game={game} />}
+        {features.convex && cloudSync && game.mode !== "survival" && <SoloCloudSync game={game} />}
         <MatchResults game={game} applied={applied} onPlayAgain={handlePlayAgain} onNewGame={onExit} />
       </>
     );
@@ -245,6 +261,7 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
         totalScore={totalScore}
         timeRemaining={deadline ? Math.ceil(remaining) : null}
         movementLabel={movementLabel}
+        survivalStreak={game.mode === "survival" ? survivalStreak : null}
       />
 
       {/* TODO(bug-hunt): MapSheet is unmounted during the reveal, so the user's
@@ -270,7 +287,11 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
             key={currentResult.round}
             result={currentResult}
             map={mapConfig}
-            isLastRound={game.round >= settings.rounds}
+            isLastRound={
+              game.mode === "survival"
+                ? !currentResult.countryCorrect
+                : game.round >= settings.rounds
+            }
             onNext={next}
           />
         )}

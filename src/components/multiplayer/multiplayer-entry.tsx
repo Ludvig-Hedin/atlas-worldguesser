@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Authenticated, Unauthenticated, useMutation } from "convex/react";
 import { SignInButton } from "@clerk/nextjs";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowRight, Users } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/hooks/use-t";
 import { DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
 
@@ -22,20 +24,17 @@ function normalizeRoomInput(raw: string): string {
 }
 
 export function MultiplayerEntry() {
+  const t = useT();
   if (!features.multiplayer) return null;
   return (
-    <div className="w-full max-w-md rounded-2xl border border-border bg-card/60 p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Users className="size-4 text-primary-muted" />
-        <h3 className="text-sm font-semibold">Play with friends</h3>
-      </div>
+    <div className="w-full">
       <Authenticated>
         <MultiplayerControls />
       </Authenticated>
       <Unauthenticated>
         <SignInButton mode="modal">
           <Button className="w-full" variant="secondary">
-            Sign in for multiplayer
+            {t("mp.signInForMultiplayer")}
           </Button>
         </SignInButton>
       </Unauthenticated>
@@ -44,6 +43,7 @@ export function MultiplayerEntry() {
 }
 
 function MultiplayerControls() {
+  const t = useT();
   const router = useRouter();
   const create = useMutation(api.rooms.create);
   const [code, setCode] = useState("");
@@ -89,6 +89,12 @@ function MultiplayerControls() {
           Join
         </Button>
       </form>
+      <Button variant="ghost" size="sm" asChild className="mt-1">
+        <Link href="/party">
+          <Users className="size-4" />
+          Play with a party
+        </Link>
+      </Button>
     </div>
   );
 }

@@ -31,6 +31,7 @@ describe("foldGame", () => {
       stats: { ...EMPTY_STATS },
       streaks: { ...EMPTY_STREAKS },
       ownedAchievements: [],
+      unlockedBuildings: [],
       results: [perfect, missed],
       now: NOW,
     });
@@ -49,6 +50,7 @@ describe("foldGame", () => {
       stats: { ...EMPTY_STATS },
       streaks: { ...EMPTY_STREAKS },
       ownedAchievements: [],
+      unlockedBuildings: [],
       results: [perfect, missed],
       now: NOW,
     });
@@ -57,11 +59,36 @@ describe("foldGame", () => {
     expect(out.newAchievements).toContain("local_expert");
   });
 
+  it("unlocks a curated building on a correct country guess", () => {
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect, missed],
+      now: NOW,
+    });
+    expect(out.newBuildings).toEqual(["FR"]);
+  });
+
+  it("does not re-unlock an already-owned building", () => {
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS },
+      ownedAchievements: [],
+      unlockedBuildings: ["FR"],
+      results: [perfect, missed],
+      now: NOW,
+    });
+    expect(out.newBuildings).toEqual([]);
+  });
+
   it("resets the country streak on a wrong round", () => {
     const out = foldGame({
       stats: { ...EMPTY_STATS },
       streaks: { ...EMPTY_STREAKS, country: 3 },
       ownedAchievements: [],
+      unlockedBuildings: [],
       results: [perfect, missed],
       now: NOW,
     });
@@ -76,6 +103,7 @@ describe("foldGame", () => {
       stats: { ...EMPTY_STATS },
       streaks: { ...EMPTY_STREAKS, country: 3, bestCountry: 3 },
       ownedAchievements: [],
+      unlockedBuildings: [],
       results: [perfect, missed],
       now: NOW,
     });
@@ -88,6 +116,7 @@ describe("foldGame", () => {
       stats: { ...EMPTY_STATS },
       streaks: { ...EMPTY_STREAKS },
       ownedAchievements: [],
+      unlockedBuildings: [],
       results: [missed],
       now: NOW,
       wonOverride: true,
