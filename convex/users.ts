@@ -3,7 +3,7 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/s
 import type { Doc } from "./_generated/dataModel";
 import { settingsValidator } from "./schema";
 import { rateLimit } from "./rateLimit";
-import { ANTIPODE_METERS, clampSettings } from "./gameLogic";
+import { ANTIPODE_METERS, clampSettings, computeGuessScore } from "./gameLogic";
 import { foldGame } from "../src/lib/progression";
 import { levelForXp } from "../src/lib/xp";
 import { ACHIEVEMENTS } from "../src/lib/achievements";
@@ -241,7 +241,9 @@ export const recordSoloResult = mutation({
         r.distanceMeters > ANTIPODE_METERS * 1.01 ||
         !Number.isFinite(r.score) ||
         r.score < 0 ||
-        r.score > 5000
+        r.score > 5000 ||
+        // "" is legal (custom-map locations without a resolved country).
+        !/^([A-Za-z]{2})?$/.test(r.actual.countryCode)
       ) {
         throw new Error("Invalid game");
       }
@@ -255,16 +257,32 @@ export const recordSoloResult = mutation({
       .collect();
     const ownedIds = owned.map((a) => a.achievementId);
 
-    const results: RoundResult[] = args.results.map((r) => ({
-      round: r.round,
-      actual: { lat: r.actual.lat, lng: r.actual.lng, countryCode: r.actual.countryCode },
-      guess: r.guess,
-      distanceMeters: r.distanceMeters,
-      score: Math.round(r.score),
-      timeMs: 0,
-      guessCountryCode: r.guessCountryCode,
-      countryCorrect: r.countryCorrect,
-    }));
+    // Recompute distance + score server-side from guess/actual instead of
+    // trusting the client's numbers (XP + the global leaderboard hang off
+    // these). A modified client can still fabricate `actual` — solo is
+    // client-authoritative by design — but score-stuffing on real rounds dies.
+    const results: RoundResult[] = args.results.map((r) => {
+      const { distanceMeters, score } = computeGuessScore(r.guess, r.actual, args.mapId);
+      // Only a plausible ISO alpha-2 code is stored / counted for the bonus.
+      const guessCC =
+        r.guessCountryCode && /^[A-Za-z]{2}$/.test(r.guessCountryCode)
+          ? r.guessCountryCode.toUpperCase()
+          : null;
+      return {
+        round: r.round,
+        actual: {
+          lat: r.actual.lat,
+          lng: r.actual.lng,
+          countryCode: r.actual.countryCode.toUpperCase(),
+        },
+        guess: r.guess,
+        distanceMeters,
+        score,
+        timeMs: 0,
+        guessCountryCode: guessCC,
+        countryCorrect: !!guessCC && guessCC === r.actual.countryCode.toUpperCase(),
+      };
+    });
 
     const out = foldGame({
       stats: { ...user.stats, xp: user.xp },
@@ -295,7 +313,16 @@ export const recordSoloResult = mutation({
       avgDistanceMeters: out.avgDistanceMeters,
       perfectRounds: out.perfectRounds,
       won: out.won,
-      replay: args.results,
+      // Store the server-recomputed rounds, not the client's claimed numbers.
+      replay: results.map((r) => ({
+        round: r.round,
+        actual: r.actual,
+        guess: r.guess,
+        distanceMeters: r.distanceMeters,
+        score: r.score,
+        guessCountryCode: r.guessCountryCode,
+        countryCorrect: r.countryCorrect,
+      })),
       createdAt: now,
     });
 
@@ -333,7 +360,7 @@ export const importGuestProfile = mutation({
       gamesPlayed: clampInt(args.stats.gamesPlayed, 1_000_000),
       roundsPlayed: clampInt(args.stats.roundsPlayed, 10_000_000),
       wins: clampInt(args.stats.wins, 1_000_000),
-      bestScore: clampInt(args.stats.bestScore, 50_000),
+      bestScore: clampInt(args.stats.bestScore, 100_000), // 20-round max = 20 × 5000
       totalDistanceMeters: clampInt(args.stats.totalDistanceMeters, Number.MAX_SAFE_INTEGER),
       countryCorrect: clampInt(args.stats.countryCorrect, 10_000_000),
       countryTotal: clampInt(args.stats.countryTotal, 10_000_000),

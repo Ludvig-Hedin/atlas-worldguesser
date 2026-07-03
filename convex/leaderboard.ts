@@ -21,9 +21,17 @@ function row(u: Doc<"users">, rank: number) {
 export const top = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit }) => {
-    const n = Math.min(limit ?? 50, 100);
+    // Clamp both ends — a client-sent negative/NaN limit would make .take() throw.
+    const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
     const users = await ctx.db.query("users").withIndex("by_xp").order("desc").take(n);
-    return users.map((u, i) => row(u, i + 1));
+    // Competition ranking (ties share a rank) so this list agrees with
+    // myRank's "(# strictly higher) + 1" for tied XP values.
+    const rows: ReturnType<typeof row>[] = [];
+    for (let i = 0; i < users.length; i++) {
+      const rank = i > 0 && users[i].xp === users[i - 1].xp ? rows[i - 1].rank : i + 1;
+      rows.push(row(users[i], rank));
+    }
+    return rows;
   },
 });
 
@@ -37,10 +45,16 @@ export const myRank = query({
   handler: async (ctx) => {
     const me = await currentUser(ctx);
     if (!me) return null;
+    // Bounded read: `.collect()` would materialize every higher-XP user and
+    // can blow Convex's per-query read limits for low-ranked players. Past
+    // the cap the rank is reported as RANK_CAP + 1 ("you're way down there").
+    // TODO(bug-hunt): switch to a maintained count (@convex-dev/aggregate)
+    // if the user base outgrows this.
+    const RANK_CAP = 5000;
     const higher = await ctx.db
       .query("users")
       .withIndex("by_xp", (q) => q.gt("xp", me.xp))
-      .collect();
+      .take(RANK_CAP);
     return row(me, higher.length + 1);
   },
 });

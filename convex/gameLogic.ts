@@ -68,9 +68,11 @@ export function pickMatchLocations(mapId: string, rounds: number, seed: number):
     chosen.push(p[Math.floor(rng() * p.length)]);
   }
   // Hometown easter egg — small chance any round drops in Åkers Styckebruk, SE.
+  // World map only: a Sweden drop inside Europe/USA maps breaks their region
+  // contract (matches the solo engine's behavior).
   const AKERS = { lat: 59.217, lng: 17.006, cc: "SE" };
   return chosen.map((s) =>
-    rng() < 0.03
+    mapId === "world" && rng() < 0.03
       ? { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc }
       : { lat: s.lat, lng: s.lng, countryCode: s.cc },
   );

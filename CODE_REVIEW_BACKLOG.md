@@ -53,10 +53,19 @@
 - `src/app/layout.tsx` + `src/app/page.tsx` — root-layout `canonical: "/"` was inherited by every noindex page (profile/rooms/replays canonicalizing to the homepage): moved to the homepage's own metadata
 - `src/app/profile/[username]/page.tsx` — title used the percent-encoded username (`j%C3%B6rgen`); decode also made crash-safe for malformed encodings
 
-### Needs human review (6 issues — TODOs in code)
+### Fixed after independent review (claude-review, 2 rounds — 8 more issues)
 
-- `convex/chat.ts:33` — `chat.list` has no auth/membership check; anyone resolving a room code can read a private room's chat (spectating may or may not be intended)
-  - Suggested fix: mirror `send` — `requireUser` + `assertMember` (needs `QueryCtx` support)
+- `convex/chat.ts` — `chat.list` was world-readable for anyone resolving a room code: now members-only (returns `[]` for non-members/unauthenticated so the panel degrades gracefully during auth settling)
+- `convex/rooms.ts` (`finishMatch`) — an all-AFK match ended with everyone at 0 === maxScore 0, marking every player a "winner" and inflating win streaks: competitive now requires `maxScore > 0`
+- `convex/users.ts` (`recordSoloResult`) — scores/distances recomputed server-side via `computeGuessScore` instead of trusting client numbers (closes score-stuffing; `actual` remains client-supplied — solo is client-authoritative by design, see note below); `guessCountryCode` sanitized to ISO alpha-2; `countryCorrect` recomputed; replay stores the recomputed rounds
+- `convex/users.ts` (`importGuestProfile`) — `bestScore` clamp raised 50k → 100k (a 20-round game can legitimately reach 100,000)
+- `convex/gameLogic.ts` (`pickMatchLocations`) — same Åkers easter-egg scoping as solo: world map only (Europe/USA multiplayer maps could drop a round in Sweden)
+- `convex/leaderboard.ts` — `top({ limit: -1 })` made `.take()` throw (lower bound + floor added); `myRank`'s unbounded `.collect()` capped at 5,000 (TODO: aggregate component at scale); `top` now uses competition ranking so tied-XP ranks agree with `myRank`
+- `src/components/maps/map-creator.tsx` — effect cleanup read `markersRef.current` (react-hooks warning): Map instance captured in the effect body
+
+### Needs human review (5 issues — TODOs in code)
+
+- `convex/users.ts` (`recordSoloResult`) — solo games are client-authoritative: a modified client can still fabricate `actual` locations to farm XP. A real fix (server-issued location seeds like multiplayer) is architectural.
 - `convex/rooms.ts` (`getByCode`) — mid-round score leak: `totalScore` updates the instant a player guesses, so opponents see your round score before the reveal
   - Suggested fix: report round-start totals during `status === "active"`
 - `convex/users.ts` (`setUsername`) — renaming leaves denormalized `maps.ownerName` and `roomMembers.username` stale

@@ -112,9 +112,12 @@ function Creator() {
       setPoints(next);
     });
     mapRef.current = map;
+    // The Map instance in the ref is never reassigned, so capturing it here
+    // is safe and keeps the cleanup off ref.current (react-hooks rule).
+    const markers = markersRef.current;
     return () => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current.clear();
+      markers.forEach((m) => m.remove());
+      markers.clear();
       map.remove();
     };
   }, []);
