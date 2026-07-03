@@ -13,7 +13,7 @@ import { MapGlyph } from "@/components/map-glyph";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/format";
-import { getMapConfig } from "@/lib/maps-config";
+import { getMapConfig, mapNameKey } from "@/lib/maps-config";
 import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export function RoomResults({ room }: { room: RoomState }) {
         className="flex flex-col items-center gap-2 text-center"
       >
         <Badge variant="muted" className="gap-1.5">
-          <MapGlyph mapId={room.mapId} className="size-3" /> {map.name} · {t("mp.finalResults")}
+          <MapGlyph mapId={room.mapId} className="size-3" /> {t(mapNameKey(map.id))} · {t("mp.finalResults")}
         </Badge>
         {teamMode ? (
           competitive && teamWinner ? (

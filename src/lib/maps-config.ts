@@ -1,4 +1,5 @@
 import type { GameModeId, GameSettings, Movement } from "./types";
+import type { TKey } from "@/lib/i18n";
 
 /** Official map metadata: scoring scale, region filter, and default map view. */
 export interface MapConfig {
@@ -116,7 +117,7 @@ export const MAPS: Record<GameModeId, MapConfig> = {
   southeastasia: {
     id: "southeastasia",
     slug: "southeastasia",
-    name: "SE Asia",
+    name: "Southeast Asia",
     tagline: "Mekong to the islands",
     scaleKm: 900,
     countryCodes: SOUTHEAST_ASIA_CODES,
@@ -206,6 +207,31 @@ export function getMapConfig(id: string): MapConfig {
   // Object.hasOwn so prototype members ("constructor", "toString", …) can't
   // masquerade as a map config and leak NaN into scoring via scaleKm.
   return Object.hasOwn(MAPS, id) ? (MAPS as Record<string, MapConfig>)[id] : MAPS.world;
+}
+
+/** Translation key for a map's display name — mirrors `MapConfig.name`, kept in sync in every locale file. */
+export function mapNameKey(id: GameModeId): TKey {
+  return `map.${id}.name` as TKey;
+}
+
+/** Translation key for a map's tagline — mirrors `MapConfig.tagline`, kept in sync in every locale file. */
+export function mapTaglineKey(id: GameModeId): TKey {
+  return `map.${id}.tagline` as TKey;
+}
+
+/** Translation key for a movement preset's short tag — mirrors `MOVEMENTS[].label`. */
+export function movementLabelKey(id: Movement): TKey {
+  return `movement.${id}.label` as TKey;
+}
+
+/** Translation key for a movement preset's plain-language name — mirrors `MOVEMENTS[].title`. */
+export function movementTitleKey(id: Movement): TKey {
+  return `movement.${id}.title` as TKey;
+}
+
+/** Translation key for a movement capability's label — mirrors `MOVEMENT_CAPS[].label`. */
+export function movementCapLabelKey(key: "move" | "pan" | "zoom"): TKey {
+  return `movementCap.${key}` as TKey;
 }
 
 export function scaleMetersForMap(id: string): number {

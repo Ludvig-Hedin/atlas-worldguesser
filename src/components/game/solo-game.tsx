@@ -19,7 +19,8 @@ import { useSoloGame, type SoloGame as SoloGameState, type SoloMode } from "@/ho
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useLocalProfile } from "@/hooks/use-local-profile";
-import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
+import { useT } from "@/hooks/use-t";
+import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import type { ApplyResult } from "@/lib/local-profile";
 import type { GameLocation, GameSettings, RoundResult } from "@/lib/types";
 
@@ -45,6 +46,7 @@ export function SoloGame({
   cloudSync = true,
   onComplete,
 }: SoloGameProps) {
+  const t = useT();
   const engine = useSoloGame({ mapId, settings, customLocations, mode });
   const {
     game,
@@ -104,10 +106,10 @@ export function SoloGame({
       lng: ((currentLocation.lng + dLng + 540) % 360) - 180,
     };
     setHintCircle({ center, radiusMeters });
-    toast(`Search area shown on the map · ${continentOf(currentLocation.lat, currentLocation.lng)}`, {
+    toast(t("mp.hintToast", { continent: continentOf(currentLocation.lat, currentLocation.lng) }), {
       icon: <Lightbulb className="size-4 text-primary-muted" />,
     });
-  }, [hintCircle, mapId, currentLocation]);
+  }, [hintCircle, mapId, currentLocation, t]);
 
   // No Google coverage → swap in another location instead of showing the demo.
   const handleNoCoverage = useCallback(
@@ -155,7 +157,7 @@ export function SoloGame({
   useEffect(() => setMounted(true), []);
 
   const mapConfig = getMapConfig(mapId);
-  const movementLabel = MOVEMENTS.find((m) => m.id === settings.movement)?.label ?? "Moving";
+  const movementLabel = t(movementLabelKey(settings.movement));
 
   // Server-authoritative-style timer for solo: auto-submit when time runs out.
   const deadline =
@@ -164,7 +166,7 @@ export function SoloGame({
       : null;
   const remaining = useCountdown(deadline, () => {
     if (game.phase === "guessing" && !submitting) {
-      toast("Time's up — locking in your guess.");
+      toast(t("game.timeUp"));
       void submit();
     }
   });
@@ -212,7 +214,7 @@ export function SoloGame({
       <div className="flex h-[100dvh] w-full items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-3 text-white/60">
           <AtlasMark className="size-6 animate-pulse text-primary-muted" />
-          <p className="text-sm">Dropping you somewhere…</p>
+          <p className="text-sm">{t("game.droppingSomewhere")}</p>
         </div>
       </div>
     );
@@ -247,7 +249,7 @@ export function SoloGame({
           >
             <div className="flex flex-col items-center gap-3 text-white/60">
               <AtlasMark className="size-6 animate-pulse text-primary-muted" />
-              <p className="text-sm">Finding a spot with Street View…</p>
+              <p className="text-sm">{t("game.findingSpot")}</p>
             </div>
           </motion.div>
         )}
@@ -256,7 +258,7 @@ export function SoloGame({
       <GameHUD
         round={game.round}
         totalRounds={settings.rounds}
-        mapName={mapConfig.name}
+        mapName={t(mapNameKey(mapConfig.id))}
         mapId={mapId}
         totalScore={totalScore}
         timeRemaining={deadline ? Math.ceil(remaining) : null}

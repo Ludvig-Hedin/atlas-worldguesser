@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapGlyph } from "@/components/map-glyph";
 import { useT } from "@/hooks/use-t";
-import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig } from "@/lib/maps-config";
+import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import type { Movement } from "@/lib/types";
 import type { TKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,6 @@ export function RoomLobby({ room }: { room: RoomState }) {
 
   const me = room.standings.find((s) => s.userId === room.myUserId);
   const readyCount = room.standings.filter((s) => s.ready).length;
-  const map = getMapConfig(room.mapId);
 
   const teamMode = room.teamMode;
   const myTeam = me?.team ?? null;
@@ -111,7 +110,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                       )}
                     >
                       <MapGlyph mapId={m.id} className="size-5 text-primary-muted" />
-                      <span className="text-xs font-medium">{m.name}</span>
+                      <span className="text-xs font-medium">{t(mapNameKey(m.id))}</span>
                     </button>
                   ))}
                 </div>
@@ -164,8 +163,8 @@ export function RoomLobby({ room }: { room: RoomState }) {
             <div className="flex flex-col gap-2">
               <p className="text-xs text-muted-foreground">{t("lobby.hostControlsNote")}</p>
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {map.name}</Badge>
-                <Badge variant="muted">{MOVEMENTS.find((m) => m.id === room.settings.movement)?.label}</Badge>
+                <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {t(mapNameKey(getMapConfig(room.mapId).id))}</Badge>
+                <Badge variant="muted">{t(movementLabelKey(room.settings.movement))}</Badge>
                 <Badge variant="muted">{t("lobby.roundsSuffix", { n: room.settings.rounds })}</Badge>
                 <Badge variant="muted">
                   {t("lobby.timerSuffix", {

@@ -17,7 +17,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useT } from "@/hooks/use-t";
 import { continentOf, countryAtAsync } from "@/lib/geo";
-import { getMapConfig, MOVEMENTS } from "@/lib/maps-config";
+import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
@@ -34,8 +34,7 @@ export function RoomGame({ room }: { room: RoomState }) {
   const me = room.standings.find((s) => s.userId === room.myUserId);
   const iGuessed = me?.hasGuessed ?? false;
   const timed = room.settings.timeLimitSec > 0;
-  const movementLabel =
-    MOVEMENTS.find((m) => m.id === room.settings.movement)?.label ?? t("mp.movementMoving");
+  const movementLabel = t(movementLabelKey(room.settings.movement));
 
   // Reset the pending guess + hint whenever the round or phase changes.
   useEffect(() => {
@@ -119,7 +118,7 @@ export function RoomGame({ room }: { room: RoomState }) {
       <GameHUD
         round={room.currentRound}
         totalRounds={room.totalRounds}
-        mapName={mapCfg.name}
+        mapName={t(mapNameKey(mapCfg.id))}
         mapId={room.mapId}
         totalScore={me?.totalScore ?? 0}
         timeRemaining={timed && room.status === "active" ? Math.ceil(remaining) : null}

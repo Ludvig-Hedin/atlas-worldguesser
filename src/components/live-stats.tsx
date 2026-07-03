@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
+import { useT } from "@/hooks/use-t";
 
 /**
  * Homepage social proof: a live "X playing now" pill and a total-players badge.
@@ -14,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
  * Only mount this where the Convex provider exists (i.e. behind `features.auth`).
  */
 export function LiveStats() {
+  const t = useT();
   const stats = useQuery(api.presence.homeStats);
 
   if (!stats) return null;
@@ -27,21 +29,21 @@ export function LiveStats() {
       {showPlaying && (
         <Badge
           variant="muted"
-          className="gap-1.5 border border-white/10 bg-white/[0.04] backdrop-blur-sm"
+          className="gap-1.5 border border-border bg-overlay backdrop-blur-sm"
         >
           <span className="relative flex size-2" aria-hidden>
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400/70" />
             <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
           </span>
-          {stats.playingNow.toLocaleString()} playing now
+          {t("home.playingNow", { count: stats.playingNow.toLocaleString() })}
         </Badge>
       )}
       {showTotal && (
         <Badge
           variant="muted"
-          className="border border-white/10 bg-white/[0.04] backdrop-blur-sm"
+          className="border border-border bg-overlay backdrop-blur-sm"
         >
-          {stats.totalPlayers.toLocaleString()} players
+          {t("home.players", { count: stats.totalPlayers.toLocaleString() })}
         </Badge>
       )}
     </div>

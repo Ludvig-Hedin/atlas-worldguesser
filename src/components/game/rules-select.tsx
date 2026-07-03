@@ -2,7 +2,8 @@
 
 import { motion } from "motion/react";
 import { Check, X } from "lucide-react";
-import { MOVEMENTS, MOVEMENT_CAPS } from "@/lib/maps-config";
+import { MOVEMENTS, MOVEMENT_CAPS, movementLabelKey, movementTitleKey, movementCapLabelKey } from "@/lib/maps-config";
+import { useT } from "@/hooks/use-t";
 import type { Movement } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -20,10 +21,11 @@ interface RulesSelectProps {
  * decoded. Still a single-select radio group under the hood.
  */
 export function RulesSelect({ value, onChange, readOnly = false }: RulesSelectProps) {
+  const t = useT();
   return (
     <div
       role={readOnly ? undefined : "radiogroup"}
-      aria-label={readOnly ? undefined : "Rules"}
+      aria-label={readOnly ? undefined : t("setup.rules")}
       className="flex flex-col gap-2"
     >
       {MOVEMENTS.map((m) => {
@@ -65,9 +67,9 @@ export function RulesSelect({ value, onChange, readOnly = false }: RulesSelectPr
                   </motion.span>
                 )}
               </span>
-              <span className="font-semibold">{m.title}</span>
+              <span className="font-semibold">{t(movementTitleKey(m.id))}</span>
               <span className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-subtle">
-                {m.label}
+                {t(movementLabelKey(m.id))}
               </span>
             </div>
 
@@ -87,7 +89,7 @@ export function RulesSelect({ value, onChange, readOnly = false }: RulesSelectPr
                     ) : (
                       <X className="size-3.5 shrink-0 text-muted-foreground/50" strokeWidth={2.5} />
                     )}
-                    {cap.label}
+                    {t(movementCapLabelKey(cap.key))}
                   </span>
                 );
               })}

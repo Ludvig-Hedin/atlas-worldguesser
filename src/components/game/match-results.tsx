@@ -19,7 +19,7 @@ import { countryName } from "@/lib/countries-meta";
 import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
 import { formatDistance, formatNumber } from "@/lib/format";
-import { getMapConfig } from "@/lib/maps-config";
+import { getMapConfig, mapNameKey } from "@/lib/maps-config";
 import { maxMatchScore } from "@/lib/scoring";
 import { MAX_ROUND_SCORE } from "@/lib/types";
 import { levelProgress } from "@/lib/xp";
@@ -56,7 +56,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
             <MapGlyph mapId={game.mapId} className="size-3" />
             {isSurvival
               ? t("match.survivalBadge", { count: survived })
-              : `${applied.won ? t("match.greatRun") : t("match.matchComplete")} · ${map.name}`}
+              : `${applied.won ? t("match.greatRun") : t("match.matchComplete")} · ${t(mapNameKey(map.id))}`}
           </Badge>
           <div className="flex items-end justify-center gap-2">
             <AnimatedNumber

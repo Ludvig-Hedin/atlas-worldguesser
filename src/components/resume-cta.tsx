@@ -5,6 +5,8 @@ import Link from "next/link";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loadLastGame, type LastGame } from "@/lib/last-game";
+import { getMapConfig, mapNameKey } from "@/lib/maps-config";
+import { useT } from "@/hooks/use-t";
 
 /**
  * "Continue" shortcut on the landing hero. Reads the player's last solo setup
@@ -12,6 +14,7 @@ import { loadLastGame, type LastGame } from "@/lib/last-game";
  * no layout space) for first-time visitors, so it's client-only + hydration-safe.
  */
 export function ResumeCta() {
+  const t = useT();
   const [last, setLast] = useState<LastGame | null>(null);
 
   useEffect(() => {
@@ -25,11 +28,11 @@ export function ResumeCta() {
       size="lg"
       variant="secondary"
       asChild
-      className="min-w-44 border-white/10 bg-white/[0.06] backdrop-blur-sm hover:bg-white/[0.1]"
+      className="min-w-44 border-border bg-overlay backdrop-blur-sm hover:bg-overlay-hover"
     >
       <Link href="/play?resume=1">
         <RotateCcw className="size-4" />
-        Continue · {last.label}
+        {t("home.continue", { label: t(mapNameKey(getMapConfig(last.mapId).id)) })}
       </Link>
     </Button>
   );

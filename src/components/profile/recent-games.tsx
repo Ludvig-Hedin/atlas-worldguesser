@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { MapGlyph } from "@/components/map-glyph";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber, timeAgo } from "@/lib/format";
-import { getMapConfig } from "@/lib/maps-config";
+import { getMapConfig, mapNameKey } from "@/lib/maps-config";
+import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
 export interface RecentItem {
@@ -18,10 +21,11 @@ export interface RecentItem {
 }
 
 export function RecentGames({ games }: { games: RecentItem[] }) {
+  const t = useT();
   if (games.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">
-        No games yet. Time to explore.
+        {t("profile.noRecentGames")}
       </div>
     );
   }
@@ -36,9 +40,9 @@ export function RecentGames({ games }: { games: RecentItem[] }) {
             <MapGlyph mapId={g.mapId} className="size-5 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{map.name}</span>
-                {g.mode === "multi" && <Badge variant="muted">Multiplayer</Badge>}
-                {g.won && <Badge variant="primary">Win</Badge>}
+                <span className="text-sm font-medium">{t(mapNameKey(map.id))}</span>
+                {g.mode === "multi" && <Badge variant="muted">{t("common.multiplayer")}</Badge>}
+                {g.won && <Badge variant="primary">{t("common.win")}</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">{timeAgo(g.at)}</p>
             </div>

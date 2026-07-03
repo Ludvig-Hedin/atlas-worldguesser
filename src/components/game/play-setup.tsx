@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { RulesSelect } from "@/components/game/rules-select";
 import { MapGlyph } from "@/components/map-glyph";
-import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS } from "@/lib/maps-config";
+import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS, mapNameKey, mapTaglineKey } from "@/lib/maps-config";
 import { poolSize } from "@/lib/locations";
 import { pluralize } from "@/lib/format";
 import { useT } from "@/hooks/use-t";
@@ -71,8 +71,8 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
                   </motion.span>
                 )}
                 <MapGlyph mapId={m.id} className="size-6 text-primary-muted" />
-                <span className="font-semibold">{m.name}</span>
-                <span className="line-clamp-2 min-h-8 text-xs text-muted-foreground">{m.tagline}</span>
+                <span className="font-semibold">{t(mapNameKey(m.id))}</span>
+                <span className="line-clamp-2 min-h-8 text-xs text-muted-foreground">{t(mapTaglineKey(m.id))}</span>
                 <span className="mt-1 text-[11px] text-subtle">{pluralize(poolSize(m.id), "location")}</span>
               </button>
             );

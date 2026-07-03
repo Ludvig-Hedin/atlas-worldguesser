@@ -13,11 +13,13 @@ import { Progress } from "@/components/ui/progress";
 import { MapGlyph, CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
-import { getMapConfig } from "@/lib/maps-config";
+import { getMapConfig, mapNameKey } from "@/lib/maps-config";
 import { MAX_ROUND_SCORE, type RoundResult } from "@/lib/types";
+import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
 export function ReplayClient({ gameId }: { gameId: string }) {
+  const t = useT();
   const data = useQuery(api.games.getReplay, { gameId: gameId as Id<"games"> });
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -32,7 +34,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
         <Film className="size-8 text-muted-foreground" />
-        <h1 className="text-xl font-semibold">Replay not found</h1>
+        <h1 className="text-xl font-semibold">{t("replay.notFound")}</h1>
       </div>
     );
   }
@@ -56,7 +58,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
         <div className="flex items-center gap-2">
           <MapGlyph mapId={data.mapId} className="size-6 text-primary-muted" />
           <div>
-            <h1 className="text-lg font-semibold leading-tight">{map.name} replay</h1>
+            <h1 className="text-lg font-semibold leading-tight">{t("replay.title", { name: t(mapNameKey(map.id)) })}</h1>
             {data.owner && (
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <IdentityAvatar
