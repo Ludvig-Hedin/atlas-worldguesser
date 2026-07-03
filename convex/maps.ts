@@ -35,6 +35,18 @@ export const create = mutation({
     if (name.length < 3) throw new Error("Give your map a name (3+ characters)");
     if (args.locations.length < 5) throw new Error("Add at least 5 locations");
     if (args.locations.length > 200) throw new Error("Maps can have at most 200 locations");
+    // Public maps are played by everyone — never store coordinates a real
+    // click can't produce (NaN/Infinity/out-of-range breaks Street View + scoring).
+    for (const loc of args.locations) {
+      if (
+        !Number.isFinite(loc.lat) ||
+        !Number.isFinite(loc.lng) ||
+        Math.abs(loc.lat) > 90 ||
+        Math.abs(loc.lng) > 180
+      ) {
+        throw new Error("Invalid location coordinates");
+      }
+    }
 
     const slug = slugify(name);
     const mapId = await ctx.db.insert("maps", {
@@ -52,7 +64,7 @@ export const create = mutation({
         mapId,
         lat: loc.lat,
         lng: loc.lng,
-        countryCode: loc.countryCode,
+        countryCode: /^[A-Za-z]{2}$/.test(loc.countryCode) ? loc.countryCode.toUpperCase() : "",
       });
     }
     return { mapId, slug };
@@ -113,8 +125,12 @@ export const listMine = query({
 
 /** Map + its locations, for playing. Private maps are visible only to the owner. */
 export const getWithLocations = query({
-  args: { mapId: v.id("maps") },
-  handler: async (ctx, { mapId }) => {
+  // The id comes straight from the URL — accept any string and normalize, so
+  // /maps/garbage/play renders the "not found" state instead of crashing.
+  args: { mapId: v.string() },
+  handler: async (ctx, args) => {
+    const mapId = ctx.db.normalizeId("maps", args.mapId);
+    if (!mapId) return null;
     const map = await ctx.db.get(mapId);
     if (!map) return null;
     if (!map.isPublic) {

@@ -2,6 +2,7 @@
 
 import { Check, Crown, Loader2, WifiOff } from "lucide-react";
 import { IdentityAvatar } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Id } from "@convex/_generated/dataModel";
@@ -33,7 +34,7 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
             key={s.userId}
             className={cn(
               "flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors",
-              isMe ? "bg-primary/10" : "bg-white/[0.03]",
+              isMe ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-white/[0.03]",
             )}
           >
             {phase !== "lobby" && (
@@ -44,11 +45,32 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
             <IdentityAvatar name={s.username} className="size-7" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className={cn("truncate text-sm font-medium", isMe && "text-primary-muted")}>
+                <span
+                  className={cn("truncate text-sm font-medium", isMe && "text-primary-muted")}
+                  title={s.username}
+                >
                   {s.username}
                 </span>
-                {s.isHost && <Crown className="size-3 shrink-0 text-gold" />}
-                {!s.connected && <WifiOff className="size-3 shrink-0 text-muted-foreground" />}
+                {s.isHost && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex shrink-0">
+                        <Crown className="size-3.5 text-gold" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Host</TooltipContent>
+                  </Tooltip>
+                )}
+                {!s.connected && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex shrink-0">
+                        <WifiOff className="size-3.5 text-muted-foreground" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Disconnected</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </div>
             {phase === "lobby" ? (

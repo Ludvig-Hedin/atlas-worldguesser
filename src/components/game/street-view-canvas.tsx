@@ -11,9 +11,10 @@ import { GoogleStreetView } from "./google-street-view";
 interface Props {
   location: GameLocation;
   movement: Movement;
-  /** Called when Google has no coverage. If provided, the parent handles it
-   * (e.g. re-rolls to another location) and no demo view is shown. */
-  onUnavailable?: () => void;
+  /** Called when Google has no coverage ("coverage") or the Maps API itself
+   * failed to load ("load"). If provided, the parent handles it (e.g. re-rolls
+   * to another location) and no demo view is shown. */
+  onUnavailable?: (reason?: "load" | "coverage") => void;
   /** Force the demo view (e.g. after coverage re-rolls are exhausted). */
   forceDemo?: boolean;
 }
@@ -30,10 +31,13 @@ export function StreetViewCanvas({ location, movement, onUnavailable, forceDemo 
     setLocalFallback(false);
   }, [location.lat, location.lng]);
 
-  const handleUnavailable = useCallback(() => {
-    if (onUnavailable) onUnavailable();
-    else setLocalFallback(true);
-  }, [onUnavailable]);
+  const handleUnavailable = useCallback(
+    (reason?: "load" | "coverage") => {
+      if (onUnavailable) onUnavailable(reason);
+      else setLocalFallback(true);
+    },
+    [onUnavailable],
+  );
 
   const demoMode = !features.googleMaps || forceDemo || localFallback;
   const nmpz = movement === "noMoveNoPanZoom";

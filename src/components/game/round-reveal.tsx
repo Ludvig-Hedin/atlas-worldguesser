@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Flag, Trophy } from "lucide-react";
 import { GuessMap } from "./guess-map";
@@ -25,6 +26,18 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
   const madeGuess = result.guess !== null;
   const scoreFraction = result.score / MAX_ROUND_SCORE;
 
+  // Mash-guard: keep the advance button disabled briefly so a quick click
+  // doesn't skip the map-fit animation. Re-focus once it becomes actionable.
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setReady(true);
+      nextRef.current?.focus();
+    }, 450);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -47,7 +60,7 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
         transition={{ type: "spring", stiffness: 400, damping: 34, delay: 0.1 }}
         className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 p-4"
       >
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-2xl border border-border bg-popover/95 p-5 shadow-2xl backdrop-blur">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-2xl border border-border-strong bg-popover/95 p-5 shadow-3 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="flex size-10 items-center justify-center rounded-full bg-white/6">
@@ -90,7 +103,7 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
             </span>
           </div>
 
-          <Button size="lg" className="w-full" onClick={onNext} autoFocus>
+          <Button ref={nextRef} size="lg" className="w-full" onClick={onNext} disabled={!ready} autoFocus>
             {isLastRound ? "See results" : "Next round"}
             <ArrowRight className="size-4" />
             <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>

@@ -5,6 +5,7 @@ import { Lightbulb, MapPin, Maximize2, Minimize2 } from "lucide-react";
 import { GuessMap, type HintCircle } from "./guess-map";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { LatLng } from "@/lib/types";
 import { clamp } from "@/lib/math";
 
@@ -68,18 +69,23 @@ export function MapSheet({
       className={fullscreen ? "fixed inset-x-3 bottom-3 top-16 z-40" : "fixed bottom-4 right-4 z-30"}
       style={fullscreen ? undefined : { width: size.w }}
     >
-      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-card shadow-2xl">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-card shadow-3">
         <div className="relative w-full" style={fullscreen ? { flex: 1 } : { height: size.h }}>
           <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive hintCircle={hintCircle} />
 
-          <button
-            type="button"
-            onClick={() => setFullscreen((f) => !f)}
-            className="absolute right-2 top-2 z-10 flex size-7 items-center justify-center rounded-lg bg-black/50 text-white/85 backdrop-blur transition-colors hover:bg-black/70"
-            aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen map"}
-          >
-            {fullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setFullscreen((f) => !f)}
+                className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-lg bg-black/50 text-white/85 shadow-1 backdrop-blur-md transition-colors hover:bg-black/68"
+                aria-label={fullscreen ? "Shrink map" : "Expand map"}
+              >
+                {fullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">{fullscreen ? "Shrink map" : "Expand map"}</TooltipContent>
+          </Tooltip>
 
           {!fullscreen && (
             <div
@@ -87,7 +93,7 @@ export function MapSheet({
               onPointerMove={onResizeMove}
               onPointerUp={endResize}
               onPointerCancel={endResize}
-              className="absolute left-0 top-0 z-10 flex size-6 cursor-nwse-resize touch-none items-center justify-center"
+              className="absolute left-0 top-0 z-10 flex size-10 cursor-nwse-resize touch-none items-start justify-start p-1.5"
               aria-label="Resize map"
               role="separator"
             >
@@ -97,7 +103,7 @@ export function MapSheet({
 
           {!guess && (
             <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-2">
-              <span className="flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white/75 backdrop-blur">
+              <span className="flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white/80 shadow-1 backdrop-blur-md">
                 <MapPin className="size-3" />
                 Click the map to place your guess
               </span>

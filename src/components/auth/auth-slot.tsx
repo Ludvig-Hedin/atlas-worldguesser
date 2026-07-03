@@ -2,6 +2,7 @@
 
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { features } from "@/lib/env";
 
 /** Renders Clerk auth controls only when auth is configured; otherwise nothing. */
@@ -12,13 +13,19 @@ export function AuthSlot() {
 
 function AuthControls() {
   const { isLoaded, isSignedIn } = useUser();
-  if (!isLoaded) return <div className="size-8" aria-hidden />;
+  // Subtle skeleton (not an empty gap) while Clerk initializes.
+  if (!isLoaded) return <div className="size-8 animate-pulse rounded-full bg-white/5" aria-hidden />;
   if (isSignedIn) {
     return <UserButton appearance={{ elements: { avatarBox: { width: "2rem", height: "2rem" } } }} />;
   }
   return (
-    <SignInButton mode="modal">
-      <Button size="sm">Sign in</Button>
-    </SignInButton>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <SignInButton mode="modal">
+          <Button size="sm">Sign in</Button>
+        </SignInButton>
+      </TooltipTrigger>
+      <TooltipContent>Save your progress, climb the leaderboard, and play with friends</TooltipContent>
+    </Tooltip>
   );
 }

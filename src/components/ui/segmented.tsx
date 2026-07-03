@@ -58,7 +58,7 @@ export function Segmented<T extends string | number>({
               <motion.span
                 layoutId={`segmented-${groupId}`}
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                className="absolute inset-0 rounded-lg bg-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+                className="absolute inset-0 rounded-lg bg-white/10 shadow-1"
               />
             )}
             <span className="relative z-10">{opt.label}</span>

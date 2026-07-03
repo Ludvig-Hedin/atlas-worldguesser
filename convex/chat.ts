@@ -1,10 +1,10 @@
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx } from "./_generated/server";
+import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireUser } from "./users";
 import { rateLimit } from "./rateLimit";
 
-async function assertMember(ctx: MutationCtx, roomId: Id<"rooms">, userId: Id<"users">) {
+async function assertMember(ctx: QueryCtx | MutationCtx, roomId: Id<"rooms">, userId: Id<"users">) {
   const member = await ctx.db
     .query("roomMembers")
     .withIndex("by_room_user", (q) => q.eq("roomId", roomId).eq("userId", userId))
@@ -33,6 +33,10 @@ export const send = mutation({
 export const list = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, { roomId }) => {
+    // Members only — room ids are resolvable from public codes, and chat in a
+    // private room shouldn't be world-readable.
+    const user = await requireUser(ctx);
+    await assertMember(ctx, roomId, user._id);
     const msgs = await ctx.db
       .query("chatMessages")
       .withIndex("by_room", (q) => q.eq("roomId", roomId))

@@ -51,10 +51,10 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
                 type="button"
                 onClick={() => setMapId(m.id)}
                 className={cn(
-                  "group relative flex flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-all duration-200 active:scale-[0.98]",
+                  "group relative flex flex-col items-start gap-1 rounded-xl border p-3.5 text-left shadow-1 transition-all duration-200 ease-fluid active:scale-[0.98]",
                   active
-                    ? "border-primary/50 bg-primary/10"
-                    : "border-border bg-card hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.03]",
+                    ? "border-primary/50 bg-primary/10 shadow-2"
+                    : "border-border bg-card hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2",
                 )}
               >
                 {active && (

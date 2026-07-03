@@ -1,0 +1,23 @@
+# Atlas
+
+> Atlas is a free online geography guessing game (a GeoGuessr alternative). You are dropped into a random Street View panorama somewhere in the world, read the visual clues, and drop a pin on the map to guess where you are. Five rounds, worldwide.
+
+Atlas runs in the browser on desktop and mobile, requires no download, and is free to play. Modes include World, Europe, USA, and Countries, plus untimed or timed rounds and NMPZ (no-move, no-pan, no-zoom). Sign in to save stats, earn XP, unlock achievements, keep streaks, build custom maps, and play private multiplayer rooms with friends.
+
+## Common questions
+
+- What is Atlas? A free map guessing game where you guess a real-world location from a Street View image.
+- Is it like GeoGuessr? Yes — Atlas is a free geography guessing game in the same genre, with world/region maps, timers, and multiplayer.
+- Is it free? Yes, fully free to play in the browser with no account required for solo play.
+- What can I guess? Real streets and places worldwide; pick a map to narrow the region.
+
+## Pages
+
+- Home: https://geoatlas.xyz/
+- Play (choose a map / quick play): https://geoatlas.xyz/play
+- Custom maps: https://geoatlas.xyz/maps
+- Leaderboard: https://geoatlas.xyz/leaderboard
+
+## Keywords
+
+map game, guess the location, geoguessr alternative, geography guessing game, street view game, guess the country game, where in the world game, free online map game

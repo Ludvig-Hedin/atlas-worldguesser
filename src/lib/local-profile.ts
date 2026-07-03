@@ -63,6 +63,25 @@ export function saveProfile(profile: LocalProfile) {
   }
 }
 
+/**
+ * Payload for the one-time guest→cloud import (api.users.importGuestProfile).
+ * The cloud user separates `xp` from `stats`, so we peel it off here.
+ */
+export function guestImportPayload(profile: LocalProfile) {
+  const { xp, ...statsNoXp } = profile.stats;
+  return {
+    xp,
+    stats: statsNoXp,
+    streaks: profile.streaks,
+    achievements: profile.achievements,
+  };
+}
+
+/** Whether a guest profile has anything worth importing into a new account. */
+export function hasGuestProgress(profile: LocalProfile): boolean {
+  return profile.stats.gamesPlayed > 0;
+}
+
 export interface GameSummary {
   id: string;
   mapId: string;

@@ -92,8 +92,14 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
 
   const win = won ? s.win + 1 : 0;
 
+  // Track the peak inside the game too — a streak that breaks before the last
+  // round would otherwise never be recorded in bestCountry.
   let country = s.country;
-  for (const r of results) country = r.countryCorrect ? country + 1 : 0;
+  let bestCountry = s.bestCountry;
+  for (const r of results) {
+    country = r.countryCorrect ? country + 1 : 0;
+    bestCountry = Math.max(bestCountry, country);
+  }
 
   const streaks: StreakState = {
     daily,
@@ -101,7 +107,7 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
     win,
     bestWin: Math.max(s.bestWin, win),
     country,
-    bestCountry: Math.max(s.bestCountry, country),
+    bestCountry,
   };
 
   const ctx: AchievementContext = {

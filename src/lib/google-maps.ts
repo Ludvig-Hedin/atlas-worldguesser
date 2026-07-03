@@ -30,6 +30,8 @@ export function loadGoogleMaps(): Promise<typeof google> {
     const timeout = window.setTimeout(() => {
       if (settled) return;
       settled = true;
+      // Remove the stalled tag so a retry doesn't double-include the API.
+      script.remove();
       loadPromise = null;
       reject(new Error("Google Maps load timed out"));
     }, SCRIPT_TIMEOUT_MS);
@@ -53,6 +55,7 @@ export function loadGoogleMaps(): Promise<typeof google> {
       if (settled) return;
       settled = true;
       window.clearTimeout(timeout);
+      script.remove();
       loadPromise = null;
       reject(new Error("Failed to load Google Maps JS API"));
     };

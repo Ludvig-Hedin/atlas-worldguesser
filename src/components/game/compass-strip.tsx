@@ -5,9 +5,12 @@ const PX_PER_DEG = 2.4;
 const WIDTH = 288; // w-72
 const CENTER = WIDTH / 2;
 
-// Two full turns so both edges always have marks regardless of heading.
+// The viewport is centered on heading + 360° with a ±60° visible window, so
+// marks must cover up to 359 + 420 = 779° or the strip goes blank on the right
+// for headings near north (300–360°).
 const MARKS: number[] = [];
-for (let deg = 0; deg <= 720; deg += 15) MARKS.push(deg);
+for (let deg = 0; deg <= 780; deg += 15) MARKS.push(deg);
+const TRACK_DEG = 780;
 
 const MASK = "linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent)";
 
@@ -17,8 +20,8 @@ export function CompassStrip({ heading }: { heading: number }) {
   const translate = CENTER - (h + 360) * PX_PER_DEG;
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-14 z-20 flex -translate-x-1/2 flex-col items-center sm:top-2">
-      <span className="rounded bg-black/45 px-1.5 text-[11px] font-semibold tabular text-white backdrop-blur-sm [text-shadow:0_1px_2px_rgb(0_0_0_/_0.6)]">
+    <div className="pointer-events-none absolute left-1/2 top-20 z-20 flex -translate-x-1/2 flex-col items-center sm:top-2">
+      <span className="rounded-md bg-black/50 px-1.5 text-[11px] font-semibold tabular text-white backdrop-blur-md [text-shadow:0_1px_2px_rgb(0_0_0_/_0.6)]">
         {Math.round(h)}°
       </span>
       <span className="mt-0.5 size-0 border-x-[4px] border-t-[5px] border-x-transparent border-t-white/90" />
@@ -31,7 +34,7 @@ export function CompassStrip({ heading }: { heading: number }) {
           style={{
             transform: `translateX(${translate}px)`,
             transition: "transform 100ms linear",
-            width: 720 * PX_PER_DEG,
+            width: TRACK_DEG * PX_PER_DEG,
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))",
           }}
         >

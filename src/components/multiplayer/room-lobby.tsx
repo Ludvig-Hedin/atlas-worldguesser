@@ -12,6 +12,7 @@ import { ChatPanel } from "./chat-panel";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, MOVEMENTS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig } from "@/lib/maps-config";
 import type { Movement } from "@/lib/types";
@@ -84,7 +85,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                       onClick={() => patch(m.id, room.settings)}
                       className={cn(
                         "flex flex-col items-center gap-0.5 rounded-xl border p-2.5 text-center transition-colors",
-                        m.id === room.mapId ? "border-primary/50 bg-primary/10" : "border-border hover:bg-white/[0.03]",
+                        m.id === room.mapId ? "border-primary/50 bg-primary/10" : "border-border hover:bg-elevated",
                       )}
                     >
                       <MapGlyph mapId={m.id} className="size-5 text-primary-muted" />
@@ -123,31 +124,45 @@ export function RoomLobby({ room }: { room: RoomState }) {
               </div>
             </>
           ) : (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {map.name}</Badge>
-              <Badge variant="muted">{MOVEMENTS.find((m) => m.id === room.settings.movement)?.label}</Badge>
-              <Badge variant="muted">{room.settings.rounds} rounds</Badge>
-              <Badge variant="muted">{TIME_LABELS[room.settings.timeLimitSec] ?? "None"} timer</Badge>
-              <span className="text-xs text-muted-foreground">Waiting for the host to start…</span>
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground">Host controls · only the host can change these</p>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="muted" className="gap-1"><MapGlyph mapId={room.mapId} className="size-3" /> {map.name}</Badge>
+                <Badge variant="muted">{MOVEMENTS.find((m) => m.id === room.settings.movement)?.label}</Badge>
+                <Badge variant="muted">{room.settings.rounds} rounds</Badge>
+                <Badge variant="muted">{TIME_LABELS[room.settings.timeLimitSec] ?? "None"} timer</Badge>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant={me?.ready ? "secondary" : "primary"}
-            size="lg"
-            className="flex-1"
-            onClick={() => setReady({ roomId: room._id, ready: !me?.ready })}
-          >
-            <Check className="size-4" />
-            {me?.ready ? "Ready" : "I'm ready"}
-          </Button>
-          {room.amHost && (
-            <Button size="lg" className="flex-1" onClick={doStart} disabled={starting || room.standings.length < 1}>
-              <Play className="size-4" />
-              Start match
-            </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={me?.ready ? "secondary" : "primary"}
+                  size="lg"
+                  className="flex-1"
+                  onClick={() => setReady({ roomId: room._id, ready: !me?.ready })}
+                >
+                  <Check className="size-4" />
+                  {me?.ready ? "Ready" : "I'm ready"}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Let the host know you&apos;re set — they can start anytime.</TooltipContent>
+            </Tooltip>
+            {room.amHost && (
+              <Button size="lg" className="flex-1" onClick={doStart} disabled={starting || room.standings.length < 1}>
+                <Play className="size-4" />
+                Start match
+              </Button>
+            )}
+          </div>
+          {!room.amHost && (
+            <p className="text-xs text-muted-foreground">
+              Waiting for the host to start… Mark yourself ready so they know you&apos;re set.
+            </p>
           )}
         </div>
       </div>

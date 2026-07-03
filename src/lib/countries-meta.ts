@@ -144,7 +144,7 @@ export const COUNTRY_NAMES: Record<string, string> = {
   "SK": "Slovakia",
   "SL": "Sierra Leone",
   "SN": "Senegal",
-  "SO": "Somaliland",
+  "SO": "Somalia",
   "SR": "Suriname",
   "SS": "S. Sudan",
   "SV": "El Salvador",

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { FriendsClient } from "@/components/social/friends-client";
 import { ConvexGate } from "@/components/convex-gate";
+import { NOINDEX } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Friends",
+  robots: NOINDEX,
 };
 
 export default function FriendsPage() {

@@ -76,6 +76,7 @@ export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className 
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
+      onPointerCancel={endDrag}
       onPointerLeave={endDrag}
       className={cn(
         "relative h-full w-full select-none overflow-hidden touch-none",
@@ -121,7 +122,7 @@ export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className 
         onResetNorth={disablePan ? undefined : () => setHeading(0)}
       />
 
-      <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/70 backdrop-blur">
+      <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-medium text-white/80 shadow-1 backdrop-blur-md">
         <ImageOff className="size-3" />
         {hasGoogleKey
           ? "No Street View here — showing a demo view"

@@ -59,6 +59,23 @@ function RoomInner({ code }: { code: string }) {
     );
   }
 
+  // Joining is only possible from the lobby — rendering the game UI to a
+  // non-member would let them place pins whose submits silently fail.
+  if (!room.amMember && room.status !== "lobby" && room.status !== "finished") {
+    return (
+      <FullscreenMessage>
+        <Globe2 className="size-8 text-muted-foreground" />
+        <h1 className="text-xl font-semibold">Match in progress</h1>
+        <p className="max-w-xs text-sm text-muted-foreground">
+          This match has already started — ask the host for a rematch invite once it ends.
+        </p>
+        <Button asChild>
+          <Link href="/play">Back to play</Link>
+        </Button>
+      </FullscreenMessage>
+    );
+  }
+
   if (room.status === "lobby") return <RoomLobby room={room} />;
   if (room.status === "finished") return <RoomResults room={room} />;
   return <RoomGame room={room} />;

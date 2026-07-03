@@ -16,6 +16,8 @@
   --card-foreground: #fafafa;
   --popover: #161618;
   --popover-foreground: #fafafa;
+  /* One step above --card, for hover/raised surfaces. */
+  --elevated: #1c1c20;
 
   --muted: #1b1b1f;
   --muted-foreground: #a1a1aa;
@@ -36,10 +38,15 @@
 
   --gold: #f5c451;
 
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
   --input: rgba(255, 255, 255, 0.06);
   --ring: #0a84ff;
+
+  /* In-view glass — one recipe for every panorama/map overlay so depth reads
+     consistently. Consumed via the .glass / .glass-strong utilities below. */
+  --glass: rgba(18, 18, 20, 0.62);
+  --glass-strong: rgba(12, 12, 14, 0.7);
 }
 
 @theme inline {
@@ -52,6 +59,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-subtle: var(--subtle);
+  --color-elevated: var(--elevated);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-muted: var(--primary-muted);
@@ -75,6 +83,16 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 10px);
+
+  /* Layered elevation scale, tuned for a near-black canvas: a soft cast plus a
+     tighter contact shadow. Utilities: shadow-1 (rest) · shadow-2 (raised/hover)
+     · shadow-3 (sheets, popovers, floating panels). */
+  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-2: 0 4px 14px -3px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+  --shadow-3: 0 20px 48px -12px rgb(0 0 0 / 0.66), 0 6px 14px -6px rgb(0 0 0 / 0.45);
+
+  /* Opt-in fluid easing (decel curve) for entrances and hover transitions. */
+  --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-fade-in: fade-in 0.2s ease-out;
   --animate-fade-up: fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -134,7 +152,36 @@ body {
   font-family: var(--font-sans);
   font-feature-settings: "cv11", "ss01";
   font-variant-ligatures: contextual;
+  font-optical-sizing: auto;
+  /* A whisper of negative tracking pulls body copy in so it reads intentional
+     rather than airy — without hurting legibility on the dark canvas. */
+  letter-spacing: -0.005em;
+  line-height: 1.5;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings sit tighter than body — set once so every surface inherits rhythm. */
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--foreground);
+}
+
+/* Honour reduced-motion: collapse durations and drop non-essential motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Refined, unobtrusive scrollbars */
@@ -166,6 +213,23 @@ body {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Consistent in-view overlay glass — pills, controls, floating panels that sit
+   over a photographic panorama or map. One recipe = coherent depth everywhere. */
+@utility glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  box-shadow: var(--shadow-2);
+}
+@utility glass-strong {
+  background: var(--glass-strong);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: var(--shadow-3);
 }
 
 .tabular {

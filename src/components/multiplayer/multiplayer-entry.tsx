@@ -11,6 +11,16 @@ import { Button } from "@/components/ui/button";
 import { DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
 
+/**
+ * Accepts either a raw room code or a full invite link (e.g. `https://site/room/ABCD`)
+ * and returns a normalized code: uppercase, alphanumeric, max 6 chars.
+ */
+function normalizeRoomInput(raw: string): string {
+  const linkMatch = raw.match(/\/room\/([A-Za-z0-9]+)/i);
+  const base = linkMatch ? linkMatch[1] : raw.replace(/[^A-Za-z0-9]/g, "");
+  return base.toUpperCase().slice(0, 6);
+}
+
 export function MultiplayerEntry() {
   if (!features.multiplayer) return null;
   return (
@@ -52,7 +62,7 @@ function MultiplayerControls() {
 
   const joinRoom = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = code.trim().toUpperCase();
+    const clean = normalizeRoomInput(code);
     if (clean.length < 4) return;
     router.push(`/room/${clean}`);
   };
@@ -71,12 +81,11 @@ function MultiplayerControls() {
       <form onSubmit={joinRoom} className="flex items-center gap-2">
         <input
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="ROOM CODE"
-          maxLength={6}
-          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-center font-mono text-sm tracking-widest outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+          onChange={(e) => setCode(normalizeRoomInput(e.target.value))}
+          placeholder="Room code or link"
+          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-center font-mono text-sm tracking-widest outline-none placeholder:tracking-normal placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
         />
-        <Button type="submit" variant="secondary" disabled={code.trim().length < 4}>
+        <Button type="submit" variant="secondary" disabled={code.length < 4}>
           Join
         </Button>
       </form>

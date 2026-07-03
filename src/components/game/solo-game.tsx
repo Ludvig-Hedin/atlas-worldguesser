@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { AtlasMark } from "@/components/atlas-mark";
@@ -14,7 +14,7 @@ import { MatchResults } from "./match-results";
 import { SoloCloudSync } from "./solo-cloud-sync";
 import type { HintCircle } from "./guess-map";
 import { features } from "@/lib/env";
-import { pickLocations } from "@/lib/locations";
+import { pickLocations, sampleLocations } from "@/lib/locations";
 import { useSoloGame } from "@/hooks/use-solo-game";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
@@ -51,35 +51,90 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
   const [mounted, setMounted] = useState(false);
   const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
   const [forceDemo, setForceDemo] = useState(false);
+  const [rerolling, setRerolling] = useState(false);
   const rerollRef = useRef(0);
+  const rerollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordedRef = useRef<string | null>(null);
 
   // Reset the hint + coverage re-roll each round.
   useEffect(() => {
     setHintCircle(null);
     setForceDemo(false);
+    setRerolling(false);
     rerollRef.current = 0;
+    if (rerollTimer.current) {
+      clearTimeout(rerollTimer.current);
+      rerollTimer.current = null;
+    }
   }, [game.round]);
+
+  // Clear any pending reroll timer on unmount.
+  useEffect(() => () => {
+    if (rerollTimer.current) clearTimeout(rerollTimer.current);
+  }, []);
 
   const useHint = useCallback(() => {
     if (hintCircle) return;
     const radiusMeters = getMapConfig(mapId).scaleKm * 500;
-    setHintCircle({ center: { lat: currentLocation.lat, lng: currentLocation.lng }, radiusMeters });
+    // Offset the circle's center randomly so the answer lands anywhere inside
+    // it — centered on the answer, the circle's midpoint IS a perfect guess.
+    const bearing = Math.random() * 2 * Math.PI;
+    const offsetMeters = Math.random() * radiusMeters * 0.7;
+    const dLat = (offsetMeters * Math.cos(bearing)) / 111_320;
+    const dLng =
+      (offsetMeters * Math.sin(bearing)) /
+      (111_320 * Math.max(0.2, Math.cos((currentLocation.lat * Math.PI) / 180)));
+    const center = {
+      lat: Math.max(-85, Math.min(85, currentLocation.lat + dLat)),
+      lng: ((currentLocation.lng + dLng + 540) % 360) - 180,
+    };
+    setHintCircle({ center, radiusMeters });
     toast(`Search area shown on the map · ${continentOf(currentLocation.lat, currentLocation.lng)}`, {
       icon: <Lightbulb className="size-4 text-primary-muted" />,
     });
   }, [hintCircle, mapId, currentLocation]);
 
   // No Google coverage → swap in another location instead of showing the demo.
-  const handleNoCoverage = useCallback(() => {
-    if (rerollRef.current >= 6) {
-      setForceDemo(true);
-      return;
-    }
-    rerollRef.current += 1;
-    const [nextLoc] = pickLocations(mapId, 1);
-    if (nextLoc) replaceCurrentLocation(nextLoc);
-  }, [mapId, replaceCurrentLocation]);
+  const handleNoCoverage = useCallback(
+    (reason?: "load" | "coverage") => {
+      // The Maps API itself failed to load (blocked / offline): re-rolling can't
+      // help, and no further onUnavailable would ever fire — go straight to demo.
+      if (reason === "load" || rerollRef.current >= 6) {
+        setForceDemo(true);
+        setRerolling(false);
+        if (rerollTimer.current) {
+          clearTimeout(rerollTimer.current);
+          rerollTimer.current = null;
+        }
+        return;
+      }
+      rerollRef.current += 1;
+      // Custom maps must re-roll from the user's own pool, not the world pool.
+      const pick = () =>
+        customLocations && customLocations.length > 0
+          ? sampleLocations(customLocations, 1)[0]
+          : pickLocations(mapId, 1)[0];
+      let nextLoc = pick();
+      // Re-picking the identical coordinates wouldn't re-trigger the panorama
+      // effect (deps unchanged) and the round would hang — try once more.
+      if (nextLoc && nextLoc.lat === currentLocation.lat && nextLoc.lng === currentLocation.lng) {
+        nextLoc = pick();
+      }
+      if (nextLoc && (nextLoc.lat !== currentLocation.lat || nextLoc.lng !== currentLocation.lng)) {
+        // Show a subtle "searching" overlay while we hunt for a covered spot.
+        // Debounced clear: as long as rerolls keep firing the overlay stays;
+        // once coverage is found (no more rerolls) it lifts after the delay.
+        setRerolling(true);
+        if (rerollTimer.current) clearTimeout(rerollTimer.current);
+        rerollTimer.current = setTimeout(() => setRerolling(false), 1200);
+        replaceCurrentLocation(nextLoc);
+      } else {
+        setForceDemo(true);
+        setRerolling(false);
+      }
+    },
+    [mapId, customLocations, currentLocation.lat, currentLocation.lng, replaceCurrentLocation],
+  );
 
   // The game is fully client-driven (random seed) — avoid SSR/hydration mismatch.
   useEffect(() => setMounted(true), []);
@@ -93,7 +148,10 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
       ? game.roundStartAt + settings.timeLimitSec * 1000
       : null;
   const remaining = useCountdown(deadline, () => {
-    if (game.phase === "guessing" && !submitting) void submit();
+    if (game.phase === "guessing" && !submitting) {
+      toast("Time's up — locking in your guess.");
+      void submit();
+    }
   });
 
   // Record the finished game exactly once.
@@ -109,15 +167,25 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
     restart();
   }, [restart]);
 
+  // Mirror RoundReveal's 450ms mash-guard: without it, held-down Space
+  // (key-repeat) from submitting skips the reveal instantly.
+  const revealAtRef = useRef(0);
+  useEffect(() => {
+    if (game.phase === "reveal") revealAtRef.current = Date.now();
+  }, [game.phase]);
+  const advanceFromReveal = useCallback(() => {
+    if (Date.now() - revealAtRef.current >= 450) next();
+  }, [next]);
+
   useKeyboardShortcuts(
     {
       " ": (e) => {
         e.preventDefault();
         if (game.phase === "guessing" && guess && !submitting) void submit();
-        else if (game.phase === "reveal") next();
+        else if (game.phase === "reveal") advanceFromReveal();
       },
       enter: () => {
-        if (game.phase === "reveal") next();
+        if (game.phase === "reveal") advanceFromReveal();
       },
     },
     game.phase !== "finished",
@@ -152,6 +220,23 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
         forceDemo={forceDemo}
       />
 
+      <AnimatePresence>
+        {rerolling && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-3 text-white/60">
+              <AtlasMark className="size-6 animate-pulse text-primary-muted" />
+              <p className="text-sm">Finding a spot with Street View…</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <GameHUD
         round={game.round}
         totalRounds={settings.rounds}
@@ -162,6 +247,10 @@ export function SoloGame({ mapId, settings, onExit, customLocations }: SoloGameP
         movementLabel={movementLabel}
       />
 
+      {/* TODO(bug-hunt): MapSheet is unmounted during the reveal, so the user's
+          drag-resized dimensions and fullscreen preference reset every round.
+          If persistence is wanted, lift size/fullscreen state up here (or hide
+          with CSS instead of unmounting). */}
       {game.phase === "guessing" && (
         <MapSheet
           guess={guess}

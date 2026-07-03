@@ -22,7 +22,11 @@ export function AnimatedNumber({ value, durationMs = 700, format, className }: A
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / durationMs);
       const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(from + (value - from) * eased);
+      const current = from + (value - from) * eased;
+      // Keep the origin at the live displayed value so a mid-animation value
+      // change restarts from what's on screen instead of jumping backwards.
+      fromRef.current = current;
+      setDisplay(current);
       if (t < 1) raf = requestAnimationFrame(tick);
       else fromRef.current = value;
     };

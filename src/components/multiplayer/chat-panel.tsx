@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Send } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,11 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
     const value = text.trim();
     if (!value) return;
     setText("");
-    await send({ roomId, text: value }).catch(() => {});
+    // Restore the draft on failure (e.g. rate limited) instead of losing it.
+    await send({ roomId, text: value }).catch(() => {
+      setText(value);
+      toast.error("Message not sent — try again in a moment");
+    });
   };
 
   return (
@@ -45,6 +50,9 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
               <span className={cn("font-medium", isMe ? "text-primary-muted" : "text-foreground/80")}>
                 {m.username}
               </span>{" "}
+              <span className="text-[10px] tabular text-subtle">
+                {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>{" "}
               <span className="text-muted-foreground">{m.text}</span>
             </div>
           );
@@ -52,13 +60,20 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
         <div ref={endRef} />
       </div>
       <form onSubmit={submit} className="mt-2 flex items-center gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Message…"
-          maxLength={300}
-          className="h-9 flex-1 rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
-        />
+        <div className="relative flex-1">
+          {text.length >= 260 && (
+            <span className="pointer-events-none absolute -top-4 right-0.5 text-[10px] tabular text-muted-foreground">
+              {text.length}/300
+            </span>
+          )}
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Message…"
+            maxLength={300}
+            className="h-9 w-full rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
         <Button type="submit" size="icon-sm" variant="secondary" disabled={!text.trim()} aria-label="Send">
           <Send className="size-3.5" />
         </Button>

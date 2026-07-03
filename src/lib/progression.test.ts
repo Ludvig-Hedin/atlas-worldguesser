@@ -69,6 +69,20 @@ describe("foldGame", () => {
     expect(out.streaks.daily).toBe(1);
   });
 
+  it("records a country-streak peak that breaks before the game ends", () => {
+    // 3 (carried) + 1 correct = 4, then broken by the miss: the peak must
+    // still land in bestCountry even though the live streak ends at 0.
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, country: 3, bestCountry: 3 },
+      ownedAchievements: [],
+      results: [perfect, missed],
+      now: NOW,
+    });
+    expect(out.streaks.country).toBe(0);
+    expect(out.streaks.bestCountry).toBe(4);
+  });
+
   it("honors a multiplayer win override", () => {
     const out = foldGame({
       stats: { ...EMPTY_STATS },

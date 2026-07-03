@@ -79,7 +79,11 @@ export function GuestProfile() {
       </header>
 
       <StatsGrid stats={profile.stats} xp={profile.stats.xp} dailyStreak={profile.streaks.daily} />
-      <AchievementGrid owned={profile.achievements} />
+      <AchievementGrid
+        owned={profile.achievements}
+        stats={profile.stats}
+        streaks={profile.streaks}
+      />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">Recent games</h2>

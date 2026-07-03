@@ -76,7 +76,9 @@ export const OFFICIAL_MAPS: MapConfig[] = [
 ];
 
 export function getMapConfig(id: string): MapConfig {
-  return (MAPS as Record<string, MapConfig>)[id] ?? MAPS.world;
+  // Object.hasOwn so prototype members ("constructor", "toString", …) can't
+  // masquerade as a map config and leak NaN into scoring via scaleKm.
+  return Object.hasOwn(MAPS, id) ? (MAPS as Record<string, MapConfig>)[id] : MAPS.world;
 }
 
 export function scaleMetersForMap(id: string): number {

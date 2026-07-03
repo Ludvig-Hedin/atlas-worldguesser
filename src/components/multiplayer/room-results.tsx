@@ -59,7 +59,7 @@ export function RoomResults({ room }: { room: RoomState }) {
           >
             <span className="w-6 text-center text-lg font-semibold tabular text-muted-foreground">{i + 1}</span>
             <IdentityAvatar name={s.username} />
-            <span className="min-w-0 flex-1 truncate font-medium">{s.username}</span>
+            <span className="min-w-0 flex-1 truncate font-medium" title={s.username}>{s.username}</span>
             <span className="text-lg font-semibold tabular text-primary-muted">{formatNumber(s.totalScore)}</span>
           </motion.div>
         ))}

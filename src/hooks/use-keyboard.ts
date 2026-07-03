@@ -29,8 +29,10 @@ export function useKeyboardShortcuts(
       ) {
         return;
       }
-      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-      const handler = handlersRef.current[key];
+      // Lowercase ALL keys (not just single chars) so handlers registered as
+      // "enter" match e.key === "Enter" — the docstring promises case-insensitivity.
+      const key = e.key.toLowerCase();
+      const handler = handlersRef.current[key] ?? handlersRef.current[e.key];
       if (handler) handler(e);
     };
     window.addEventListener("keydown", onKeyDown);

@@ -60,6 +60,12 @@ export function circlePolygon(
 }
 
 /** Rough continent for a coordinate — good enough for an in-game hint. */
+// TODO(bug-hunt): known misclassifications shown to players as a paid hint —
+// coastal North Africa above 35°N (Tunis, Algiers, Tangier) reads "Europe",
+// and Central America below 13°N (Panama City, San José) reads "South
+// America". Both call sites already know the actual countryCode, so a
+// country-code → continent lookup would be exact; a pure lat/lng heuristic
+// can't split these bands without breaking southern Spain/Greece or Colombia.
 export function continentOf(lat: number, lng: number): string {
   if (lat <= -60) return "Antarctica";
   if (lng >= 112 && lat <= 0) return "Oceania";

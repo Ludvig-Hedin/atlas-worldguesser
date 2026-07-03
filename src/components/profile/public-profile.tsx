@@ -54,7 +54,11 @@ export function PublicProfile({ username }: { username: string }) {
       </header>
 
       <StatsGrid stats={profile.stats} xp={profile.xp} dailyStreak={profile.streaks.daily} />
-      <AchievementGrid owned={achievements.map((a) => a.id)} />
+      <AchievementGrid
+        owned={achievements.map((a) => a.id)}
+        stats={profile.stats}
+        streaks={profile.streaks}
+      />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">Recent games</h2>

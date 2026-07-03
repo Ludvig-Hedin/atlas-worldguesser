@@ -23,6 +23,11 @@ import type { RoundResult } from "../src/lib/types";
 
 const REVEAL_MS = 6000;
 const DEFAULT_ROUND_CAP_SEC = 90;
+/** Extra server-side slack past the displayed deadline so a client auto-submit
+ * fired exactly at 0s (plus country lookup + RTT) still lands in the round. */
+const GUESS_GRACE_MS = 2500;
+/** A member is considered connected if a heartbeat landed this recently. */
+const CONNECTED_WINDOW_MS = 45_000;
 
 function assertMultiplayerEnabled() {
   if (process.env.DISABLE_MULTIPLAYER === "true") {
@@ -65,9 +70,11 @@ export const create = mutation({
     const now = Date.now();
 
     let code = randomRoomCode();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; ; i++) {
       const clash = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).unique();
       if (!clash) break;
+      // Never insert a duplicate code — `.unique()` readers would throw for both rooms.
+      if (i >= 4) throw new Error("Could not allocate a room code — please try again");
       code = randomRoomCode();
     }
 
@@ -166,8 +173,21 @@ export const leave = mutation({
     const remaining = await membersOf(ctx, roomId);
     if (remaining.length === 0) {
       await ctx.db.patch(roomId, { status: "finished" });
-    } else if (room.hostId === user._id) {
+      return;
+    }
+    if (room.hostId === user._id) {
       await ctx.db.patch(roomId, { hostId: remaining[0].userId });
+    }
+    // If the leaver was the only one still guessing, advance the round early.
+    if (room.status === "active" && room.currentRound > 0) {
+      const guesses = await ctx.db
+        .query("guesses")
+        .withIndex("by_room_round", (q) => q.eq("roomId", roomId).eq("round", room.currentRound))
+        .collect();
+      const guessed = new Set(guesses.map((g) => g.userId));
+      if (remaining.every((m) => guessed.has(m.userId))) {
+        await enterRoundResult(ctx, roomId, room.currentRound);
+      }
     }
   },
 });
@@ -202,7 +222,15 @@ async function startRound(ctx: MutationCtx, roomId: Id<"rooms">, round: number) 
     roundStartedAt: now,
     roundEndsAt: now + durationMs,
   });
-  await ctx.scheduler.runAfter(durationMs, internal.rooms.endRound, { roomId, round });
+  // `startedAt` fences the timer to THIS round instance: after a rematch the
+  // round counter restarts, so {roomId, round} alone would let a stale job from
+  // the previous match force-end the new match's round. The grace window lets
+  // deadline auto-submits from clients land before the round is closed.
+  await ctx.scheduler.runAfter(durationMs + GUESS_GRACE_MS, internal.rooms.endRound, {
+    roomId,
+    round,
+    startedAt: now,
+  });
 }
 
 export const start = mutation({
@@ -221,8 +249,14 @@ export const start = mutation({
 async function enterRoundResult(ctx: MutationCtx, roomId: Id<"rooms">, round: number) {
   const room = await ctx.db.get(roomId);
   if (!room || room.status !== "active" || room.currentRound !== round) return;
-  await ctx.db.patch(roomId, { status: "roundResult" });
-  await ctx.scheduler.runAfter(REVEAL_MS, internal.rooms.advance, { roomId, round });
+  // Repoint roundEndsAt at the reveal deadline so the client's "Next round in
+  // Xs" countdown matches when `advance` will actually fire.
+  await ctx.db.patch(roomId, { status: "roundResult", roundEndsAt: Date.now() + REVEAL_MS });
+  await ctx.scheduler.runAfter(REVEAL_MS, internal.rooms.advance, {
+    roomId,
+    round,
+    startedAt: room.roundStartedAt,
+  });
 }
 
 export const submitGuess = mutation({
@@ -234,6 +268,20 @@ export const submitGuess = mutation({
   handler: async (ctx, { roomId, guess, guessCountryCode }) => {
     const user = await requireUser(ctx);
     await rateLimit(ctx, "guess", user._id);
+    if (
+      guess &&
+      (!Number.isFinite(guess.lat) ||
+        !Number.isFinite(guess.lng) ||
+        Math.abs(guess.lat) > 90 ||
+        Math.abs(guess.lng) > 180)
+    ) {
+      throw new Error("Invalid guess coordinates");
+    }
+    // Only a plausible ISO alpha-2 code counts toward the country bonus.
+    const countryCode =
+      guessCountryCode && /^[A-Za-z]{2}$/.test(guessCountryCode)
+        ? guessCountryCode.toUpperCase()
+        : null;
     const room = await ctx.db.get(roomId);
     if (!room || room.status !== "active") throw new Error("No active round");
     const member = await memberOf(ctx, roomId, user._id);
@@ -250,8 +298,9 @@ export const submitGuess = mutation({
 
     const actual = room.locations[round - 1];
     const { distanceMeters, score } = computeGuessScore(guess, actual, room.mapId);
-    const countryCorrect = !!guessCountryCode && guessCountryCode === actual.countryCode;
+    const countryCorrect = !!countryCode && countryCode === actual.countryCode;
 
+    const now = Date.now();
     await ctx.db.insert("guesses", {
       roomId,
       round,
@@ -261,36 +310,47 @@ export const submitGuess = mutation({
       lng: guess?.lng ?? 0,
       distanceMeters,
       score,
-      guessCountryCode,
+      guessCountryCode: countryCode,
       countryCorrect,
-      createdAt: Date.now(),
+      createdAt: now,
     });
-    await ctx.db.patch(member._id, { totalScore: member.totalScore + score, lastSeenAt: Date.now() });
+    await ctx.db.patch(member._id, { totalScore: member.totalScore + score, lastSeenAt: now });
 
-    // Advance early once everyone has guessed.
+    // Advance early once every connected member has guessed — abandoned tabs
+    // (no recent heartbeat) shouldn't force the full round timer on everyone.
     const members = await membersOf(ctx, roomId);
     const guesses = await ctx.db
       .query("guesses")
       .withIndex("by_room_round", (q) => q.eq("roomId", roomId).eq("round", round))
       .collect();
-    if (guesses.length >= members.length) {
+    const guessed = new Set(guesses.map((g) => g.userId));
+    const stillPlaying = members.filter(
+      (m) => m.userId === user._id || now - m.lastSeenAt < CONNECTED_WINDOW_MS,
+    );
+    if (stillPlaying.every((m) => guessed.has(m.userId))) {
       await enterRoundResult(ctx, roomId, round);
     }
   },
 });
 
 export const endRound = internalMutation({
-  args: { roomId: v.id("rooms"), round: v.number() },
-  handler: async (ctx, { roomId, round }) => {
+  args: { roomId: v.id("rooms"), round: v.number(), startedAt: v.optional(v.number()) },
+  handler: async (ctx, { roomId, round, startedAt }) => {
+    // Ignore timers scheduled for an earlier match in the same room (rematch).
+    if (startedAt !== undefined) {
+      const room = await ctx.db.get(roomId);
+      if (!room || room.roundStartedAt !== startedAt) return;
+    }
     await enterRoundResult(ctx, roomId, round);
   },
 });
 
 export const advance = internalMutation({
-  args: { roomId: v.id("rooms"), round: v.number() },
-  handler: async (ctx, { roomId, round }) => {
+  args: { roomId: v.id("rooms"), round: v.number(), startedAt: v.optional(v.number()) },
+  handler: async (ctx, { roomId, round, startedAt }) => {
     const room = await ctx.db.get(roomId);
     if (!room || room.status !== "roundResult" || room.currentRound !== round) return;
+    if (startedAt !== undefined && room.roundStartedAt !== startedAt) return;
     if (round >= room.settings.rounds) {
       await finishMatch(ctx, room);
     } else {
@@ -302,7 +362,9 @@ export const advance = internalMutation({
 async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
   const members = await membersOf(ctx, room._id);
   const maxScore = members.reduce((m, x) => Math.max(m, x.totalScore), 0);
-  const competitive = members.length > 1;
+  // maxScore > 0: in an all-AFK match everyone ends at 0 === 0, which would
+  // mark every player a "winner" and inflate win streaks from idle matches.
+  const competitive = members.length > 1 && maxScore > 0;
   const now = Date.now();
 
   for (const member of members) {
@@ -383,6 +445,7 @@ export const rematch = mutation({
     const user = await requireUser(ctx);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can start a rematch");
+    if (room.status !== "finished") throw new Error("Match still in progress");
 
     // Clear guesses from the previous match.
     for (let r = 1; r <= room.settings.rounds; r++) {
@@ -431,13 +494,20 @@ export const getByCode = query({
         : [];
     const guessByUser = new Map(guesses.map((g) => [g.userId, g]));
 
+    // Nothing ever writes `connected: false`, so derive liveness from the
+    // heartbeat timestamp instead of trusting the stored flag.
+    // TODO(bug-hunt): totalScore is patched the instant a player guesses, so
+    // during an active round opponents can see your round score (standings
+    // re-sort live) before the reveal. If unintended, report round-start
+    // totals while status === "active" by subtracting this round's guesses.
+    const now = Date.now();
     const standings = members
       .map((m) => ({
         userId: m.userId,
         username: m.username,
         totalScore: m.totalScore,
         ready: m.ready,
-        connected: m.connected,
+        connected: now - m.lastSeenAt < CONNECTED_WINDOW_MS,
         isHost: m.userId === room.hostId,
         hasGuessed: guessByUser.has(m.userId),
       }))

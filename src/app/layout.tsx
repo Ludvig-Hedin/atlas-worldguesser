@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers";
+import { StructuredData } from "@/components/structured-data";
+import { SITE_KEYWORDS, SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,22 +15,52 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITLE_DEFAULT = "Atlas — Free Geography Guessing Game";
+const DESCRIPTION =
+  "Play Atlas, a free online map guessing game and GeoGuessr alternative. You're dropped into a random Street View anywhere on Earth — read the clues and guess the location by dropping a pin on the map.";
+
 export const metadata: Metadata = {
   title: {
-    default: "Atlas — Guess the World",
+    default: TITLE_DEFAULT,
     template: "%s · Atlas",
   },
-  description:
-    "A fast, beautiful geography guessing game. Drop into a random street, read the clues, and pin your guess on the map.",
-  applicationName: "Atlas",
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [...SITE_KEYWORDS],
   authors: [{ name: "Ludvig Hedin" }],
-  metadataBase: new URL("https://geoatlas.xyz"),
+  creator: "Ludvig Hedin",
+  publisher: SITE_NAME,
+  category: "games",
+  metadataBase: new URL(SITE_URL),
+  // No `alternates` here: metadata is inherited by pages that don't define it,
+  // so a root canonical of "/" would make every noindex page (profile, rooms,
+  // replays…) canonicalize to the homepage. The home canonical lives in page.tsx.
   openGraph: {
-    title: "Atlas — Guess the World",
-    description: "Drop into a random street and guess where you are.",
-    url: "https://geoatlas.xyz",
-    siteName: "Atlas",
+    title: TITLE_DEFAULT,
+    description:
+      "A free geography guessing game — dropped into a random Street View, guess where you are on the map.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE_DEFAULT,
+    description:
+      "A free geography guessing game and GeoGuessr alternative. Guess the location from Street View.",
+    creator: TWITTER_HANDLE,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: { icon: "/favicon.ico" },
 };
@@ -37,8 +69,6 @@ export const viewport: Viewport = {
   themeColor: "#0b0b0c",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -53,6 +83,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
+        <StructuredData />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

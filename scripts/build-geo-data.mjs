@@ -43,6 +43,9 @@ const COMMON_NAMES = {
   KP: "North Korea", CD: "DR Congo", CG: "Congo", CZ: "Czechia", TZ: "Tanzania",
   VE: "Venezuela", BO: "Bolivia", IR: "Iran", SY: "Syria", LA: "Laos",
   VN: "Vietnam", BN: "Brunei", MD: "Moldova", MK: "North Macedonia", TW: "Taiwan",
+  // Natural Earth has two "SO" features (Somalia + Somaliland); last-write-wins
+  // in the names loop picked Somaliland. Pin the recognized country's name.
+  SO: "Somalia",
 };
 
 function isoOf(props) {
@@ -119,8 +122,14 @@ export function countryName(iso: string | null | undefined): string {
     const pop = p.pop_max || 0;
     const isCapital = p.featurecla && /capital/i.test(p.featurecla);
     if (pop < 150000 && !isCapital) continue;
-    const cc = countryAt(lng, lat) || (p.iso_a2 && p.iso_a2 !== "-99" ? p.iso_a2 : null);
+    const srcIso = p.iso_a2 && p.iso_a2 !== "-99" ? p.iso_a2.toUpperCase() : null;
+    const cc = countryAt(lng, lat) || srcIso;
     if (!cc) continue;
+    // When the polygon lookup disagrees with the city's own country, the city
+    // sits in a country whose polygon is missing from the trimmed set (e.g.
+    // Singapore resolves to Malaysia). It would be revealed under the wrong
+    // country name — drop it rather than mislabel it.
+    if (srcIso && cc.toUpperCase() !== srcIso) continue;
     raw.push({ lat: +lat.toFixed(5), lng: +lng.toFixed(5), cc: cc.toUpperCase(), name: p.name, pop });
   }
   raw.sort((a, b) => b.pop - a.pop);

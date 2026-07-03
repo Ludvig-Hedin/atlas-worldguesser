@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Globe2, MapPin, Timer, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,14 +6,54 @@ import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/site-header";
 import { GlobeBackground } from "@/components/globe-background";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
+import { ResumeCta } from "@/components/resume-cta";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
+
+// Moved here from the root layout so only the homepage canonicalizes to "/".
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const HIGHLIGHTS = [
   { icon: MapPin, title: "Real streets", body: "Dropped into a random panorama anywhere on Earth." },
   { icon: Timer, title: "Your pace", body: "Untimed, or race a per-round clock. Moving to NMPZ." },
   { icon: Trophy, title: "Climb", body: "Earn XP, unlock achievements, keep your streak alive." },
+];
+
+const STEPS = [
+  {
+    title: "Drop into a street",
+    body: "Start a round and you're placed in a random Street View panorama somewhere in the world.",
+  },
+  {
+    title: "Read the clues",
+    body: "Study the road signs, architecture, plants, and language to work out the location.",
+  },
+  {
+    title: "Guess on the map",
+    body: "Drop a pin where you think you are — the closer your guess, the more points you score.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "Is Atlas free to play?",
+    a: "Yes. Atlas is a completely free geography guessing game you play in your browser. Sign in only if you want to save stats, earn XP, and play multiplayer with friends.",
+  },
+  {
+    q: "Is Atlas like GeoGuessr?",
+    a: "If you enjoy GeoGuessr, you'll feel right at home. Atlas is a free GeoGuessr alternative with world and regional maps, timed or untimed rounds, and an NMPZ mode.",
+  },
+  {
+    q: "Do I need an account?",
+    a: "No — solo play works with zero setup. An account unlocks streaks, achievements, friends, and custom maps.",
+  },
+  {
+    q: "What can I guess?",
+    a: "Real streets and landmarks worldwide. Pick a map to focus the game on a region like Europe or the USA, or take on the whole world.",
+  },
 ];
 
 export default function Home() {
@@ -53,6 +94,7 @@ export default function Home() {
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+            <ResumeCta />
             <Button size="lg" asChild className="min-w-44 shadow-lg shadow-primary/20">
               <Link href="/play?map=world&quick=1">
                 Quick play
@@ -68,6 +110,10 @@ export default function Home() {
               <Link href="/play">Choose a map</Link>
             </Button>
           </div>
+
+          <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)]">
+            Quick play drops you on the World map — 5 rounds, move freely, no timer.
+          </p>
 
           {!features.googleMaps && (
             <p className="mt-4 text-xs text-subtle">
@@ -95,11 +141,11 @@ export default function Home() {
                   <Link
                     key={m.id}
                     href={`/play?map=${m.id}&quick=1`}
-                    className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:bg-card active:scale-[0.97]"
+                    className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97]"
                   >
                     <MapGlyph
                       mapId={m.id}
-                      className="size-7 text-primary-muted transition-transform group-hover:scale-110"
+                      className="size-7 text-primary-muted transition-transform duration-200 ease-fluid group-hover:scale-110"
                     />
                     <span className="text-sm font-semibold">{m.name}</span>
                     <span className="text-[11px] text-muted-foreground">{m.tagline}</span>
@@ -111,12 +157,67 @@ export default function Home() {
             {/* Highlights */}
             <div className="grid gap-3 text-left sm:grid-cols-3">
               {HIGHLIGHTS.map((h) => (
-                <div key={h.title} className="rounded-2xl border border-border bg-card/40 p-5">
-                  <h.icon className="size-5 text-primary-muted" />
-                  <h3 className="mt-3 text-sm font-semibold">{h.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{h.body}</p>
+                <div
+                  key={h.title}
+                  className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                >
+                  <span className="flex size-9 items-center justify-center rounded-xl border border-border bg-primary/10 text-primary-muted">
+                    <h.icon className="size-[18px]" />
+                  </span>
+                  <h3 className="mt-3.5 text-sm font-semibold">{h.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{h.body}</p>
                 </div>
               ))}
+            </div>
+
+            {/* How to play */}
+            <div>
+              <h2 className="mb-6 text-center text-xl font-semibold tracking-tight">How to play</h2>
+              <ol className="grid gap-3 text-left sm:grid-cols-3">
+                {STEPS.map((s, i) => (
+                  <li
+                    key={s.title}
+                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-muted">
+                      Step {i + 1}
+                    </span>
+                    <h3 className="mt-2.5 text-sm font-semibold">{s.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* What is Atlas — keyword-rich intro for search + AI answer engines */}
+            <div className="text-center">
+              <h2 className="mb-3 text-xl font-semibold tracking-tight">
+                A free map guessing game
+              </h2>
+              <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                Atlas is a free geography guessing game you play right in your browser — no
+                download, no sign-up to start. It’s a fast, modern GeoGuessr alternative: you’re
+                dropped somewhere on Earth in Street View and have to guess the location. Play the
+                whole world, or focus on Europe, the USA, or a famous place in every country.
+              </p>
+            </div>
+
+            {/* FAQ (plain markup — Google restricts FAQ rich results, so no FAQPage schema) */}
+            <div>
+              <h2 className="mb-6 text-center text-xl font-semibold tracking-tight">
+                Frequently asked questions
+              </h2>
+              <div className="flex flex-col gap-3">
+                {FAQ.map((f) => (
+                  <div
+                    key={f.q}
+                    className="rounded-2xl border border-border bg-card/40 p-5 shadow-1"
+                  >
+                    <h3 className="text-sm font-semibold">{f.q}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

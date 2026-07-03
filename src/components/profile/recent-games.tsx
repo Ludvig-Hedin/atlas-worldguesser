@@ -50,7 +50,7 @@ export function RecentGames({ games }: { games: RecentItem[] }) {
           </div>
         );
         return g.replayId ? (
-          <Link key={g.key} href={`/replay/${g.replayId}`} className="transition-colors hover:bg-white/[0.03]">
+          <Link key={g.key} href={`/replay/${g.replayId}`} className="transition-colors hover:bg-elevated">
             {inner}
           </Link>
         ) : (

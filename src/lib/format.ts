@@ -3,7 +3,7 @@
 /** Format a distance in meters as "8 m", "3.4 km", or "1,240 km". */
 export function formatDistance(meters: number): string {
   if (!Number.isFinite(meters) || meters < 0) return "—";
-  if (meters < 1000) return `${Math.round(meters)} m`;
+  if (Math.round(meters) < 1000) return `${Math.round(meters)} m`;
   const km = meters / 1000;
   if (km < 10) return `${km.toFixed(1).replace(/\.0$/, "")} km`;
   return `${Math.round(km).toLocaleString("en-US")} km`;
@@ -43,7 +43,8 @@ export function timeAgo(timestamp: number, now = Date.now()): string {
   if (week < 5) return `${week}w ago`;
   const month = Math.floor(day / 30);
   if (month < 12) return `${month}mo ago`;
-  return `${Math.floor(day / 365)}y ago`;
+  // Days 360-364 give month === 12 but floor(day/365) === 0 — never "0y ago".
+  return `${Math.max(1, Math.floor(day / 365))}y ago`;
 }
 
 /** Percentage string with no decimals, safe against divide-by-zero. */

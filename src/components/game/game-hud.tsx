@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft, Clock } from "lucide-react";
 import { AnimatedNumber } from "./animated-number";
+import { KeyboardLegend } from "./keyboard-legend";
 import { MapGlyph } from "@/components/map-glyph";
 import { formatClock, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,8 @@ interface GameHUDProps {
   movementLabel: string;
 }
 
-const pill = "flex h-9 items-center rounded-full bg-black/45 backdrop-blur transition-colors";
+const pill =
+  "flex h-9 items-center rounded-full bg-black/50 shadow-1 backdrop-blur-md transition-colors";
 
 export function GameHUD({
   round,
@@ -34,12 +36,13 @@ export function GameHUD({
       <div className="pointer-events-auto flex items-center gap-2">
         <Link
           href="/"
-          className={cn(pill, "gap-1 pl-2 pr-3 text-sm font-medium text-white/90 hover:bg-black/65")}
+          className={cn(pill, "gap-1 pl-2 pr-3 text-sm font-medium text-white/90 hover:bg-black/68")}
           aria-label="Back to menu"
         >
           <ChevronLeft className="size-4" />
           Menu
         </Link>
+        <KeyboardLegend />
         <div className={cn(pill, "hidden gap-1.5 px-3 text-xs font-medium text-white/85 sm:flex")}>
           <MapGlyph mapId={mapId} className="size-3.5 text-primary-muted" />
           <span>{mapName}</span>

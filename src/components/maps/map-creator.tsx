@@ -1,21 +1,40 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Authenticated, Unauthenticated, useMutation } from "convex/react";
 import { SignInButton } from "@clerk/nextjs";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { toast } from "sonner";
-import { MapPin, Save, Trash2, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ClipboardPaste,
+  Copy,
+  MapPin,
+  Play,
+  Save,
+  Trash2,
+  Undo2,
+  X,
+} from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CARTO_DARK_STYLE } from "@/lib/map-style";
 import { countryAtAsync } from "@/lib/geo";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
-import { hashString } from "@/lib/utils";
+import { cn, hashString } from "@/lib/utils";
 
 interface Point {
   id: string;
@@ -23,6 +42,8 @@ interface Point {
   lng: number;
   countryCode: string;
 }
+
+const MAX_LOCATIONS = 200;
 
 function pinEl(n: number): HTMLDivElement {
   const el = document.createElement("div");
@@ -44,6 +65,12 @@ function Creator() {
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [created, setCreated] = useState<{ mapId: string; slug: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [pasting, setPasting] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const pointsRef = useRef<Point[]>([]);
   useEffect(() => {
     pointsRef.current = points;
@@ -67,8 +94,17 @@ function Creator() {
         toast.error("Pick a spot on land");
         return;
       }
+      // Re-check AFTER the await: two quick clicks resolve against the same
+      // stale ref otherwise, and the click path must respect the cap too.
+      if (pointsRef.current.length >= MAX_LOCATIONS) {
+        toast.error(`Map is full (${MAX_LOCATIONS} locations)`);
+        return;
+      }
       const id = `${lat.toFixed(4)},${lng.toFixed(4)},${hashString(`${lat}${lng}`)}`;
+      if (markersRef.current.has(id)) return; // same spot clicked twice
       const next = [...pointsRef.current, { id, lat, lng, countryCode: cc }];
+      // Sync the ref immediately so overlapping click handlers see this point.
+      pointsRef.current = next;
       const marker = new maplibregl.Marker({ element: pinEl(next.length), anchor: "bottom" })
         .setLngLat([lng, lat])
         .addTo(map);
@@ -83,10 +119,164 @@ function Creator() {
     };
   }, []);
 
+  /** Append a batch of locations, creating a numbered marker for each. Skips ids already on the map. */
+  const addPoints = (locs: { lat: number; lng: number; countryCode: string }[]) => {
+    const map = mapRef.current;
+    if (!map || locs.length === 0) return;
+    const arr = [...pointsRef.current];
+    for (const loc of locs) {
+      const id = `${loc.lat.toFixed(4)},${loc.lng.toFixed(4)},${hashString(`${loc.lat}${loc.lng}`)}`;
+      if (markersRef.current.has(id)) continue;
+      const marker = new maplibregl.Marker({ element: pinEl(arr.length + 1), anchor: "bottom" })
+        .setLngLat([loc.lng, loc.lat])
+        .addTo(map);
+      markersRef.current.set(id, marker);
+      arr.push({ id, lat: loc.lat, lng: loc.lng, countryCode: loc.countryCode });
+    }
+    pointsRef.current = arr;
+    setPoints(arr);
+  };
+
+  /** Re-label every on-map pin to match the sidebar's index-based numbering. */
+  const renumberMarkers = (arr: Point[]) => {
+    arr.forEach((p, i) => {
+      const el = markersRef.current.get(p.id)?.getElement();
+      if (el) el.textContent = String(i + 1);
+    });
+  };
+
   const removePoint = (id: string) => {
     markersRef.current.get(id)?.remove();
     markersRef.current.delete(id);
-    setPoints((prev) => prev.filter((p) => p.id !== id));
+    const next = pointsRef.current.filter((p) => p.id !== id);
+    pointsRef.current = next;
+    renumberMarkers(next);
+    setPoints(next);
+  };
+
+  const clearAll = () => {
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current.clear();
+    pointsRef.current = [];
+    setPoints([]);
+  };
+
+  const undo = useCallback(() => {
+    const arr = pointsRef.current;
+    const last = arr[arr.length - 1];
+    if (!last) return;
+    markersRef.current.get(last.id)?.remove();
+    markersRef.current.delete(last.id);
+    const next = arr.filter((p) => p.id !== last.id);
+    pointsRef.current = next;
+    setPoints(next);
+  }, []);
+
+  // Cmd/Ctrl+Z undoes the last point, unless the user is typing in a field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
+        const t = e.target as HTMLElement | null;
+        const tag = t?.tagName;
+        if (t?.isContentEditable || tag === "INPUT" || tag === "TEXTAREA") return;
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo]);
+
+  const addPasted = async () => {
+    const valid: { lat: number; lng: number }[] = [];
+    let skipped = 0;
+    for (const line of pasteText.split("\n")) {
+      const raw = line.trim();
+      if (!raw) continue; // ignore blank lines
+      const parts = raw.split(/[\s,]+/).filter(Boolean);
+      if (parts.length !== 2) {
+        skipped++;
+        continue;
+      }
+      const lat = Number(parts[0]);
+      const lng = Number(parts[1]);
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180
+      ) {
+        skipped++;
+        continue;
+      }
+      valid.push({ lat, lng });
+    }
+
+    if (valid.length === 0) {
+      toast.error(
+        skipped
+          ? `No valid coordinates — skipped ${skipped} line${skipped === 1 ? "" : "s"}`
+          : "Add one “lat, lng” per line",
+      );
+      return;
+    }
+
+    setPasting(true);
+    try {
+      // Derive countryCode the same way the map click does.
+      const derived = await Promise.all(
+        valid.map(async (c) => ({ ...c, cc: await countryAtAsync({ lat: c.lat, lng: c.lng }) })),
+      );
+      const existing = new Set(pointsRef.current.map((p) => p.id));
+      const seen = new Set<string>();
+      const capacity = Math.max(0, MAX_LOCATIONS - pointsRef.current.length);
+      const toAdd: { lat: number; lng: number; countryCode: string }[] = [];
+      for (const d of derived) {
+        if (!d.cc) {
+          skipped++; // ocean / no country → cannot place
+          continue;
+        }
+        const id = `${d.lat.toFixed(4)},${d.lng.toFixed(4)},${hashString(`${d.lat}${d.lng}`)}`;
+        if (existing.has(id) || seen.has(id) || toAdd.length >= capacity) {
+          skipped++;
+          continue;
+        }
+        seen.add(id);
+        toAdd.push({ lat: d.lat, lng: d.lng, countryCode: d.cc });
+      }
+
+      if (toAdd.length === 0) {
+        toast.error(
+          capacity === 0
+            ? `Map is full (${MAX_LOCATIONS} locations)`
+            : `No new locations — skipped ${skipped} line${skipped === 1 ? "" : "s"}`,
+        );
+        return;
+      }
+
+      addPoints(toAdd);
+      setPasteText("");
+      toast.success(
+        `Added ${toAdd.length} location${toAdd.length === 1 ? "" : "s"}` +
+          (skipped ? `, skipped ${skipped} invalid line${skipped === 1 ? "" : "s"}` : ""),
+      );
+    } finally {
+      setPasting(false);
+    }
+  };
+
+  const copyLink = async () => {
+    if (!created) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/maps/${created.mapId}/play`);
+      setCopied(true);
+      toast.success("Link copied");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy link");
+    }
   };
 
   const save = async () => {
@@ -94,14 +284,14 @@ function Creator() {
     if (points.length < 5) return toast.error("Add at least 5 locations");
     setSaving(true);
     try {
-      await create({
+      const res = await create({
         name: name.trim(),
         description: description.trim() || undefined,
         isPublic,
         locations: points.map((p) => ({ lat: p.lat, lng: p.lng, countryCode: p.countryCode })),
       });
       toast.success("Map created");
-      router.push("/maps");
+      setCreated({ mapId: res.mapId, slug: res.slug });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save");
       setSaving(false);
@@ -119,68 +309,172 @@ function Creator() {
       </div>
 
       <aside className="flex flex-col gap-4 overflow-y-auto border-t border-border p-5 lg:border-l lg:border-t-0">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Map name"
-          maxLength={40}
-          className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description (optional)"
-          maxLength={200}
-          rows={2}
-          className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <label className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Public — anyone can play</span>
-          <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-        </label>
+        {created ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Check className="size-6" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-base font-semibold">Map created</h2>
+              <p className="mx-auto max-w-[15rem] truncate text-sm text-muted-foreground">
+                {name.trim()}
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <Button onClick={() => router.push(`/maps/${created.mapId}/play`)}>
+                <Play className="size-4" />
+                Play now
+              </Button>
+              <Button variant="outline" onClick={copyLink}>
+                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                {copied ? "Copied" : "Copy link"}
+              </Button>
+              <Link
+                href="/maps"
+                className="mt-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Back to maps
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <TooltipProvider delayDuration={200}>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Map name"
+              maxLength={40}
+              className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description (optional)"
+              maxLength={200}
+              rows={2}
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <label className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Public — anyone can play</span>
+              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            </label>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{points.length} locations</span>
-          {points.length < 5 && <span className="text-subtle">Need {5 - points.length} more</span>}
-        </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{points.length} locations</span>
+              {points.length < 5 && <span className="text-subtle">Need {5 - points.length} more</span>}
+            </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-          {points.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-2 text-sm">
-              <span className="w-4 text-xs text-muted-foreground">{i + 1}</span>
-              <CountryGlyph className="size-3.5" />
-              <span className="min-w-0 flex-1 truncate">{countryName(p.countryCode)}</span>
+            <div className="rounded-lg border border-border">
               <button
                 type="button"
-                onClick={() => removePoint(p.id)}
-                className="text-muted-foreground transition-colors hover:text-destructive"
-                aria-label="Remove location"
+                onClick={() => setShowPaste((v) => !v)}
+                aria-expanded={showPaste}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                <X className="size-3.5" />
+                <span className="flex items-center gap-1.5">
+                  <ClipboardPaste className="size-3.5" />
+                  Paste coordinates
+                </span>
+                <ChevronDown className={cn("size-3.5 transition-transform", showPaste && "rotate-180")} />
               </button>
+              {showPaste && (
+                <div className="space-y-2 border-t border-border p-2.5">
+                  <textarea
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    placeholder={"One per line:\n48.8584, 2.2945\n40.7128 -74.0060"}
+                    rows={4}
+                    className="w-full resize-none rounded-md border border-border bg-input px-2.5 py-2 font-mono text-xs outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-subtle">lat, lng · comma, space or tab</span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={addPasted}
+                      disabled={pasting || !pasteText.trim()}
+                    >
+                      {pasting ? "Adding…" : "Add"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              markersRef.current.forEach((m) => m.remove());
-              markersRef.current.clear();
-              setPoints([]);
-            }}
-            disabled={points.length === 0}
-          >
-            <Trash2 className="size-3.5" />
-            Clear
-          </Button>
-          <Button className="flex-1" onClick={save} disabled={saving || points.length < 5 || name.trim().length < 3}>
-            <Save className="size-4" />
-            Save map
-          </Button>
-        </div>
+            <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+              {points.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-2 rounded-lg bg-muted px-2.5 py-2 text-sm"
+                >
+                  <span className="w-4 text-xs text-muted-foreground">{i + 1}</span>
+                  <CountryGlyph className="size-3.5" />
+                  <span className="min-w-0 flex-1 truncate">{countryName(p.countryCode)}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => removePoint(p.id)}
+                        className="text-muted-foreground transition-colors hover:text-destructive"
+                        aria-label="Remove location"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Remove</TooltipContent>
+                  </Tooltip>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={undo}
+                    disabled={points.length === 0}
+                    aria-label="Undo last location"
+                  >
+                    <Undo2 className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Undo last (⌘Z)</TooltipContent>
+              </Tooltip>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmClear(true)}
+                disabled={points.length === 0}
+              >
+                <Trash2 className="size-3.5" />
+                Clear
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={save}
+                disabled={saving || points.length < 5 || name.trim().length < 3}
+              >
+                <Save className="size-4" />
+                Save map
+              </Button>
+            </div>
+
+            <ConfirmDialog
+              open={confirmClear}
+              onOpenChange={setConfirmClear}
+              title="Clear all locations?"
+              description="This removes every pin you've added. This can't be undone."
+              confirmLabel="Clear all"
+              destructive
+              onConfirm={() => {
+                clearAll();
+                setConfirmClear(false);
+              }}
+            />
+          </TooltipProvider>
+        )}
       </aside>
     </div>
   );

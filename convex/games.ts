@@ -4,8 +4,12 @@ import { currentUser } from "./users";
 
 /** A full game replay (public — anyone with the id can watch). */
 export const getReplay = query({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, { gameId }) => {
+  // The id comes straight from the URL — accept any string and normalize, so
+  // /replay/garbage renders the "not found" state instead of crashing.
+  args: { gameId: v.string() },
+  handler: async (ctx, args) => {
+    const gameId = ctx.db.normalizeId("games", args.gameId);
+    if (!gameId) return null;
     const g = await ctx.db.get(gameId);
     if (!g) return null;
     const owner = await ctx.db.get(g.userId);

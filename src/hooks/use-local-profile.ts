@@ -38,11 +38,11 @@ export function useLocalProfile(): UseLocalProfile {
   }, []);
 
   const setUsername = useCallback((username: string) => {
-    setProfile((prev) => {
-      const next = { ...prev, username };
-      saveProfile(next);
-      return next;
-    });
+    // Merge onto the freshest persisted state (like record) so renaming can't
+    // clobber stats written by another hook instance or tab since mount.
+    const next = { ...loadProfile(), username };
+    saveProfile(next);
+    setProfile(next);
   }, []);
 
   const reset = useCallback(() => {

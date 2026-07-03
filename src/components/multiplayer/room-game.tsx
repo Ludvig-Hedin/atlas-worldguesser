@@ -52,17 +52,30 @@ export function RoomGame({ room }: { room: RoomState }) {
   const submit = useCallback(async () => {
     if (iGuessed || submitting || room.status !== "active") return;
     setSubmitting(true);
-    const cc = guess ? await countryAtAsync(guess) : null;
     try {
+      // Country lookup lazy-loads a JSON chunk; a rejection here must not
+      // leave `submitting` stuck true (permanently disabled Guess button).
+      let cc: string | null = null;
+      if (guess) {
+        try {
+          cc = await countryAtAsync(guess);
+        } catch {
+          cc = null;
+        }
+      }
       await submitGuess({ roomId: room._id, guess, guessCountryCode: cc });
     } catch {
       // round may have already ended
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }, [iGuessed, submitting, room.status, room._id, guess, submitGuess]);
 
+  // Always arm the deadline auto-submit: even "no timer" rooms are hard-capped
+  // server-side (roundEndsAt is always set), and a placed pin should never be
+  // silently lost when that cap hits. Only the HUD display is gated on `timed`.
   const remaining = useCountdown(
-    timed && room.status === "active" ? room.roundEndsAt : null,
+    room.status === "active" ? room.roundEndsAt : null,
     () => {
       if (!iGuessed) void submit();
     },
@@ -117,7 +130,7 @@ export function RoomGame({ room }: { room: RoomState }) {
       {/* Active: guessing or waiting */}
       {room.status === "active" &&
         (iGuessed ? (
-          <div className="absolute bottom-4 right-4 z-30 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/60 px-4 py-3 text-sm text-white/80 backdrop-blur">
+          <div className="absolute bottom-4 right-4 z-30 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white/80 shadow-1 backdrop-blur-md">
             <Loader2 className="size-4 animate-spin text-primary-muted" />
             Waiting for other players…
           </div>
@@ -137,7 +150,7 @@ export function RoomGame({ room }: { room: RoomState }) {
       {/* Reveal panel */}
       {room.status === "roundResult" && room.reveal && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 p-4">
-          <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-popover/95 p-4 shadow-2xl backdrop-blur">
+          <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-popover/95 p-4 shadow-3 backdrop-blur-md">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CountryGlyph className="size-4" />
@@ -152,7 +165,7 @@ export function RoomGame({ room }: { room: RoomState }) {
                 .sort((a, b) => b.score - a.score)
                 .map((g) => (
                   <div key={g.userId} className="flex items-center gap-2 text-sm">
-                    <span className="min-w-0 flex-1 truncate">{g.username}</span>
+                    <span className="min-w-0 flex-1 truncate" title={g.username}>{g.username}</span>
                     <span className="text-xs text-muted-foreground">
                       {g.distanceMeters !== null ? formatDistance(g.distanceMeters) : "No guess"}
                     </span>

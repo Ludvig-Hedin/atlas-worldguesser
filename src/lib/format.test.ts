@@ -11,6 +11,10 @@ describe("formatDistance", () => {
     expect(formatDistance(3400)).toBe("3.4 km");
     expect(formatDistance(1_240_000)).toBe("1,240 km");
   });
+  it("never renders '1000 m' at the km boundary", () => {
+    expect(formatDistance(999.5)).toBe("1 km");
+    expect(formatDistance(999.4)).toBe("999 m");
+  });
   it("guards invalid input", () => {
     expect(formatDistance(-1)).toBe("—");
   });
@@ -40,5 +44,12 @@ describe("timeAgo", () => {
     expect(timeAgo(now, now)).toBe("just now");
     expect(timeAgo(now - 5 * 60_000, now)).toBe("5m ago");
     expect(timeAgo(now - 3 * 3_600_000, now)).toBe("3h ago");
+  });
+  it("never renders '0y ago' for ages just under a year", () => {
+    const now = 1_000_000_000_000;
+    const day = 86_400_000;
+    expect(timeAgo(now - 362 * day, now)).toBe("1y ago");
+    expect(timeAgo(now - 400 * day, now)).toBe("1y ago");
+    expect(timeAgo(now - 731 * day, now)).toBe("2y ago");
   });
 });

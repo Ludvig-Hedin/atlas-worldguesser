@@ -44,7 +44,10 @@ function createGame({ mapId, settings, seed, customLocations }: CreateOpts): Sol
     customLocations && customLocations.length > 0
       ? sampleLocations(customLocations, settings.rounds, rng)
       : pickLocations(mapId, settings.rounds, rng);
-  const locations = picked.map((loc) => (rng() < 0.03 ? AKERS : loc));
+  // World map only — a Sweden drop inside USA/Europe/custom maps breaks the
+  // map's region contract.
+  const locations =
+    mapId === "world" ? picked.map((loc) => (rng() < 0.03 ? AKERS : loc)) : picked;
   return {
     id: crypto.randomUUID(),
     mapId,
@@ -86,24 +89,41 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
   const submit = useCallback(async () => {
     if (game.phase !== "guessing" || submitting) return;
     setSubmitting(true);
-    const actual = game.locations[game.round - 1];
-    const g = guess;
-    const distance = g ? haversineMeters(g, actual) : ANTIPODE_METERS;
-    const score = g ? roundScore(distance, scaleMetersForMap(game.mapId)) : 0;
-    const timeMs = Date.now() - game.roundStartAt;
-    const guessCC = g ? await countryAtAsync(g) : null;
-    const result: RoundResult = {
-      round: game.round,
-      actual,
-      guess: g,
-      distanceMeters: distance,
-      score,
-      timeMs,
-      guessCountryCode: guessCC,
-      countryCorrect: !!guessCC && guessCC === actual.countryCode,
-    };
-    setGame((prev) => ({ ...prev, results: [...prev.results, result], phase: "reveal" }));
-    setSubmitting(false);
+    try {
+      const actual = game.locations[game.round - 1];
+      const g = guess;
+      const distance = g ? haversineMeters(g, actual) : ANTIPODE_METERS;
+      const score = g ? roundScore(distance, scaleMetersForMap(game.mapId)) : 0;
+      const timeMs = Date.now() - game.roundStartAt;
+      // Country lookup lazy-loads a JSON chunk; if that fails (offline, stale
+      // deploy) score the round anyway — only the country bonus is lost.
+      let guessCC: string | null = null;
+      if (g) {
+        try {
+          guessCC = await countryAtAsync(g);
+        } catch {
+          guessCC = null;
+        }
+      }
+      const result: RoundResult = {
+        round: game.round,
+        actual,
+        guess: g,
+        distanceMeters: distance,
+        score,
+        timeMs,
+        guessCountryCode: guessCC,
+        countryCorrect: !!guessCC && guessCC === actual.countryCode,
+      };
+      setGame((prev) =>
+        prev.phase !== "guessing"
+          ? prev
+          : { ...prev, results: [...prev.results, result], phase: "reveal" },
+      );
+    } finally {
+      // Always release the guard — otherwise a throw soft-locks the round.
+      setSubmitting(false);
+    }
   }, [game, guess, submitting]);
 
   const next = useCallback(() => {

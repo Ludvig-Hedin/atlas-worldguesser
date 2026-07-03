@@ -83,7 +83,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           <MatchMap results={game.results} initialView={map.view} />
         </div>
 
-        <div className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-1">
           {game.results.map((r) => (
             <div key={r.round} className="flex items-center gap-3 px-4 py-3">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/6 text-xs font-semibold tabular text-muted-foreground">
@@ -106,7 +106,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-medium">Level {level.level}</span>
             <span className="text-muted-foreground tabular">

@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Authenticated, useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { Play, Plus, Trash2 } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { pluralize, timeAgo } from "@/lib/format";
 
 interface MapSummary {
@@ -20,7 +23,15 @@ interface MapSummary {
   createdAt: number;
 }
 
-function MapCard({ map, onDelete }: { map: MapSummary; onDelete?: () => void }) {
+function MapCard({
+  map,
+  onDelete,
+  deleting,
+}: {
+  map: MapSummary;
+  onDelete?: () => void;
+  deleting?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-2">
@@ -41,7 +52,13 @@ function MapCard({ map, onDelete }: { map: MapSummary; onDelete?: () => void }) 
           </Link>
         </Button>
         {onDelete && (
-          <Button size="icon-sm" variant="ghost" onClick={onDelete} aria-label="Delete map">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={onDelete}
+            disabled={deleting}
+            aria-label="Delete map"
+          >
             <Trash2 className="size-3.5" />
           </Button>
         )}
@@ -54,6 +71,22 @@ export function MapsClient() {
   const publicMaps = useQuery(api.maps.listPublic);
   const mine = useQuery(api.maps.listMine);
   const remove = useMutation(api.maps.remove);
+  const [deleteTarget, setDeleteTarget] = useState<Id<"maps"> | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await remove({ mapId: deleteTarget });
+      toast("Map deleted");
+      setDeleteTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete map");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8">
@@ -78,7 +111,12 @@ export function MapsClient() {
             <h2 className="text-sm font-medium text-muted-foreground">Your maps</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {mine.map((m) => (
-                <MapCard key={m._id} map={m} onDelete={() => remove({ mapId: m._id })} />
+                <MapCard
+                  key={m._id}
+                  map={m}
+                  onDelete={() => setDeleteTarget(m._id)}
+                  deleting={deleting && deleteTarget === m._id}
+                />
               ))}
             </div>
           </section>
@@ -105,6 +143,19 @@ export function MapsClient() {
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(o) => {
+          if (!o && !deleting) setDeleteTarget(null);
+        }}
+        title="Delete map?"
+        description="This permanently deletes this map and its locations. This can't be undone."
+        confirmLabel="Delete"
+        destructive
+        pending={deleting}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

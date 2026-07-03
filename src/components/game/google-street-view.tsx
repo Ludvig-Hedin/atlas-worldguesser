@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { findPanorama, loadGoogleMaps } from "@/lib/google-maps";
 import type { GameLocation, Movement } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { PanoramaControls } from "./panorama-controls";
 import { CompassStrip } from "./compass-strip";
 
@@ -30,7 +31,9 @@ function optionsFor(movement: Movement): google.maps.StreetViewPanoramaOptions {
 interface Props {
   location: GameLocation;
   movement: Movement;
-  onUnavailable: () => void;
+  /** "load" = the Maps API failed to load (re-rolling won't help);
+   *  "coverage" = no panorama near this location. */
+  onUnavailable: (reason?: "load" | "coverage") => void;
 }
 
 export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
@@ -54,6 +57,11 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
   const loadedKeyRef = useRef<string | null>(null);
 
   // Initialise the panorama + service exactly once.
+  // TODO(bug-hunt): each remount ("Play again" bumps gameKey) constructs a new
+  // StreetViewPanorama holding a WebGL context, and Google provides no destroy
+  // API — long sessions can accumulate leaked contexts (browser cap ~16).
+  // Consider setVisible(false) on cleanup and/or a singleton panorama that gets
+  // re-parented instead of recreated.
   useEffect(() => {
     let cancelled = false;
     loadGoogleMaps()
@@ -70,7 +78,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         setReady(true);
       })
       .catch(() => {
-        if (!cancelled) onUnavailableRef.current();
+        if (!cancelled) onUnavailableRef.current("load");
       });
     return () => {
       cancelled = true;
@@ -99,7 +107,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         if (cancelled) return;
         if (!res) {
           loadedKeyRef.current = null;
-          onUnavailableRef.current();
+          onUnavailableRef.current("coverage");
           return;
         }
         const pano = panoRef.current!;
@@ -111,7 +119,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
       .catch(() => {
         if (!cancelled) {
           loadedKeyRef.current = null;
-          onUnavailableRef.current();
+          onUnavailableRef.current("coverage");
         }
       });
     return () => {
@@ -120,6 +128,20 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
   }, [ready, location.lat, location.lng, location.heading, location.pitch]);
 
   const canPanZoom = movement !== "noMoveNoPanZoom";
+
+  // "+ / −  Zoom in / out" — advertised in the keyboard legend.
+  const zoomBy = useCallback((delta: number) => {
+    const p = panoRef.current;
+    if (p) p.setZoom(Math.max(0, Math.min(5, p.getZoom() + delta)));
+  }, []);
+  useKeyboardShortcuts(
+    {
+      "+": () => zoomBy(1),
+      "=": () => zoomBy(1),
+      "-": () => zoomBy(-1),
+    },
+    ready && canPanZoom,
+  );
 
   return (
     <div className="relative h-full w-full">
