@@ -57,7 +57,7 @@ export function AchievementGrid({
               <span
                 className={cn(
                   "flex size-9 shrink-0 items-center justify-center rounded-full",
-                  has ? "bg-primary/12 text-primary-muted" : "bg-white/5",
+                  has ? "bg-primary/12 text-primary-muted" : "bg-overlay",
                 )}
                 aria-hidden
               >
@@ -68,7 +68,7 @@ export function AchievementGrid({
                 <p className="mt-0.5 text-xs text-muted-foreground">{a.description}</p>
                 {showProgress && progress && (
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/8">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-overlay">
                       <div
                         className="h-full rounded-full bg-primary-muted/70"
                         style={{ width: `${Math.round(progress.fraction * 100)}%` }}

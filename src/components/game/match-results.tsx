@@ -86,7 +86,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
         <div className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-1">
           {game.results.map((r) => (
             <div key={r.round} className="flex items-center gap-3 px-4 py-3">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/6 text-xs font-semibold tabular text-muted-foreground">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-overlay text-xs font-semibold tabular text-muted-foreground">
                 {r.round}
               </span>
               <CountryGlyph className="size-4" />

@@ -14,7 +14,7 @@ export function AuthSlot() {
 function AuthControls() {
   const { isLoaded, isSignedIn } = useUser();
   // Subtle skeleton (not an empty gap) while Clerk initializes.
-  if (!isLoaded) return <div className="size-8 animate-pulse rounded-full bg-white/5" aria-hidden />;
+  if (!isLoaded) return <div className="size-8 animate-pulse rounded-full bg-overlay" aria-hidden />;
   if (isSignedIn) {
     return <UserButton appearance={{ elements: { avatarBox: { width: "2rem", height: "2rem" } } }} />;
   }

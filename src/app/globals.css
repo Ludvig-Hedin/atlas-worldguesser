@@ -9,6 +9,73 @@
 :root {
   --radius: 0.75rem;
 
+  /* Light theme (default). Near-white canvas, crisp white cards, dark ink —
+     the same restrained, near-monochrome system as dark, mirrored. */
+  --background: #f6f6f7;
+  --foreground: #0c0c0d;
+
+  --card: #ffffff;
+  --card-foreground: #0c0c0d;
+  --popover: #ffffff;
+  --popover-foreground: #0c0c0d;
+  /* One step above --card, for hover/raised surfaces. */
+  --elevated: #eeeef1;
+
+  --muted: #ececee;
+  --muted-foreground: #5a5a63;
+  --subtle: #86868f;
+
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  /* Darker tint so accent text/icons stay legible on light surfaces. */
+  --primary-muted: #0063d8;
+
+  --secondary: #ffffff;
+  --secondary-foreground: #1a1a1f;
+
+  --accent: #eeeef1;
+  --accent-foreground: #0c0c0d;
+
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+
+  --gold: #b57d0a;
+
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #0a84ff;
+
+  /* Theme-aware overlays: alpha fills used by shared controls (buttons,
+     segmented, ghost hovers). Black-alpha on the light canvas. */
+  --overlay: rgba(0, 0, 0, 0.05);
+  --overlay-hover: rgba(0, 0, 0, 0.08);
+  --overlay-strong: rgba(0, 0, 0, 0.12);
+
+  /* Elevation, tuned soft for a bright canvas (raw values; theme-exposed as
+     --shadow-1/2/3 via @theme inline). */
+  --sh-1: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+  --sh-2: 0 4px 14px -3px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --sh-3: 0 20px 48px -12px rgb(0 0 0 / 0.2), 0 6px 14px -6px rgb(0 0 0 / 0.12);
+
+  /* In-view glass — one recipe for every panorama/map overlay so depth reads
+     consistently. Consumed via the .glass / .glass-strong utilities below. */
+  --glass: rgba(255, 255, 255, 0.74);
+  --glass-strong: rgba(255, 255, 255, 0.84);
+  --glass-border: rgb(0 0 0 / 0.08);
+  --glass-foreground: #0c0c0d;
+
+  --scrollbar: rgba(0, 0, 0, 0.2);
+  --scrollbar-hover: rgba(0, 0, 0, 0.32);
+
+  /* In-game HUD pills/panels that float over Street View. Light theme → frosted
+     light pills with dark ink (paired with text-foreground). */
+  --hud: rgba(255, 255, 255, 0.72);
+  --hud-hover: rgba(255, 255, 255, 0.85);
+  --hud-scrim: rgb(0 0 0 / 0.14);
+}
+
+.dark {
   --background: #0b0b0c;
   --foreground: #fafafa;
 
@@ -16,7 +83,6 @@
   --card-foreground: #fafafa;
   --popover: #161618;
   --popover-foreground: #fafafa;
-  /* One step above --card, for hover/raised surfaces. */
   --elevated: #1c1c20;
 
   --muted: #1b1b1f;
@@ -43,10 +109,26 @@
   --input: rgba(255, 255, 255, 0.06);
   --ring: #0a84ff;
 
-  /* In-view glass — one recipe for every panorama/map overlay so depth reads
-     consistently. Consumed via the .glass / .glass-strong utilities below. */
+  --overlay: rgba(255, 255, 255, 0.06);
+  --overlay-hover: rgba(255, 255, 255, 0.1);
+  --overlay-strong: rgba(255, 255, 255, 0.14);
+
+  /* Layered elevation for a near-black canvas: soft cast + tighter contact. */
+  --sh-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --sh-2: 0 4px 14px -3px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+  --sh-3: 0 20px 48px -12px rgb(0 0 0 / 0.66), 0 6px 14px -6px rgb(0 0 0 / 0.45);
+
   --glass: rgba(18, 18, 20, 0.62);
   --glass-strong: rgba(12, 12, 14, 0.7);
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-foreground: #fafafa;
+
+  --scrollbar: rgba(255, 255, 255, 0.14);
+  --scrollbar-hover: rgba(255, 255, 255, 0.22);
+
+  --hud: rgba(0, 0, 0, 0.5);
+  --hud-hover: rgba(0, 0, 0, 0.68);
+  --hud-scrim: rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
@@ -74,6 +156,11 @@
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-overlay-hover: var(--overlay-hover);
+  --color-overlay-strong: var(--overlay-strong);
+  --color-hud: var(--hud);
+  --color-hud-hover: var(--hud-hover);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -87,9 +174,9 @@
   /* Layered elevation scale, tuned for a near-black canvas: a soft cast plus a
      tighter contact shadow. Utilities: shadow-1 (rest) · shadow-2 (raised/hover)
      · shadow-3 (sheets, popovers, floating panels). */
-  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-2: 0 4px 14px -3px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.35);
-  --shadow-3: 0 20px 48px -12px rgb(0 0 0 / 0.66), 0 6px 14px -6px rgb(0 0 0 / 0.45);
+  --shadow-1: var(--sh-1);
+  --shadow-2: var(--sh-2);
+  --shadow-3: var(--sh-3);
 
   /* Opt-in fluid easing (decel curve) for entrances and hover transitions. */
   --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
@@ -134,7 +221,9 @@
 }
 
 html {
-  color-scheme: dark;
+  /* Sane default before the no-flash script runs; it then sets the concrete
+     scheme inline on <html> to match the resolved theme. */
+  color-scheme: light dark;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -187,18 +276,18 @@ h1, h2, h3, h4 {
 /* Refined, unobtrusive scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-color: var(--scrollbar) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--scrollbar);
   border-radius: 9999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--scrollbar-hover);
 }
 
 /* Accessible focus ring */
@@ -221,15 +310,17 @@ h1, h2, h3, h4 {
   background: var(--glass);
   backdrop-filter: blur(12px) saturate(1.4);
   -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  border: 1px solid rgb(255 255 255 / 0.1);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-2);
+  color: var(--glass-foreground);
 }
 @utility glass-strong {
   background: var(--glass-strong);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid rgb(255 255 255 / 0.12);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-3);
+  color: var(--glass-foreground);
 }
 
 .tabular {

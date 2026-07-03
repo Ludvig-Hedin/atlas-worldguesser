@@ -15,7 +15,7 @@ import { Kbd } from "@/components/ui/kbd";
 /** A compact chip used for pointer-driven actions (e.g. clicking the map). */
 function ActionChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-5 items-center rounded border border-border bg-white/5 px-1.5 text-[11px] font-medium text-muted-foreground">
+    <span className="inline-flex h-5 items-center rounded border border-border bg-overlay px-1.5 text-[11px] font-medium text-muted-foreground">
       {children}
     </span>
   );
@@ -46,7 +46,7 @@ export function KeyboardLegend() {
             <button
               type="button"
               aria-label="Keyboard shortcuts"
-              className="flex size-9 items-center justify-center rounded-full bg-black/50 text-white/90 shadow-1 backdrop-blur-md transition-colors hover:bg-black/68 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex size-9 items-center justify-center rounded-full bg-hud text-foreground/90 shadow-1 backdrop-blur-md transition-colors hover:bg-hud-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Keyboard className="size-4" />
             </button>

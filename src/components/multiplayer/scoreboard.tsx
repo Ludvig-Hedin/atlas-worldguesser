@@ -34,7 +34,7 @@ export function Scoreboard({ standings, myUserId, phase, className }: Scoreboard
             key={s.userId}
             className={cn(
               "flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors",
-              isMe ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-white/[0.03]",
+              isMe ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-overlay",
             )}
           >
             {phase !== "lobby" && (

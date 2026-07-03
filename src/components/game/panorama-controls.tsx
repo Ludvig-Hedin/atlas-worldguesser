@@ -30,7 +30,7 @@ export function PanoramaControls({
             onClick={onResetNorth}
             disabled={!onResetNorth}
             aria-label="Face north"
-            className="flex size-11 items-center justify-center rounded-full bg-black/50 text-white shadow-2 ring-1 ring-inset ring-white/10 backdrop-blur-md transition hover:bg-black/68 hover:ring-white/30 disabled:cursor-default disabled:ring-0 disabled:hover:bg-black/50 disabled:hover:ring-0"
+            className="flex size-11 items-center justify-center rounded-full bg-hud text-foreground shadow-2 ring-1 ring-inset ring-border backdrop-blur-md transition hover:bg-hud-hover hover:ring-border-strong disabled:cursor-default disabled:ring-0 disabled:hover:bg-hud disabled:hover:ring-0"
           >
             <svg
               width="22"
@@ -47,21 +47,21 @@ export function PanoramaControls({
       </Tooltip>
 
       {showZoom && (
-        <div className="flex flex-col overflow-hidden rounded-full bg-black/50 text-white shadow-2 backdrop-blur-md">
+        <div className="flex flex-col overflow-hidden rounded-full bg-hud text-foreground shadow-2 backdrop-blur-md">
           <button
             type="button"
             onClick={onZoomIn}
             aria-label="Zoom in"
-            className="flex size-9 items-center justify-center transition-colors hover:bg-white/15 active:bg-white/20"
+            className="flex size-9 items-center justify-center transition-colors hover:bg-overlay-hover active:bg-overlay-strong"
           >
             <Plus className="size-4" />
           </button>
-          <span className="mx-auto h-px w-5 bg-white/15" />
+          <span className="mx-auto h-px w-5 bg-border-strong" />
           <button
             type="button"
             onClick={onZoomOut}
             aria-label="Zoom out"
-            className="flex size-9 items-center justify-center transition-colors hover:bg-white/15 active:bg-white/20"
+            className="flex size-9 items-center justify-center transition-colors hover:bg-overlay-hover active:bg-overlay-strong"
           >
             <Minus className="size-4" />
           </button>

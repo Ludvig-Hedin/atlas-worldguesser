@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Progress } from "@/components/ui/progress";
 import { CountryGlyph } from "@/components/map-glyph";
+import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { MAX_ROUND_SCORE, type RoundResult } from "@/lib/types";
@@ -25,6 +26,7 @@ interface RoundRevealProps {
 export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealProps) {
   const madeGuess = result.guess !== null;
   const scoreFraction = result.score / MAX_ROUND_SCORE;
+  const hasKeyboard = useHasKeyboard();
 
   // Mash-guard: keep the advance button disabled briefly so a quick click
   // doesn't skip the map-fit animation. Re-focus once it becomes actionable.
@@ -63,7 +65,7 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-2xl border border-border-strong bg-popover/95 p-5 shadow-3 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-white/6">
+              <span className="flex size-10 items-center justify-center rounded-full bg-overlay">
                 <CountryGlyph className="size-5" />
               </span>
               <div>
@@ -106,7 +108,9 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
           <Button ref={nextRef} size="lg" className="w-full" onClick={onNext} disabled={!ready} autoFocus>
             {isLastRound ? "See results" : "Next round"}
             <ArrowRight className="size-4" />
-            <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>
+            {hasKeyboard && (
+              <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>
+            )}
           </Button>
         </div>
       </motion.div>

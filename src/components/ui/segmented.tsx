@@ -34,7 +34,7 @@ export function Segmented<T extends string | number>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        "relative inline-flex w-full items-stretch gap-1 rounded-xl bg-white/5 p-1",
+        "relative inline-flex w-full items-stretch gap-1 rounded-xl bg-overlay p-1",
         className,
       )}
     >
@@ -58,7 +58,7 @@ export function Segmented<T extends string | number>({
               <motion.span
                 layoutId={`segmented-${groupId}`}
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                className="absolute inset-0 rounded-lg bg-white/10 shadow-1"
+                className="absolute inset-0 rounded-lg bg-overlay-hover shadow-1"
               />
             )}
             <span className="relative z-10">{opt.label}</span>

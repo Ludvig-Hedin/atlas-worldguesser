@@ -5,6 +5,7 @@ import { ChevronLeft, Clock } from "lucide-react";
 import { AnimatedNumber } from "./animated-number";
 import { KeyboardLegend } from "./keyboard-legend";
 import { MapGlyph } from "@/components/map-glyph";
+import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import { formatClock, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -16,10 +17,12 @@ interface GameHUDProps {
   totalScore: number;
   timeRemaining: number | null;
   movementLabel: string;
+  /** Survival mode: show a running country streak instead of "round X/Y". */
+  survivalStreak?: number | null;
 }
 
 const pill =
-  "flex h-9 items-center rounded-full bg-black/50 shadow-1 backdrop-blur-md transition-colors";
+  "flex h-9 items-center rounded-full bg-hud shadow-1 backdrop-blur-md transition-colors";
 
 export function GameHUD({
   round,
@@ -29,25 +32,27 @@ export function GameHUD({
   totalScore,
   timeRemaining,
   movementLabel,
+  survivalStreak = null,
 }: GameHUDProps) {
   const lowTime = timeRemaining !== null && timeRemaining <= 10;
+  const hasKeyboard = useHasKeyboard();
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-2 bg-gradient-to-b from-black/55 to-transparent p-3 pb-10">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-2 bg-gradient-to-b from-[var(--hud-scrim)] to-transparent p-3 pb-10">
       <div className="pointer-events-auto flex items-center gap-2">
         <Link
           href="/"
-          className={cn(pill, "gap-1 pl-2 pr-3 text-sm font-medium text-white/90 hover:bg-black/68")}
+          className={cn(pill, "gap-1 pl-2 pr-3 text-sm font-medium text-foreground/90 hover:bg-hud-hover")}
           aria-label="Back to menu"
         >
           <ChevronLeft className="size-4" />
           Menu
         </Link>
-        <KeyboardLegend />
-        <div className={cn(pill, "hidden gap-1.5 px-3 text-xs font-medium text-white/85 sm:flex")}>
+        {hasKeyboard && <KeyboardLegend />}
+        <div className={cn(pill, "hidden gap-1.5 px-3 text-xs font-medium text-foreground/85 sm:flex")}>
           <MapGlyph mapId={mapId} className="size-3.5 text-primary-muted" />
           <span>{mapName}</span>
-          <span className="text-white/35">·</span>
-          <span className="text-white/60">{movementLabel}</span>
+          <span className="text-foreground/35">·</span>
+          <span className="text-foreground/60">{movementLabel}</span>
         </div>
       </div>
 
@@ -57,7 +62,7 @@ export function GameHUD({
             className={cn(
               pill,
               "gap-1.5 px-3 font-mono text-sm font-semibold tabular",
-              lowTime ? "bg-destructive/30 text-destructive-foreground" : "text-white/90",
+              lowTime ? "bg-destructive/30 text-destructive-foreground" : "text-foreground/90",
             )}
           >
             <Clock className="size-3.5" />
@@ -65,8 +70,8 @@ export function GameHUD({
           </div>
         )}
         <div className={cn(pill, "gap-2 px-3.5")}>
-          <span className="text-[11px] font-medium uppercase tracking-wide text-white/50">
-            {round}/{totalRounds}
+          <span className="text-[11px] font-medium uppercase tracking-wide text-foreground/50">
+            {survivalStreak !== null ? `Streak ${survivalStreak}` : `${round}/${totalRounds}`}
           </span>
           <AnimatedNumber
             value={totalScore}

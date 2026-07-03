@@ -14,7 +14,7 @@ export function ConvexGate({ children, label = "This feature" }: { children: Rea
         <h1 className="text-xl font-semibold">{label} needs setup</h1>
         <p className="max-w-sm text-sm text-muted-foreground">
           {label} runs on Convex + Clerk. Add the keys from{" "}
-          <code className="rounded bg-white/8 px-1">.env.example</code> to enable it.
+          <code className="rounded bg-overlay px-1">.env.example</code> to enable it.
         </p>
         <Button asChild>
           <Link href="/play">Play solo instead</Link>

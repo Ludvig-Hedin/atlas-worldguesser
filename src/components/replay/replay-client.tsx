@@ -78,7 +78,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
           onClick={() => setSelected(null)}
           className={cn(
             "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-            selected == null ? "bg-white/10 text-foreground" : "bg-white/5 text-muted-foreground hover:text-foreground",
+            selected == null ? "bg-overlay-hover text-foreground" : "bg-overlay text-muted-foreground hover:text-foreground",
           )}
         >
           Overview
@@ -90,7 +90,7 @@ export function ReplayClient({ gameId }: { gameId: string }) {
             onClick={() => setSelected(r.round)}
             className={cn(
               "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-              selected === r.round ? "bg-white/10 text-foreground" : "bg-white/5 text-muted-foreground hover:text-foreground",
+              selected === r.round ? "bg-overlay-hover text-foreground" : "bg-overlay text-muted-foreground hover:text-foreground",
             )}
           >
             R{r.round}

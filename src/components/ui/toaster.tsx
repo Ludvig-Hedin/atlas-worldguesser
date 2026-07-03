@@ -14,7 +14,7 @@ export function Toaster() {
             "!bg-popover !border-border !text-popover-foreground !rounded-xl !shadow-3 !backdrop-blur-md",
           description: "!text-muted-foreground",
           actionButton: "!bg-primary !text-primary-foreground",
-          cancelButton: "!bg-white/8 !text-foreground",
+          cancelButton: "!bg-overlay !text-foreground",
         },
       }}
     />
