@@ -56,17 +56,13 @@ for (let i = 0; i < CANDIDATES; i++) {
   let lonDeg = (((i * golden) / DEG) % 360);
   if (lonDeg > 180) lonDeg -= 360;
 
-  // Ice cap: guarantee Antarctica ring (polygon-in-polygon is unreliable at the pole).
-  let onLand = latDeg < -62;
-
-  if (!onLand) {
-    const pt = [lonDeg, latDeg];
-    for (const { f, bbox } of feats) {
-      if (lonDeg < bbox[0] || lonDeg > bbox[2] || latDeg < bbox[1] || latDeg > bbox[3]) continue;
-      if (booleanPointInPolygon(pt, f)) {
-        onLand = true;
-        break;
-      }
+  let onLand = false;
+  const pt = [lonDeg, latDeg];
+  for (const { f, bbox } of feats) {
+    if (lonDeg < bbox[0] || lonDeg > bbox[2] || latDeg < bbox[1] || latDeg > bbox[3]) continue;
+    if (booleanPointInPolygon(pt, f)) {
+      onLand = true;
+      break;
     }
   }
 
