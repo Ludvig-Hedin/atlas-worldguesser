@@ -9,11 +9,13 @@ import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/hooks/use-t";
 
 export function GuestProfile() {
   const { profile, ready, setUsername } = useLocalProfile();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const t = useT();
 
   if (!ready) {
     return (
@@ -54,7 +56,7 @@ export function GuestProfile() {
                 maxLength={20}
                 className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
-              <Button size="icon-sm" onClick={saveName} aria-label="Save name">
+              <Button size="icon-sm" onClick={saveName} aria-label={t("profile.saveName")}>
                 <Check className="size-4" />
               </Button>
             </div>
@@ -68,13 +70,13 @@ export function GuestProfile() {
                   setEditing(true);
                 }}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Edit name"
+                aria-label={t("profile.editName")}
               >
                 <Pencil className="size-3.5" />
               </button>
             </div>
           )}
-          <p className="text-sm text-muted-foreground">Stats saved on this device</p>
+          <p className="text-sm text-muted-foreground">{t("profile.statsOnDevice")}</p>
         </div>
       </header>
 
@@ -86,7 +88,7 @@ export function GuestProfile() {
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Recent games</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{t("profile.recentGames")}</h2>
         <RecentGames games={recent} />
       </section>
     </div>

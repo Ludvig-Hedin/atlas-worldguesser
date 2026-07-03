@@ -9,9 +9,11 @@ import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { timeAgo } from "@/lib/format";
+import { useT } from "@/hooks/use-t";
 
 export function PublicProfile({ username }: { username: string }) {
   const data = useQuery(api.users.profileByUsername, { username });
+  const t = useT();
 
   if (data === undefined) {
     return (
@@ -25,8 +27,8 @@ export function PublicProfile({ username }: { username: string }) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
         <Globe2 className="size-8 text-muted-foreground" />
-        <h1 className="text-xl font-semibold">Player not found</h1>
-        <p className="text-sm text-muted-foreground">No one plays under &ldquo;{username}&rdquo;.</p>
+        <h1 className="text-xl font-semibold">{t("profile.playerNotFound")}</h1>
+        <p className="text-sm text-muted-foreground">{t("profile.noPlayerNamed", { username })}</p>
       </div>
     );
   }
@@ -49,7 +51,7 @@ export function PublicProfile({ username }: { username: string }) {
         <IdentityAvatar name={profile.username} src={profile.avatarUrl} className="size-16 text-lg" />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{profile.username}</h1>
-          <p className="text-sm text-muted-foreground">Level {profile.level} · joined {timeAgo(profile.createdAt)}</p>
+          <p className="text-sm text-muted-foreground">{t("profile.levelJoined", { level: profile.level, joined: timeAgo(profile.createdAt) })}</p>
         </div>
       </header>
 
@@ -61,7 +63,7 @@ export function PublicProfile({ username }: { username: string }) {
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Recent games</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{t("profile.recentGames")}</h2>
         <RecentGames games={recentItems} />
       </section>
     </div>

@@ -1,17 +1,21 @@
 import type { LocaleDictionary } from "./en";
 
-/** Swedish (Svenska). Keys mirror `en`; missing keys fall back to English. */
+/** Swedish (Svenska). Keys mirror `en`; complete translation. */
 export const sv: LocaleDictionary = {
+  // Navigation / header
   "nav.maps": "Kartor",
   "nav.leaderboard": "Topplista",
   "nav.friends": "Vänner",
   "nav.stats": "Statistik",
   "nav.play": "Spela",
 
+  // Auth
   "auth.signIn": "Logga in",
   "auth.signUp": "Skapa konto",
   "auth.signOut": "Logga ut",
+  "auth.signInTooltip": "Spara dina framsteg, klättra på topplistan och spela med vänner",
 
+  // Settings menu
   "settings.title": "Inställningar",
   "settings.open": "Inställningar",
   "settings.theme": "Tema",
@@ -25,6 +29,95 @@ export const sv: LocaleDictionary = {
   "settings.mapType.terrain": "Terräng",
   "settings.mapType.hybrid": "Hybrid",
 
+  // Game
+  "round.counter": "Runda {current} av {total}",
+
+  // Friends
+  "friends.title": "Vänner",
+  "friends.subtitle": "Lägg till spelare och starta privata matcher",
+  "friends.signInToManage": "Logga in för att hantera vänner.",
+  "friends.signIn": "Logga in",
+  "friends.removed": "Borttagen",
+  "friends.couldNotRemove": "Kunde inte ta bort vän",
+  "friends.requestSentTo": "Förfrågan skickad till {name}",
+  "friends.couldNotSendRequest": "Kunde inte skicka förfrågan",
+  "friends.requestWithdrawn": "Förfrågan tillbakadragen",
+  "friends.couldNotWithdrawRequest": "Kunde inte dra tillbaka förfrågan",
+  "friends.usernamePlaceholder": "t.ex. kartmästare",
+  "friends.add": "Lägg till",
+  "friends.requests": "Förfrågningar",
+  "friends.accept": "Acceptera",
+  "friends.decline": "Avböj",
+  "friends.yourFriends": "Dina vänner",
+  "friends.noFriends": "Inga vänner än – lägg till någon ovan.",
+  "friends.remove": "Ta bort",
+  "friends.pendingSent": "Väntar på svar",
+  "friends.pending": "Väntar…",
+  "friends.cancel": "Avbryt",
+  "friends.recentPlayers": "Senaste spelare",
+  "friends.removeConfirmTitle": "Ta bort vän?",
+  "friends.removeConfirmDescription": "Du måste skicka en ny förfrågan för att lägga till dem igen.",
+
+  // Maps
+  "maps.byAuthor": "av {author}",
+  "maps.private": "Privat",
+  "maps.play": "Spela",
+  "maps.deleteMap": "Ta bort karta",
+  "maps.mapDeleted": "Karta borttagen",
+  "maps.deleteFailed": "Kunde inte ta bort kartan",
+  "maps.title": "Egna kartor",
+  "maps.subtitle": "Spela communityns kartor eller skapa en egen",
+  "maps.create": "Skapa",
+  "maps.yourMaps": "Dina kartor",
+  "maps.communityMaps": "Communitykartor",
+  "maps.noCommunityMaps": "Inga communitykartor än – bli den första att skapa en.",
+  "maps.deleteDialogTitle": "Ta bort karta?",
+  "maps.deleteDialogDescription": "Detta tar bort kartan och dess platser permanent. Det går inte att ångra.",
+  "maps.deleteConfirm": "Ta bort",
+  "maps.mapUnavailable": "Kartan är inte tillgänglig",
+  "maps.mapUnavailableDescription": "Kartan är privat eller har inte tillräckligt med platser.",
+  "maps.browseMaps": "Bläddra bland kartor",
+
+  // Leaderboard
+  "leaderboard.title": "Topplista",
+  "leaderboard.rankedByXp": "Rankad efter XP",
+  "leaderboard.global": "Global",
+  "leaderboard.friends": "Vänner",
+  "leaderboard.scopeAria": "Topplistans omfattning",
+  "leaderboard.you": "Du",
+  "leaderboard.levelGames": "Nivå {level} · {games} spel",
+  "leaderboard.noFriendsRanked": "Inga rankade vänner än. Lägg till vänner för att se dem här.",
+  "leaderboard.friendsSignedOut": "Logga in och lägg till vänner för att se dem rankade här.",
+  "leaderboard.noPlayersRanked": "Inga rankade spelare än. Bli den första.",
+  "leaderboard.yourRank": "Din placering",
+
+  // Profile
+  "profile.saveName": "Spara namn",
+  "profile.editName": "Ändra namn",
+  "profile.statsOnDevice": "Statistik sparad på den här enheten",
+  "profile.recentGames": "Senaste spelen",
+  "profile.playerNotFound": "Spelaren hittades inte",
+  "profile.noPlayerNamed": "Ingen spelar under ”{username}”.",
+  "profile.levelJoined": "Nivå {level} · gick med {joined}",
+
+  // Multiplayer
+  "mp.host": "Värd",
+  "mp.disconnected": "Frånkopplad",
+  "mp.ready": "Redo",
+  "mp.notReady": "Inte redo",
+  "mp.movementMoving": "Rör sig",
+  "mp.hintToast": "Sökområdet visas på kartan · {continent}",
+  "mp.waitingForPlayers": "Väntar på andra spelare…",
+  "mp.nextRoundIn": "Nästa runda om {seconds} s",
+  "mp.noGuess": "Ingen gissning",
+  "mp.finalResults": "Slutresultat",
+  "mp.wins": "vinner",
+  "mp.pointsValue": "{points} poäng",
+  "mp.rematch": "Revansch",
+  "mp.leave": "Lämna",
+  "mp.waitingForHost": "Väntar på att värden startar en revansch…",
+
+  // Generic / shared
   "common.loading": "Laddar…",
   "common.back": "Tillbaka",
   "common.cancel": "Avbryt",

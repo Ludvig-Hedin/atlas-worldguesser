@@ -3,6 +3,7 @@
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
 
 /** Renders Clerk auth controls only when auth is configured; otherwise nothing. */
@@ -13,6 +14,7 @@ export function AuthSlot() {
 
 function AuthControls() {
   const { isLoaded, isSignedIn } = useUser();
+  const t = useT();
   // Subtle skeleton (not an empty gap) while Clerk initializes.
   if (!isLoaded) return <div className="size-8 animate-pulse rounded-full bg-overlay" aria-hidden />;
   if (isSignedIn) {
@@ -22,10 +24,10 @@ function AuthControls() {
     <Tooltip>
       <TooltipTrigger asChild>
         <SignInButton mode="modal">
-          <Button size="sm">Sign in</Button>
+          <Button size="sm">{t("auth.signIn")}</Button>
         </SignInButton>
       </TooltipTrigger>
-      <TooltipContent>Save your progress, climb the leaderboard, and play with friends</TooltipContent>
+      <TooltipContent>{t("auth.signInTooltip")}</TooltipContent>
     </Tooltip>
   );
 }

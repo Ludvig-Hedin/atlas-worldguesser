@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOCALES, translate } from "./index";
+import { LOCALES, translate, type TKey } from "./index";
 import { en } from "./en";
 
 describe("translate", () => {
@@ -8,17 +8,16 @@ describe("translate", () => {
     expect(translate("pl", "settings.theme")).toBe("Motyw");
   });
 
-  it("falls back to English for a locale missing the key", () => {
-    // A key not yet translated in a locale resolves to English, never a raw key.
-    const value = translate("lt", "common.loading");
-    expect(typeof value).toBe("string");
-    expect(value).not.toBe("common.loading");
+  it("falls back to English then to the key for an unknown key", () => {
+    // Cast an unknown key: no locale (incl. en) has it, so we get the key back.
+    const unknown = "__does.not.exist__" as TKey;
+    expect(translate("lt", unknown)).toBe("__does.not.exist__");
+    expect(translate("en", unknown)).toBe("__does.not.exist__");
   });
 
-  it("interpolates {name} placeholders", () => {
+  it("interpolates {name} placeholders in en and in a translated locale", () => {
     expect(translate("en", "round.counter", { current: 2, total: 5 })).toBe("Round 2 of 5");
-    // A locale without the key still interpolates via the English fallback.
-    expect(translate("sv", "round.counter", { current: 1, total: 3 })).toBe("Round 1 of 3");
+    expect(translate("sv", "round.counter", { current: 1, total: 3 })).toBe("Runda 1 av 3");
   });
 
   it("every locale exposes its endonym", () => {

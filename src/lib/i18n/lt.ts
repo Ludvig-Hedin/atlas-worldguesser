@@ -1,17 +1,21 @@
 import type { LocaleDictionary } from "./en";
 
-/** Lithuanian (Lietuvių). Keys mirror `en`; missing keys fall back to English. */
+/** Lithuanian (Lietuvių). Keys mirror `en`; complete translation. */
 export const lt: LocaleDictionary = {
+  // Navigacija / antraštė
   "nav.maps": "Žemėlapiai",
   "nav.leaderboard": "Lyderių lentelė",
   "nav.friends": "Draugai",
   "nav.stats": "Statistika",
   "nav.play": "Žaisti",
 
+  // Prisijungimas
   "auth.signIn": "Prisijungti",
   "auth.signUp": "Registruotis",
   "auth.signOut": "Atsijungti",
+  "auth.signInTooltip": "Išsaugokite pažangą, kilkite lyderių lentelėje ir žaiskite su draugais",
 
+  // Nustatymų meniu
   "settings.title": "Nustatymai",
   "settings.open": "Nustatymai",
   "settings.theme": "Tema",
@@ -25,6 +29,95 @@ export const lt: LocaleDictionary = {
   "settings.mapType.terrain": "Reljefas",
   "settings.mapType.hybrid": "Hibridinis",
 
+  // Žaidimas
+  "round.counter": "Raundas {current} iš {total}",
+
+  // Draugai
+  "friends.title": "Draugai",
+  "friends.subtitle": "Pridėkite žaidėjų ir pradėkite privačias rungtynes",
+  "friends.signInToManage": "Prisijunkite, kad galėtumėte valdyti draugus.",
+  "friends.signIn": "Prisijungti",
+  "friends.removed": "Pašalinta",
+  "friends.couldNotRemove": "Nepavyko pašalinti draugo",
+  "friends.requestSentTo": "Užklausa išsiųsta {name}",
+  "friends.couldNotSendRequest": "Nepavyko išsiųsti užklausos",
+  "friends.requestWithdrawn": "Užklausa atšaukta",
+  "friends.couldNotWithdrawRequest": "Nepavyko atšaukti užklausos",
+  "friends.usernamePlaceholder": "pvz. mapmaster",
+  "friends.add": "Pridėti",
+  "friends.requests": "Užklausos",
+  "friends.accept": "Priimti",
+  "friends.decline": "Atmesti",
+  "friends.yourFriends": "Jūsų draugai",
+  "friends.noFriends": "Kol kas draugų nėra — pridėkite ką nors aukščiau.",
+  "friends.remove": "Pašalinti",
+  "friends.pendingSent": "Išsiųsta, laukiama",
+  "friends.pending": "Laukiama…",
+  "friends.cancel": "Atšaukti",
+  "friends.recentPlayers": "Neseniai žaidę",
+  "friends.removeConfirmTitle": "Pašalinti draugą?",
+  "friends.removeConfirmDescription": "Norėdami pridėti iš naujo, turėsite siųsti naują užklausą.",
+
+  // Žemėlapiai
+  "maps.byAuthor": "sukūrė {author}",
+  "maps.private": "Privatus",
+  "maps.play": "Žaisti",
+  "maps.deleteMap": "Ištrinti žemėlapį",
+  "maps.mapDeleted": "Žemėlapis ištrintas",
+  "maps.deleteFailed": "Nepavyko ištrinti žemėlapio",
+  "maps.title": "Pasirinktiniai žemėlapiai",
+  "maps.subtitle": "Žaiskite bendruomenės žemėlapius arba kurkite savo",
+  "maps.create": "Kurti",
+  "maps.yourMaps": "Jūsų žemėlapiai",
+  "maps.communityMaps": "Bendruomenės žemėlapiai",
+  "maps.noCommunityMaps": "Bendruomenės žemėlapių dar nėra — sukurkite pirmasis.",
+  "maps.deleteDialogTitle": "Ištrinti žemėlapį?",
+  "maps.deleteDialogDescription": "Šis žemėlapis ir jo vietos bus negrįžtamai ištrinti. Šio veiksmo anuliuoti nebus galima.",
+  "maps.deleteConfirm": "Ištrinti",
+  "maps.mapUnavailable": "Žemėlapis nepasiekiamas",
+  "maps.mapUnavailableDescription": "Šis žemėlapis yra privatus arba neturi pakankamai vietų.",
+  "maps.browseMaps": "Naršyti žemėlapius",
+
+  // Lyderių lentelė
+  "leaderboard.title": "Lyderių lentelė",
+  "leaderboard.rankedByXp": "Reitinguota pagal XP",
+  "leaderboard.global": "Visuotinė",
+  "leaderboard.friends": "Draugai",
+  "leaderboard.scopeAria": "Lyderių lentelės apimtis",
+  "leaderboard.you": "Jūs",
+  "leaderboard.levelGames": "{level} lygis · {games} žaidimų",
+  "leaderboard.noFriendsRanked": "Reitinguotų draugų dar nėra. Pridėkite draugų, kad matytumėte juos čia.",
+  "leaderboard.friendsSignedOut": "Prisijunkite ir pridėkite draugų, kad matytumėte jų reitingus čia.",
+  "leaderboard.noPlayersRanked": "Reitinguotų žaidėjų dar nėra. Būkite pirmasis.",
+  "leaderboard.yourRank": "Jūsų vieta",
+
+  // Profilis
+  "profile.saveName": "Išsaugoti vardą",
+  "profile.editName": "Keisti vardą",
+  "profile.statsOnDevice": "Statistika išsaugota šiame įrenginyje",
+  "profile.recentGames": "Neseni žaidimai",
+  "profile.playerNotFound": "Žaidėjas nerastas",
+  "profile.noPlayerNamed": "Niekas nežaidžia vardu „{username}“.",
+  "profile.levelJoined": "{level} lygis · prisijungė {joined}",
+
+  // Kelių žaidėjų režimas
+  "mp.host": "Šeimininkas",
+  "mp.disconnected": "Atsijungęs",
+  "mp.ready": "Pasiruošęs",
+  "mp.notReady": "Nepasiruošęs",
+  "mp.movementMoving": "Judėjimas",
+  "mp.hintToast": "Paieškos sritis parodyta žemėlapyje · {continent}",
+  "mp.waitingForPlayers": "Laukiama kitų žaidėjų…",
+  "mp.nextRoundIn": "Kitas raundas po {seconds}s",
+  "mp.noGuess": "Nėra spėjimo",
+  "mp.finalResults": "Galutiniai rezultatai",
+  "mp.wins": "laimi",
+  "mp.pointsValue": "{points} taškų",
+  "mp.rematch": "Revanšas",
+  "mp.leave": "Išeiti",
+  "mp.waitingForHost": "Laukiama, kol šeimininkas pradės revanšą…",
+
+  // Bendra / dažni
   "common.loading": "Įkeliama…",
   "common.back": "Atgal",
   "common.cancel": "Atšaukti",

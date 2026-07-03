@@ -1,17 +1,21 @@
 import type { LocaleDictionary } from "./en";
 
-/** Polish (Polski). Keys mirror `en`; missing keys fall back to English. */
+/** Polish (Polski). Keys mirror `en`; complete translation. */
 export const pl: LocaleDictionary = {
+  // Navigation / header
   "nav.maps": "Mapy",
   "nav.leaderboard": "Ranking",
   "nav.friends": "Znajomi",
   "nav.stats": "Statystyki",
   "nav.play": "Graj",
 
+  // Auth
   "auth.signIn": "Zaloguj się",
   "auth.signUp": "Zarejestruj się",
   "auth.signOut": "Wyloguj się",
+  "auth.signInTooltip": "Zapisuj postępy, wspinaj się w rankingu i graj ze znajomymi",
 
+  // Settings menu
   "settings.title": "Ustawienia",
   "settings.open": "Ustawienia",
   "settings.theme": "Motyw",
@@ -25,6 +29,95 @@ export const pl: LocaleDictionary = {
   "settings.mapType.terrain": "Teren",
   "settings.mapType.hybrid": "Hybrydowa",
 
+  // Game
+  "round.counter": "Runda {current} z {total}",
+
+  // Friends
+  "friends.title": "Znajomi",
+  "friends.subtitle": "Dodawaj graczy i rozgrywaj prywatne mecze",
+  "friends.signInToManage": "Zaloguj się, aby zarządzać znajomymi.",
+  "friends.signIn": "Zaloguj się",
+  "friends.removed": "Usunięto",
+  "friends.couldNotRemove": "Nie udało się usunąć znajomego",
+  "friends.requestSentTo": "Zaproszenie wysłane do {name}",
+  "friends.couldNotSendRequest": "Nie udało się wysłać zaproszenia",
+  "friends.requestWithdrawn": "Zaproszenie wycofane",
+  "friends.couldNotWithdrawRequest": "Nie udało się wycofać zaproszenia",
+  "friends.usernamePlaceholder": "np. mapmaster",
+  "friends.add": "Dodaj",
+  "friends.requests": "Zaproszenia",
+  "friends.accept": "Akceptuj",
+  "friends.decline": "Odrzuć",
+  "friends.yourFriends": "Twoi znajomi",
+  "friends.noFriends": "Brak znajomych — dodaj kogoś powyżej.",
+  "friends.remove": "Usuń",
+  "friends.pendingSent": "Wysłano",
+  "friends.pending": "Oczekuje…",
+  "friends.cancel": "Anuluj",
+  "friends.recentPlayers": "Ostatni gracze",
+  "friends.removeConfirmTitle": "Usunąć znajomego?",
+  "friends.removeConfirmDescription": "Aby dodać go ponownie, musisz wysłać nowe zaproszenie.",
+
+  // Maps
+  "maps.byAuthor": "autor: {author}",
+  "maps.private": "Prywatna",
+  "maps.play": "Graj",
+  "maps.deleteMap": "Usuń mapę",
+  "maps.mapDeleted": "Mapa usunięta",
+  "maps.deleteFailed": "Nie udało się usunąć mapy",
+  "maps.title": "Mapy niestandardowe",
+  "maps.subtitle": "Graj na mapach społeczności lub stwórz własną",
+  "maps.create": "Utwórz",
+  "maps.yourMaps": "Twoje mapy",
+  "maps.communityMaps": "Mapy społeczności",
+  "maps.noCommunityMaps": "Brak map społeczności — stwórz pierwszą.",
+  "maps.deleteDialogTitle": "Usunąć mapę?",
+  "maps.deleteDialogDescription": "To trwale usunie tę mapę i jej lokalizacje. Tej operacji nie można cofnąć.",
+  "maps.deleteConfirm": "Usuń",
+  "maps.mapUnavailable": "Mapa niedostępna",
+  "maps.mapUnavailableDescription": "Ta mapa jest prywatna lub nie ma wystarczającej liczby lokalizacji.",
+  "maps.browseMaps": "Przeglądaj mapy",
+
+  // Leaderboard
+  "leaderboard.title": "Ranking",
+  "leaderboard.rankedByXp": "Wg punktów XP",
+  "leaderboard.global": "Globalny",
+  "leaderboard.friends": "Znajomi",
+  "leaderboard.scopeAria": "Zakres rankingu",
+  "leaderboard.you": "Ty",
+  "leaderboard.levelGames": "Poziom {level} · {games} gier",
+  "leaderboard.noFriendsRanked": "Brak znajomych w rankingu. Dodaj znajomych, aby ich tu zobaczyć.",
+  "leaderboard.friendsSignedOut": "Zaloguj się i dodaj znajomych, aby zobaczyć ich w rankingu.",
+  "leaderboard.noPlayersRanked": "Brak graczy w rankingu. Bądź pierwszy.",
+  "leaderboard.yourRank": "Twoja pozycja",
+
+  // Profile
+  "profile.saveName": "Zapisz nazwę",
+  "profile.editName": "Edytuj nazwę",
+  "profile.statsOnDevice": "Statystyki zapisane na tym urządzeniu",
+  "profile.recentGames": "Ostatnie gry",
+  "profile.playerNotFound": "Nie znaleziono gracza",
+  "profile.noPlayerNamed": "Nikt nie gra pod nazwą „{username}”.",
+  "profile.levelJoined": "Poziom {level} · dołączył {joined}",
+
+  // Multiplayer
+  "mp.host": "Gospodarz",
+  "mp.disconnected": "Rozłączony",
+  "mp.ready": "Gotowy",
+  "mp.notReady": "Niegotowy",
+  "mp.movementMoving": "Ruch",
+  "mp.hintToast": "Obszar poszukiwań pokazany na mapie · {continent}",
+  "mp.waitingForPlayers": "Oczekiwanie na innych graczy…",
+  "mp.nextRoundIn": "Następna runda za {seconds} s",
+  "mp.noGuess": "Brak typu",
+  "mp.finalResults": "Wyniki końcowe",
+  "mp.wins": "wygrywa",
+  "mp.pointsValue": "{points} pkt",
+  "mp.rematch": "Rewanż",
+  "mp.leave": "Opuść",
+  "mp.waitingForHost": "Oczekiwanie, aż gospodarz rozpocznie rewanż…",
+
+  // Generic / shared
   "common.loading": "Ładowanie…",
   "common.back": "Wstecz",
   "common.cancel": "Anuluj",

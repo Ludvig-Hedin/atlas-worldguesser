@@ -1,17 +1,21 @@
 import type { LocaleDictionary } from "./en";
 
-/** Ukrainian (Українська). Keys mirror `en`; missing keys fall back to English. */
+/** Ukrainian (Українська). Keys mirror `en`; complete translation. */
 export const uk: LocaleDictionary = {
+  // Navigation / header
   "nav.maps": "Карти",
   "nav.leaderboard": "Рейтинг",
   "nav.friends": "Друзі",
   "nav.stats": "Статистика",
   "nav.play": "Грати",
 
+  // Auth
   "auth.signIn": "Увійти",
   "auth.signUp": "Зареєструватися",
   "auth.signOut": "Вийти",
+  "auth.signInTooltip": "Зберігайте прогрес, піднімайтеся в рейтингу та грайте з друзями",
 
+  // Settings menu
   "settings.title": "Налаштування",
   "settings.open": "Налаштування",
   "settings.theme": "Тема",
@@ -25,6 +29,95 @@ export const uk: LocaleDictionary = {
   "settings.mapType.terrain": "Рельєф",
   "settings.mapType.hybrid": "Гібридна",
 
+  // Game
+  "round.counter": "Раунд {current} з {total}",
+
+  // Friends
+  "friends.title": "Друзі",
+  "friends.subtitle": "Додавайте гравців і починайте приватні матчі",
+  "friends.signInToManage": "Увійдіть, щоб керувати друзями.",
+  "friends.signIn": "Увійти",
+  "friends.removed": "Видалено",
+  "friends.couldNotRemove": "Не вдалося видалити друга",
+  "friends.requestSentTo": "Запит надіслано до {name}",
+  "friends.couldNotSendRequest": "Не вдалося надіслати запит",
+  "friends.requestWithdrawn": "Запит відкликано",
+  "friends.couldNotWithdrawRequest": "Не вдалося відкликати запит",
+  "friends.usernamePlaceholder": "напр. mapmaster",
+  "friends.add": "Додати",
+  "friends.requests": "Запити",
+  "friends.accept": "Прийняти",
+  "friends.decline": "Відхилити",
+  "friends.yourFriends": "Ваші друзі",
+  "friends.noFriends": "Поки що немає друзів — додайте когось вище.",
+  "friends.remove": "Видалити",
+  "friends.pendingSent": "Запит надіслано",
+  "friends.pending": "Очікування…",
+  "friends.cancel": "Скасувати",
+  "friends.recentPlayers": "Нещодавні гравці",
+  "friends.removeConfirmTitle": "Видалити друга?",
+  "friends.removeConfirmDescription": "Щоб додати знову, доведеться надіслати новий запит.",
+
+  // Maps
+  "maps.byAuthor": "від {author}",
+  "maps.private": "Приватна",
+  "maps.play": "Грати",
+  "maps.deleteMap": "Видалити карту",
+  "maps.mapDeleted": "Карту видалено",
+  "maps.deleteFailed": "Не вдалося видалити карту",
+  "maps.title": "Власні карти",
+  "maps.subtitle": "Грайте в карти спільноти або створіть власну",
+  "maps.create": "Створити",
+  "maps.yourMaps": "Ваші карти",
+  "maps.communityMaps": "Карти спільноти",
+  "maps.noCommunityMaps": "Поки що немає карт спільноти — станьте першим, хто її створить.",
+  "maps.deleteDialogTitle": "Видалити карту?",
+  "maps.deleteDialogDescription": "Це назавжди видалить цю карту та її локації. Дію не можна скасувати.",
+  "maps.deleteConfirm": "Видалити",
+  "maps.mapUnavailable": "Карта недоступна",
+  "maps.mapUnavailableDescription": "Ця карта приватна або не має достатньо локацій.",
+  "maps.browseMaps": "Переглянути карти",
+
+  // Leaderboard
+  "leaderboard.title": "Рейтинг",
+  "leaderboard.rankedByXp": "Ранжування за XP",
+  "leaderboard.global": "Глобальний",
+  "leaderboard.friends": "Друзі",
+  "leaderboard.scopeAria": "Область рейтингу",
+  "leaderboard.you": "Ви",
+  "leaderboard.levelGames": "Рівень {level} · {games} ігор",
+  "leaderboard.noFriendsRanked": "Поки що немає друзів у рейтингу. Додайте друзів, щоб побачити їх тут.",
+  "leaderboard.friendsSignedOut": "Увійдіть і додайте друзів, щоб побачити їхній рейтинг тут.",
+  "leaderboard.noPlayersRanked": "Поки що немає гравців у рейтингу. Станьте першим.",
+  "leaderboard.yourRank": "Ваш ранг",
+
+  // Profile
+  "profile.saveName": "Зберегти імʼя",
+  "profile.editName": "Змінити імʼя",
+  "profile.statsOnDevice": "Статистика збережена на цьому пристрої",
+  "profile.recentGames": "Нещодавні ігри",
+  "profile.playerNotFound": "Гравця не знайдено",
+  "profile.noPlayerNamed": "Ніхто не грає під імʼям «{username}».",
+  "profile.levelJoined": "Рівень {level} · приєднався {joined}",
+
+  // Multiplayer
+  "mp.host": "Хост",
+  "mp.disconnected": "Відключено",
+  "mp.ready": "Готовий",
+  "mp.notReady": "Не готовий",
+  "mp.movementMoving": "Рух",
+  "mp.hintToast": "Область пошуку показана на карті · {continent}",
+  "mp.waitingForPlayers": "Очікування інших гравців…",
+  "mp.nextRoundIn": "Наступний раунд через {seconds} с",
+  "mp.noGuess": "Без здогадки",
+  "mp.finalResults": "Підсумкові результати",
+  "mp.wins": "перемагає",
+  "mp.pointsValue": "{points} очок",
+  "mp.rematch": "Реванш",
+  "mp.leave": "Вийти",
+  "mp.waitingForHost": "Очікування, поки хост почне реванш…",
+
+  // Generic / shared
   "common.loading": "Завантаження…",
   "common.back": "Назад",
   "common.cancel": "Скасувати",
