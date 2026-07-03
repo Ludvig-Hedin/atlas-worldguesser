@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { CARTO_DARK_STYLE } from "@/lib/map-style";
+import { mapStyleFor } from "@/lib/map-style";
+import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/utils";
 
 interface RevealGuess {
@@ -37,13 +38,14 @@ function guessEl(initial: string): HTMLDivElement {
 }
 
 export function RevealMap({ actual, guesses, initialView, className }: RevealMapProps) {
+  const { mapType } = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: CARTO_DARK_STYLE,
+      style: mapStyleFor(mapType),
       center: [initialView[0], initialView[1]],
       zoom: initialView[2],
       attributionControl: false,
@@ -99,7 +101,7 @@ export function RevealMap({ actual, guesses, initialView, className }: RevealMap
       map.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actual.lat, actual.lng]);
+  }, [actual.lat, actual.lng, mapType]);
 
   return <div ref={containerRef} className={cn("h-full w-full", className)} />;
 }

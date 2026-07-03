@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { LatLng } from "@/lib/types";
-import { CARTO_DARK_STYLE } from "@/lib/map-style";
+import { mapStyleFor } from "@/lib/map-style";
 import { circlePolygon } from "@/lib/geo";
+import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/utils";
 
 export interface HintCircle {
   center: LatLng;
   radiusMeters: number;
 }
+
+const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 function guessPin(): HTMLDivElement {
   const el = document.createElement("div");
@@ -32,6 +35,43 @@ function actualPin(): HTMLDivElement {
       <span style="position:absolute;inset:5px;border-radius:9999px;background:#f5c451;border:2px solid #0b0b0c"></span>
     </div>`;
   return el;
+}
+
+/**
+ * (Re)adds the guess overlay sources + layers. Idempotent so it can run on the
+ * initial style load AND after a basemap switch (setStyle clears style-owned
+ * sources/layers; DOM markers survive on their own).
+ */
+function addOverlays(map: maplibregl.Map) {
+  if (!map.getSource("result-line")) {
+    map.addSource("result-line", { type: "geojson", data: EMPTY_FC });
+    map.addLayer({
+      id: "result-line",
+      type: "line",
+      source: "result-line",
+      paint: {
+        "line-color": "#f5c451",
+        "line-width": 2,
+        "line-dasharray": [1.5, 1.5],
+        "line-opacity": 0.9,
+      },
+    });
+  }
+  if (!map.getSource("hint-circle")) {
+    map.addSource("hint-circle", { type: "geojson", data: EMPTY_FC });
+    map.addLayer({
+      id: "hint-fill",
+      type: "fill",
+      source: "hint-circle",
+      paint: { "fill-color": "#0a84ff", "fill-opacity": 0.12 },
+    });
+    map.addLayer({
+      id: "hint-line",
+      type: "line",
+      source: "hint-circle",
+      paint: { "line-color": "#0a84ff", "line-width": 2, "line-opacity": 0.75, "line-dasharray": [2, 2] },
+    });
+  }
 }
 
 interface GuessMapProps {
@@ -55,6 +95,7 @@ export function GuessMap({
   hintCircle,
   className,
 }: GuessMapProps) {
+  const { mapType } = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const guessMarker = useRef<maplibregl.Marker | null>(null);
@@ -65,12 +106,72 @@ export function GuessMap({
     onGuessRef.current = onGuess;
   });
 
+  // Repaint the hint circle from the current props.
+  const applyHint = useCallback(() => {
+    const map = mapRef.current;
+    const src = map?.getSource("hint-circle") as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    src.setData(
+      hintCircle
+        ? { type: "FeatureCollection", features: [circlePolygon(hintCircle.center, hintCircle.radiusMeters)] }
+        : EMPTY_FC,
+    );
+  }, [hintCircle]);
+
+  // Repaint the actual marker + result line (and fit) from the current props.
+  const applyReveal = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const source = map.getSource("result-line") as maplibregl.GeoJSONSource | undefined;
+    if (reveal && actual) {
+      if (!actualMarker.current) {
+        actualMarker.current = new maplibregl.Marker({ element: actualPin(), anchor: "center" });
+      }
+      actualMarker.current.setLngLat([actual.lng, actual.lat]).addTo(map);
+      if (guess) {
+        source?.setData({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "LineString",
+                coordinates: [
+                  [guess.lng, guess.lat],
+                  [actual.lng, actual.lat],
+                ],
+              },
+            },
+          ],
+        });
+        const bounds = new maplibregl.LngLatBounds([guess.lng, guess.lat], [guess.lng, guess.lat]);
+        bounds.extend([actual.lng, actual.lat]);
+        map.fitBounds(bounds, { padding: 80, maxZoom: 7, duration: 800 });
+      } else {
+        map.flyTo({ center: [actual.lng, actual.lat], zoom: 4, duration: 700 });
+      }
+    } else {
+      actualMarker.current?.remove();
+      actualMarker.current = null;
+      source?.setData(EMPTY_FC);
+    }
+  }, [reveal, actual, guess]);
+
+  // Stable refs so the basemap-switch effect can repaint without re-subscribing.
+  const applyHintRef = useRef(applyHint);
+  const applyRevealRef = useRef(applyReveal);
+  useEffect(() => {
+    applyHintRef.current = applyHint;
+    applyRevealRef.current = applyReveal;
+  }, [applyHint, applyReveal]);
+
   // Initialise the map once.
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: CARTO_DARK_STYLE,
+      style: mapStyleFor(mapType),
       center: [initialView[0], initialView[1]],
       zoom: initialView[2],
       attributionControl: false,
@@ -86,37 +187,9 @@ export function GuessMap({
     });
     map.on("load", () => {
       loadedRef.current = true;
-      map.addSource("result-line", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-      map.addLayer({
-        id: "result-line",
-        type: "line",
-        source: "result-line",
-        paint: {
-          "line-color": "#f5c451",
-          "line-width": 2,
-          "line-dasharray": [1.5, 1.5],
-          "line-opacity": 0.9,
-        },
-      });
-      map.addSource("hint-circle", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-      map.addLayer({
-        id: "hint-fill",
-        type: "fill",
-        source: "hint-circle",
-        paint: { "fill-color": "#0a84ff", "fill-opacity": 0.12 },
-      });
-      map.addLayer({
-        id: "hint-line",
-        type: "line",
-        source: "hint-circle",
-        paint: { "line-color": "#0a84ff", "line-width": 2, "line-opacity": 0.75, "line-dasharray": [2, 2] },
-      });
+      addOverlays(map);
+      applyHintRef.current();
+      applyRevealRef.current();
     });
     mapRef.current = map;
 
@@ -131,6 +204,19 @@ export function GuessMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Swap the basemap when the map-type preference changes; re-add overlays and
+  // repaint once the new style has loaded.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
+    map.setStyle(mapStyleFor(mapType));
+    map.once("styledata", () => {
+      addOverlays(map);
+      applyHintRef.current();
+      applyRevealRef.current();
+    });
+  }, [mapType]);
 
   // Reflect the guess marker.
   useEffect(() => {
@@ -151,18 +237,9 @@ export function GuessMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const apply = () => {
-      const src = map.getSource("hint-circle") as maplibregl.GeoJSONSource | undefined;
-      if (!src) return;
-      src.setData(
-        hintCircle
-          ? { type: "FeatureCollection", features: [circlePolygon(hintCircle.center, hintCircle.radiusMeters)] }
-          : { type: "FeatureCollection", features: [] },
-      );
-    };
-    if (loadedRef.current) apply();
-    else map.once("load", apply);
-  }, [hintCircle]);
+    if (loadedRef.current) applyHint();
+    else map.once("load", applyHint);
+  }, [applyHint]);
 
   // Toggle interactivity (locked during reveal).
   useEffect(() => {
@@ -176,7 +253,10 @@ export function GuessMap({
       map.boxZoom,
     ];
     const enabled = interactive && !reveal;
-    for (const h of handlers) enabled ? h.enable() : h.disable();
+    for (const h of handlers) {
+      if (enabled) h.enable();
+      else h.disable();
+    }
     if (containerRef.current) {
       containerRef.current.style.cursor = enabled ? "crosshair" : "default";
     }
@@ -186,47 +266,9 @@ export function GuessMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
-    const applyReveal = () => {
-      const source = map.getSource("result-line") as maplibregl.GeoJSONSource | undefined;
-      if (reveal && actual) {
-        if (!actualMarker.current) {
-          actualMarker.current = new maplibregl.Marker({ element: actualPin(), anchor: "center" });
-        }
-        actualMarker.current.setLngLat([actual.lng, actual.lat]).addTo(map);
-        if (guess) {
-          source?.setData({
-            type: "FeatureCollection",
-            features: [
-              {
-                type: "Feature",
-                properties: {},
-                geometry: {
-                  type: "LineString",
-                  coordinates: [
-                    [guess.lng, guess.lat],
-                    [actual.lng, actual.lat],
-                  ],
-                },
-              },
-            ],
-          });
-          const bounds = new maplibregl.LngLatBounds([guess.lng, guess.lat], [guess.lng, guess.lat]);
-          bounds.extend([actual.lng, actual.lat]);
-          map.fitBounds(bounds, { padding: 80, maxZoom: 7, duration: 800 });
-        } else {
-          map.flyTo({ center: [actual.lng, actual.lat], zoom: 4, duration: 700 });
-        }
-      } else {
-        actualMarker.current?.remove();
-        actualMarker.current = null;
-        source?.setData({ type: "FeatureCollection", features: [] });
-      }
-    };
-
     if (loadedRef.current) applyReveal();
     else map.once("load", applyReveal);
-  }, [reveal, actual, guess]);
+  }, [applyReveal]);
 
   return <div ref={containerRef} className={cn("h-full w-full", className)} />;
 }

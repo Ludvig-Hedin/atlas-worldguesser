@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { CARTO_DARK_STYLE } from "@/lib/map-style";
+import { mapStyleFor } from "@/lib/map-style";
+import { usePreferences } from "@/hooks/use-preferences";
 import type { RoundResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -22,13 +23,14 @@ interface MatchMapProps {
 
 /** Static summary map plotting every round's actual location, guess, and link. */
 export function MatchMap({ results, initialView, className }: MatchMapProps) {
+  const { mapType } = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: CARTO_DARK_STYLE,
+      style: mapStyleFor(mapType),
       center: [initialView[0], initialView[1]],
       zoom: initialView[2],
       attributionControl: false,
@@ -87,7 +89,7 @@ export function MatchMap({ results, initialView, className }: MatchMapProps) {
       map.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mapType]);
 
   return <div ref={containerRef} className={cn("h-full w-full", className)} />;
 }

@@ -30,10 +30,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CARTO_DARK_STYLE } from "@/lib/map-style";
+import { mapStyleFor } from "@/lib/map-style";
 import { countryAtAsync } from "@/lib/geo";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
+import { usePreferences } from "@/hooks/use-preferences";
 import { cn, hashString } from "@/lib/utils";
 
 interface Point {
@@ -56,9 +57,11 @@ function pinEl(n: number): HTMLDivElement {
 function Creator() {
   const router = useRouter();
   const create = useMutation(api.maps.create);
+  const { mapType } = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const styleInitRef = useRef(false);
 
   const [points, setPoints] = useState<Point[]>([]);
   const [name, setName] = useState("");
@@ -80,7 +83,7 @@ function Creator() {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: CARTO_DARK_STYLE,
+      style: mapStyleFor(mapType),
       center: [10, 25],
       zoom: 1.4,
       attributionControl: false,
@@ -120,7 +123,21 @@ function Creator() {
       markers.clear();
       map.remove();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Swap the basemap when the map-type preference changes. DOM markers survive
+  // setStyle, so nothing needs re-adding. Skip the first run (init already used
+  // the current type).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!styleInitRef.current) {
+      styleInitRef.current = true;
+      return;
+    }
+    map.setStyle(mapStyleFor(mapType));
+  }, [mapType]);
 
   /** Append a batch of locations, creating a numbered marker for each. Skips ids already on the map. */
   const addPoints = (locs: { lat: number; lng: number; countryCode: string }[]) => {
