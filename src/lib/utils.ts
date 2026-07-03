@@ -34,7 +34,9 @@ export function seededRandom(seed: number) {
 export function shuffle<T>(items: readonly T[], rng: () => number = Math.random): T[] {
   const arr = items.slice();
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
+    // Math.min guards an injected rng() that returns exactly 1.0 (real RNGs are
+    // [0,1) so this is a no-op for them) — otherwise j === i+1 swaps in undefined.
+    const j = Math.min(i, Math.floor(rng() * (i + 1)));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;

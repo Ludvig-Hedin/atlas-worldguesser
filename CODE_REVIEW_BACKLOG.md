@@ -1,5 +1,95 @@
 # Code Review Backlog
 
+## Bug Hunt — 2026-07-03 (changed-files review, session 2)
+
+Focused review of the uncommitted working-tree changes (4 parallel subagents:
+Convex backend, solo flow, multiplayer, misc UI). No HIGH-severity/crash bugs
+found — the earlier full-repo pass had already hardened the risky paths.
+
+### Auto-fixed (11 issues, validated typecheck ✓ / test 96 ✓ / lint 0-err before the parallel avatar work broke the tree)
+
+- `src/components/multiplayer/room-results.tsx` — FFA winner had no `totalScore > 0`
+  guard (the team branch requires `teamTotals.A+B > 0`). An all-AFK / all-zero
+  match crowned `standings[0]` as "wins · 0 points". Now `competitive` also
+  requires `(winner?.totalScore ?? 0) > 0`, matching the team branch and the
+  earlier server-side all-zero walkover fix in `finishMatch`.
+- `src/lib/google-maps.ts` — `findPanorama` cache key ignored `radius`: a lookup at
+  a non-default radius would return a wrong-radius cached hit/`null`. `panoKey`
+  now folds `radius` in.
+- `src/lib/google-maps.ts` — transient 10s pano timeouts were cached as permanent
+  "no coverage", poisoning a real location (→ reroll/demo) for the whole session
+  on one flaky moment. `resolvePano` now reports `{ pano, timedOut }`; `findPanorama`
+  skips caching on timeout. (Aligns with the "playable on bad internet" goal.)
+- `src/hooks/use-solo-game.ts` — country-lookup retry loop ran 3 attempts back-to-back
+  with no delay (a persistent immediate failure burned all tries in ms → false
+  "wrong country" that ends a survival run). Added 200ms backoff between attempts.
+- `src/lib/utils.ts` (`shuffle`) + `src/lib/locations.ts` (`sampleLocations` pad-loop) —
+  `Math.floor(rng() * n)` indexes out of bounds (→ `undefined` entry) if an injected
+  `rng()` ever returns exactly 1.0. Real RNGs are `[0,1)` so it's unreachable today,
+  but a new regression test (`locations.test.ts`) surfaced that the root was in
+  `shuffle`'s Fisher–Yates step (which `sample`/`sampleLocations` flow through), not
+  just the pad-loop. Both clamped with `Math.min` (no-op for real RNGs).
+- `convex/users.ts` (`bumpUserCount`) + `convex/presence.ts` (`seedUserCount`) —
+  read the singleton `appStats` row with `.unique()`, which throws hard if a stray
+  duplicate row ever exists (every new-user signup would fail). Switched to `.first()`
+  to match the deliberate defensive read in `presence.homeStats`.
+- `src/components/multiplayer/room-lobby.tsx` — `leave`/`setReady` fire-and-forget
+  mutations had no `.catch` (unhandled promise rejection → dev overlay on network
+  failure); `patch`'s error toast assumed `e` is an `Error` (non-Error → blank toast).
+  Added `.catch` + `e instanceof Error` guards. (NOTE: this file is also being
+  edited by parallel avatar/i18n work — my two `.catch` edits are preserved.)
+
+### Needs human review (backlog — flagged, not fixed)
+
+- `src/components/game/solo-cloud-sync.tsx` — pending sync retry (2s/4s) is stranded
+  and swallowed on unmount: finishing a signed-in game then hitting "Play Again"
+  before the retry fires drops the result with no toast. Architectural (needs the
+  pending-sync state hoisted above the unmounting subtree, or a final best-effort
+  save on unmount). Same accepted-tradeoff pattern noted for `ensure-user.tsx`.
+- `convex/dailyChallenge.ts` (`submit`) + `convex/users.ts` (`recordSoloResult`) —
+  score is recomputed from the **client-supplied `actual` coordinates**; the server
+  never checks `results[i].actual` against its own `pickMatchLocations(day)` output.
+  A client can send `guess === actual` to top the per-day board and inflate global
+  XP. Acknowledged in-comment ("casual board, not anti-cheat"); real fix = validate
+  each submitted `actual` against the server-derived location for that day/round.
+- `src/components/multiplayer/room-results.tsx` — FFA top-tie (two players at equal
+  max score) still renders one as "wins" by array order; team mode shows a draw.
+  For parity, render a draw when `standings[0].totalScore === standings[1].totalScore`.
+- `convex/rooms.ts` (`getByCode`) — mid-round score leak: live `standings[].totalScore`
+  / `teamTotals` are exposed while `status === "active"`, so opponents see a round
+  score before the reveal. (Already an in-code `TODO(bug-hunt)`.) Fix: report
+  round-start totals while active.
+- `convex/gameLogic.ts` / `convex/rooms.ts` — `getMapConfig(mapId)` falls back to
+  `MAPS.world` for any unknown id; if a room ever accepts a custom-map slug it would
+  silently serve world locations + world scoring. Validate `mapId` against the
+  built-in set in `create`/`updateSettings`.
+- `convex/rooms.ts` / `convex/users.ts` — achievement inserts aren't uniqueness-enforced
+  (`by_user_achievement` index isn't a unique constraint); a concurrent MP-finish +
+  solo-sync could double-insert the same `achievementId`. Re-check on insert or treat
+  as idempotent on read.
+- `src/components/game/solo-game.tsx` — coverage rerolls use the un-seeded default RNG,
+  so a game that hits a no-coverage reroll is no longer deterministically replayable
+  from its seed. Thread the game's seeded RNG into `pick()` if replay fidelity matters.
+- `convex/presence.ts` (`seedUserCount`) — one-time backfill caps at `users.take(10_000)`
+  and overwrites (not adds) the counter; undercounts >10k users and would clobber a
+  live count if re-run. Documented one-time op, low impact.
+
+### Reviewed clean (no action)
+
+- Convex: `rateLimit.ts`, `crons.ts`, `schema.ts`, `parties.ts`, and the `rooms.ts`
+  match-flow (`startRound`/`endRound`/`advance`/`enterRoundResult` `startedAt` fence +
+  OCC serialization + walkover guards).
+- Solo: `play-client.tsx`, `maps-config.ts`, `loadGoogleMaps` retry/backoff, easter-egg
+  spawn logic, both new test files.
+- Multiplayer: `scoreboard.tsx`, `team-scoreboard.tsx`, `presence-ping.tsx`,
+  `multiplayer-entry.tsx`, `party-client.tsx`, `room-game.tsx` (deadline auto-submit
+  is not a stale-closure bug — `useCountdown` refreshes `onExpireRef` each render).
+- Misc UI: `globe-background.tsx` (raf/observer/listener cleanup all correct),
+  `live-stats.tsx`, `daily-client.tsx`, `match-results.tsx` (was clean at review time),
+  `use-has-keyboard.ts`, `providers.tsx`, `layout.tsx`. `map-sheet.tsx` reads
+  `window.innerWidth` in a `useState` initializer (SSR-smell) but only mounts
+  client-side, so it's effectively safe.
+
 ## Bug Hunt — 2026-07-03 (full repo scan)
 
 ### Auto-fixed (33 issues)
