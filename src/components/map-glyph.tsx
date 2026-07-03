@@ -6,9 +6,12 @@ import {
   Landmark,
   MapPin,
   Mountain,
+  Palmtree,
   Sparkles,
+  Snowflake,
   Sun,
   Trees,
+  TentTree,
   Waves,
   type LucideIcon,
 } from "lucide-react";
@@ -17,7 +20,10 @@ import { cn } from "@/lib/utils";
 const MAP_ICONS: Record<string, LucideIcon> = {
   world: Globe2,
   europe: Landmark,
+  nordics: Snowflake,
   asia: Mountain,
+  middleeast: TentTree,
+  southeastasia: Palmtree,
   africa: Sun,
   northamerica: Compass,
   southamerica: Trees,

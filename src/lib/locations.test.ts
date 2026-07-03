@@ -5,21 +5,30 @@ import {
   AFRICA_CODES,
   ASIA_CODES,
   EUROPE_CODES,
+  MIDDLE_EAST_CODES,
+  NORDIC_CODES,
   NORTH_AMERICA_CODES,
   OCEANIA_CODES,
   SOUTH_AMERICA_CODES,
+  SOUTHEAST_ASIA_CODES,
 } from "./maps-config";
 import { seededRandom } from "./utils";
 
 const EU = new Set(EUROPE_CODES);
 
-/** Continent maps: filter over the seed dataset via `countryCodes`. */
-const CONTINENTS: { id: string; codes: string[] }[] = [
+/** Region maps (continents + sub-regions): filter the seed dataset via `countryCodes`. */
+const REGIONS: { id: string; codes: string[] }[] = [
   { id: "asia", codes: ASIA_CODES },
   { id: "africa", codes: AFRICA_CODES },
   { id: "northamerica", codes: NORTH_AMERICA_CODES },
   { id: "southamerica", codes: SOUTH_AMERICA_CODES },
   { id: "oceania", codes: OCEANIA_CODES },
+  // Sub-region maps behave identically — same countryCodes filter, may overlap a
+  // continent set. `min` guards against an empty pool if a code typo drops all
+  // matches (a filter over the seed dataset must still yield a playable round set).
+  { id: "nordics", codes: NORDIC_CODES },
+  { id: "middleeast", codes: MIDDLE_EAST_CODES },
+  { id: "southeastasia", codes: SOUTHEAST_ASIA_CODES },
 ];
 
 describe("map pools", () => {
@@ -44,7 +53,7 @@ describe("map pools", () => {
   });
 });
 
-describe.each(CONTINENTS)("continent map $id", ({ id, codes }) => {
+describe.each(REGIONS)("region map $id", ({ id, codes }) => {
   const set = new Set(codes);
 
   it("has a non-empty pool", () => {

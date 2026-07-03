@@ -53,6 +53,20 @@ export const OCEANIA_CODES = [
   "VU", "NC", "PF", "GU",
 ];
 
+// Sub-region maps overlap the continent maps above — they are independent ISO
+// filters over the same seed dataset, not a partition (a place can belong to
+// both "asia" and "middleeast"). Only the continent set is mutually exclusive.
+export const NORDIC_CODES = ["SE", "NO", "DK", "FI", "IS", "AX", "GL", "FO"];
+
+export const MIDDLE_EAST_CODES = [
+  "SA", "AE", "QA", "KW", "BH", "OM", "YE", "IR", "IQ", "IL", "PS", "JO",
+  "LB", "SY", "TR", "CY",
+];
+
+export const SOUTHEAST_ASIA_CODES = [
+  "ID", "TH", "VN", "MY", "PH", "SG", "KH", "LA", "MM", "BN", "TL",
+];
+
 export const MAPS: Record<GameModeId, MapConfig> = {
   world: {
     id: "world",
@@ -72,6 +86,15 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     countryCodes: EUROPE_CODES,
     view: [12, 52, 3.1],
   },
+  nordics: {
+    id: "nordics",
+    slug: "nordics",
+    name: "Nordics",
+    tagline: "Scandinavia & the north",
+    scaleKm: 500,
+    countryCodes: NORDIC_CODES,
+    view: [16, 63, 3.3],
+  },
   asia: {
     id: "asia",
     slug: "asia",
@@ -80,6 +103,24 @@ export const MAPS: Record<GameModeId, MapConfig> = {
     scaleKm: 1800,
     countryCodes: ASIA_CODES,
     view: [100, 30, 2.3],
+  },
+  middleeast: {
+    id: "middleeast",
+    slug: "middleeast",
+    name: "Middle East",
+    tagline: "Turkey to the Gulf",
+    scaleKm: 1000,
+    countryCodes: MIDDLE_EAST_CODES,
+    view: [45, 29, 3.2],
+  },
+  southeastasia: {
+    id: "southeastasia",
+    slug: "southeastasia",
+    name: "SE Asia",
+    tagline: "Mekong to the islands",
+    scaleKm: 900,
+    countryCodes: SOUTHEAST_ASIA_CODES,
+    view: [112, 8, 3.3],
   },
   africa: {
     id: "africa",
@@ -149,7 +190,10 @@ export const MAPS: Record<GameModeId, MapConfig> = {
 export const OFFICIAL_MAPS: MapConfig[] = [
   MAPS.world,
   MAPS.europe,
+  MAPS.nordics,
   MAPS.asia,
+  MAPS.middleeast,
+  MAPS.southeastasia,
   MAPS.africa,
   MAPS.northamerica,
   MAPS.southamerica,

@@ -15,7 +15,10 @@ export interface Pov {
 export type GameModeId =
   | "world"
   | "europe"
+  | "nordics"
   | "asia"
+  | "middleeast"
+  | "southeastasia"
   | "africa"
   | "northamerica"
   | "southamerica"
