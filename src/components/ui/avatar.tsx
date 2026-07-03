@@ -75,6 +75,8 @@ function IdentityAvatar({
     return (
       <Avatar className={className} style={{ backgroundColor: color ?? DEFAULT_AVATAR_COLOR }}>
         <AvatarImage src={building.image} alt={building.name} className="object-contain p-[12%]" />
+        {/* If the SVG fails to load, show initials over the color chip, not an empty avatar. */}
+        <AvatarFallback className="bg-transparent text-white/95">{initials}</AvatarFallback>
       </Avatar>
     );
   }

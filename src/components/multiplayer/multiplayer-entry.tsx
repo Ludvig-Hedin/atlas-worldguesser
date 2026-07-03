@@ -55,7 +55,7 @@ function MultiplayerControls() {
       const { code: newCode } = await create({ mapId: "world", settings: DEFAULT_SETTINGS });
       router.push(`/room/${newCode}`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not create room");
+      toast.error(e instanceof Error ? e.message : t("mp.couldNotCreateRoom"));
       setCreating(false);
     }
   };
@@ -70,29 +70,29 @@ function MultiplayerControls() {
   return (
     <div className="flex flex-col gap-3">
       <Button onClick={createRoom} disabled={creating}>
-        Create private room
+        {t("mp.createPrivateRoom")}
         <ArrowRight className="size-4" />
       </Button>
       <div className="flex items-center gap-2 text-xs text-subtle">
         <span className="h-px flex-1 bg-border" />
-        or join
+        {t("mp.orJoin")}
         <span className="h-px flex-1 bg-border" />
       </div>
       <form onSubmit={joinRoom} className="flex items-center gap-2">
         <input
           value={code}
           onChange={(e) => setCode(normalizeRoomInput(e.target.value))}
-          placeholder="Room code or link"
+          placeholder={t("mp.roomCodeOrLink")}
           className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-center font-mono text-sm tracking-widest outline-none placeholder:tracking-normal placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
         />
         <Button type="submit" variant="secondary" disabled={code.length < 4}>
-          Join
+          {t("common.join")}
         </Button>
       </form>
       <Button variant="ghost" size="sm" asChild className="mt-1">
         <Link href="/party">
           <Users className="size-4" />
-          Play with a party
+          {t("mp.playWithParty")}
         </Link>
       </Button>
     </div>

@@ -59,7 +59,13 @@ export function ReplayClient({ gameId }: { gameId: string }) {
             <h1 className="text-lg font-semibold leading-tight">{map.name} replay</h1>
             {data.owner && (
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <IdentityAvatar name={data.owner.username} src={data.owner.avatarUrl} className="size-4" />
+                <IdentityAvatar
+                  name={data.owner.username}
+                  src={data.owner.avatarUrl}
+                  buildingId={data.owner.avatarBuildingId}
+                  color={data.owner.avatarColor}
+                  className="size-4"
+                />
                 {data.owner.username}
               </p>
             )}

@@ -19,6 +19,8 @@ interface RowData {
   rank: number;
   username: string;
   avatarUrl?: string;
+  avatarBuildingId?: string;
+  avatarColor?: string;
   xp: number;
   level: number;
   gamesPlayed: number;
@@ -42,7 +44,7 @@ function LeaderRow({ r, isMe }: { r: RowData; isMe: boolean }) {
       >
         {r.rank}
       </span>
-      <IdentityAvatar name={r.username} src={r.avatarUrl} />
+      <IdentityAvatar name={r.username} src={r.avatarUrl} buildingId={r.avatarBuildingId} color={r.avatarColor} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate font-medium" title={r.username}>{r.username}</span>

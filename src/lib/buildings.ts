@@ -6,7 +6,7 @@ export interface BuildingDef {
   id: string;
   /** Building/landmark display name, e.g. "Eiffel Tower". */
   name: string;
-  /** Static asset path, e.g. "/buildings/fr.png". */
+  /** Static asset path, e.g. "/buildings/fr.svg". */
   image: string;
 }
 
@@ -18,36 +18,36 @@ export interface BuildingDef {
  * gradient/initials avatar) — safe to extend this list over time.
  */
 const RULES: BuildingDef[] = [
-  { id: "FR", name: "Eiffel Tower", image: "/buildings/fr.png" },
-  { id: "IT", name: "Colosseum", image: "/buildings/it.png" },
-  { id: "IN", name: "Taj Mahal", image: "/buildings/in.png" },
-  { id: "GB", name: "Big Ben", image: "/buildings/gb.png" },
-  { id: "US", name: "Statue of Liberty", image: "/buildings/us.png" },
-  { id: "EG", name: "Pyramids of Giza", image: "/buildings/eg.png" },
-  { id: "CN", name: "Great Wall of China", image: "/buildings/cn.png" },
-  { id: "AU", name: "Sydney Opera House", image: "/buildings/au.png" },
-  { id: "BR", name: "Christ the Redeemer", image: "/buildings/br.png" },
-  { id: "RU", name: "Saint Basil's Cathedral", image: "/buildings/ru.png" },
-  { id: "DE", name: "Neuschwanstein Castle", image: "/buildings/de.png" },
-  { id: "ES", name: "Sagrada Família", image: "/buildings/es.png" },
-  { id: "JP", name: "Tokyo Tower", image: "/buildings/jp.png" },
-  { id: "GR", name: "Parthenon", image: "/buildings/gr.png" },
-  { id: "PE", name: "Machu Picchu", image: "/buildings/pe.png" },
-  { id: "MX", name: "Chichén Itzá", image: "/buildings/mx.png" },
-  { id: "TR", name: "Hagia Sophia", image: "/buildings/tr.png" },
-  { id: "AE", name: "Burj Khalifa", image: "/buildings/ae.png" },
-  { id: "KH", name: "Angkor Wat", image: "/buildings/kh.png" },
-  { id: "JO", name: "Petra", image: "/buildings/jo.png" },
-  { id: "CA", name: "CN Tower", image: "/buildings/ca.png" },
-  { id: "PT", name: "Belém Tower", image: "/buildings/pt.png" },
-  { id: "CZ", name: "Prague Castle", image: "/buildings/cz.png" },
-  { id: "AT", name: "Schönbrunn Palace", image: "/buildings/at.png" },
-  { id: "MA", name: "Hassan II Mosque", image: "/buildings/ma.png" },
-  { id: "ID", name: "Borobudur", image: "/buildings/id.png" },
-  { id: "KR", name: "Gyeongbokgung Palace", image: "/buildings/kr.png" },
-  { id: "TH", name: "Grand Palace", image: "/buildings/th.png" },
-  { id: "PL", name: "Wawel Castle", image: "/buildings/pl.png" },
-  { id: "HU", name: "Hungarian Parliament Building", image: "/buildings/hu.png" },
+  { id: "FR", name: "Eiffel Tower", image: "/buildings/fr.svg" },
+  { id: "IT", name: "Colosseum", image: "/buildings/it.svg" },
+  { id: "IN", name: "Taj Mahal", image: "/buildings/in.svg" },
+  { id: "GB", name: "Big Ben", image: "/buildings/gb.svg" },
+  { id: "US", name: "Statue of Liberty", image: "/buildings/us.svg" },
+  { id: "EG", name: "Pyramids of Giza", image: "/buildings/eg.svg" },
+  { id: "CN", name: "Great Wall of China", image: "/buildings/cn.svg" },
+  { id: "AU", name: "Sydney Opera House", image: "/buildings/au.svg" },
+  { id: "BR", name: "Christ the Redeemer", image: "/buildings/br.svg" },
+  { id: "RU", name: "Saint Basil's Cathedral", image: "/buildings/ru.svg" },
+  { id: "DE", name: "Neuschwanstein Castle", image: "/buildings/de.svg" },
+  { id: "ES", name: "Sagrada Família", image: "/buildings/es.svg" },
+  { id: "JP", name: "Tokyo Tower", image: "/buildings/jp.svg" },
+  { id: "GR", name: "Parthenon", image: "/buildings/gr.svg" },
+  { id: "PE", name: "Machu Picchu", image: "/buildings/pe.svg" },
+  { id: "MX", name: "Chichén Itzá", image: "/buildings/mx.svg" },
+  { id: "TR", name: "Hagia Sophia", image: "/buildings/tr.svg" },
+  { id: "AE", name: "Burj Khalifa", image: "/buildings/ae.svg" },
+  { id: "KH", name: "Angkor Wat", image: "/buildings/kh.svg" },
+  { id: "JO", name: "Petra", image: "/buildings/jo.svg" },
+  { id: "CA", name: "CN Tower", image: "/buildings/ca.svg" },
+  { id: "PT", name: "Belém Tower", image: "/buildings/pt.svg" },
+  { id: "CZ", name: "Prague Castle", image: "/buildings/cz.svg" },
+  { id: "AT", name: "Schönbrunn Palace", image: "/buildings/at.svg" },
+  { id: "MA", name: "Hassan II Mosque", image: "/buildings/ma.svg" },
+  { id: "ID", name: "Borobudur", image: "/buildings/id.svg" },
+  { id: "KR", name: "Gyeongbokgung Palace", image: "/buildings/kr.svg" },
+  { id: "TH", name: "Grand Palace", image: "/buildings/th.svg" },
+  { id: "PL", name: "Wawel Castle", image: "/buildings/pl.svg" },
+  { id: "HU", name: "Hungarian Parliament Building", image: "/buildings/hu.svg" },
 ];
 
 export const BUILDINGS: Record<string, BuildingDef> = Object.fromEntries(

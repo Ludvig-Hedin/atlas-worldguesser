@@ -119,7 +119,12 @@ function FriendsInner() {
           <h2 className="text-sm font-medium text-muted-foreground">{t("friends.requests")}</h2>
           {data.incoming.map((r) => (
             <div key={r.requestId} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-              <IdentityAvatar name={r.user.username} src={r.user.avatarUrl} />
+              <IdentityAvatar
+                name={r.user.username}
+                src={r.user.avatarUrl}
+                buildingId={r.user.avatarBuildingId}
+                color={r.user.avatarColor}
+              />
               <span className="flex-1 truncate font-medium">{r.user.username}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -156,7 +161,7 @@ function FriendsInner() {
         ) : (
           data.friends.map((f) => (
             <div key={f._id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-              <IdentityAvatar name={f.username} src={f.avatarUrl} />
+              <IdentityAvatar name={f.username} src={f.avatarUrl} buildingId={f.avatarBuildingId} color={f.avatarColor} />
               <Link href={`/profile/${f.username}`} className="flex-1 truncate font-medium hover:underline">
                 {f.username}
               </Link>
@@ -178,7 +183,12 @@ function FriendsInner() {
           <h2 className="text-sm font-medium text-muted-foreground">{t("friends.pendingSent")}</h2>
           {data.outgoing.map((r) => (
             <div key={r.requestId} className="flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-3">
-              <IdentityAvatar name={r.user.username} src={r.user.avatarUrl} />
+              <IdentityAvatar
+                name={r.user.username}
+                src={r.user.avatarUrl}
+                buildingId={r.user.avatarBuildingId}
+                color={r.user.avatarColor}
+              />
               <span className="flex-1 truncate text-muted-foreground">{r.user.username}</span>
               <span className="text-xs text-subtle">{t("friends.pending")}</span>
               <Button size="sm" variant="ghost" onClick={() => cancelRequest(r.user._id as Id<"users">)}>
@@ -196,7 +206,7 @@ function FriendsInner() {
             .filter((p) => !knownNames.has(p.username))
             .map((p) => (
               <div key={p._id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-                <IdentityAvatar name={p.username} src={p.avatarUrl} />
+                <IdentityAvatar name={p.username} src={p.avatarUrl} buildingId={p.avatarBuildingId} color={p.avatarColor} />
                 <Link href={`/profile/${p.username}`} className="flex-1 truncate font-medium hover:underline">
                   {p.username}
                 </Link>

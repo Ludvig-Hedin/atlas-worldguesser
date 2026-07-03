@@ -48,7 +48,13 @@ export function PublicProfile({ username }: { username: string }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8">
       <header className="flex items-center gap-4">
-        <IdentityAvatar name={profile.username} src={profile.avatarUrl} className="size-16 text-lg" />
+        <IdentityAvatar
+          name={profile.username}
+          src={profile.avatarUrl}
+          buildingId={profile.avatarBuildingId}
+          color={profile.avatarColor}
+          className="size-16 text-lg"
+        />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{profile.username}</h1>
           <p className="text-sm text-muted-foreground">{t("profile.levelJoined", { level: profile.level, joined: timeAgo(profile.createdAt) })}</p>
