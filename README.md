@@ -44,6 +44,10 @@ integration is optional and independent:
 - **Clerk** (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, …) — authentication. Solo play
   never requires an account, and signed-out visitors can also play realtime
   multiplayer as ephemeral guests (stats don't persist; see the Status list).
+- **Resend** (`RESEND_API_KEY`, Convex dashboard only) — transactional email.
+- **Web Push** (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` + Convex-only
+  `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT`) — background push
+  notifications. Generate once with `bunx web-push generate-vapid-keys`.
 
 ## Deploy (Vercel + Convex)
 
@@ -129,6 +133,19 @@ by re-running the same prompt template per country code and re-keying.
   `ensureUser`) and `RESEND_API_KEY` set **in the Convex dashboard** (not
   `.env.local` — Convex functions don't read Next.js env files); without the
   key, sends are skipped with a console warning, not an error.
+- ✅ Web push (same 4 events as email above) — an opt-in toggle in Settings
+  (signed-in only) registers `public/sw.js` and subscribes via the browser's
+  `PushManager`; the subscription (`endpoint` + keys) is stored in
+  `pushSubscriptions`, keyed by user, one row per device/browser
+  (`convex/push.ts`). Sending is a Node-runtime action (`convex/pushSend.ts`,
+  `"use node"` for the `web-push` package) scheduled the same fire-and-forget
+  way as email, run in parallel across every device a user has subscribed on;
+  a 404/410 from the push service (subscription gone) prunes that row instead
+  of erroring. Needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (client) plus
+  `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` **in the Convex
+  dashboard** — generate a pair with `bunx web-push generate-vapid-keys`.
+  Without keys, sends are skipped with a console warning; without a browser
+  granting permission, the Settings toggle simply doesn't render.
 - ✅ Unlockable avatars — 145 curated iconic-building avatars (~69% of all 209
   countries), unlocked by correctly guessing that country in any game mode.
   Free background-color customization. Cloud accounts persist unlocks

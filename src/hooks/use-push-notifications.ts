@@ -34,7 +34,7 @@ export function usePushNotifications() {
     supported ? Notification.permission : "unsupported",
   );
   const [endpoint, setEndpoint] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(() => !supported);
   const [loading, setLoading] = useState(false);
 
   const subscribeMutation = useMutation(api.push.subscribe);
@@ -47,10 +47,7 @@ export function usePushNotifications() {
   // Reflect whatever subscription the browser already holds (e.g. granted in
   // an earlier visit) so the toggle shows the right state on load.
   useEffect(() => {
-    if (!supported) {
-      setReady(true);
-      return;
-    }
+    if (!supported) return;
     let cancelled = false;
     (async () => {
       try {
@@ -80,7 +77,7 @@ export function usePushNotifications() {
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
         });
       }
       const json = sub.toJSON();
