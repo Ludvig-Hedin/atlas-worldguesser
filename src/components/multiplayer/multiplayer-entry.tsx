@@ -100,6 +100,23 @@ function MultiplayerControls() {
     }
   };
 
+  const createDuel = async () => {
+    setCreating(true);
+    try {
+      if (!isAuthenticated) await provisionGuest();
+      const { code: newCode } = await create({
+        mapId: "world",
+        settings: DEFAULT_SETTINGS,
+        duelsMode: true,
+        guestId: guestId ?? undefined,
+      });
+      router.push(`/room/${newCode}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("mp.couldNotCreateRoom"));
+      setCreating(false);
+    }
+  };
+
   const joinRoom = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = normalizeRoomInput(code);
@@ -125,6 +142,10 @@ function MultiplayerControls() {
     <div className="flex flex-col gap-3">
       <Button onClick={createRoom} disabled={creating}>
         {t("mp.createPrivateRoom")}
+        <ArrowRight className="size-4" />
+      </Button>
+      <Button variant="secondary" onClick={createDuel} disabled={creating}>
+        {t("duels.start")}
         <ArrowRight className="size-4" />
       </Button>
       <div className="flex items-center gap-2 text-xs text-subtle">
