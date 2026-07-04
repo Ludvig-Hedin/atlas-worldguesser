@@ -37,7 +37,10 @@ const MAX_TEAM = 4;
 type Team = "A" | "B";
 
 /** Sum of each team's members' scores (0 for unassigned/FFA members). */
-function teamTotalsOf(members: Doc<"roomMembers">[]): { A: number; B: number } {
+function teamTotalsOf(members: { team?: "A" | "B" | null; totalScore: number }[]): {
+  A: number;
+  B: number;
+} {
   const totals = { A: 0, B: 0 };
   for (const m of members) if (m.team) totals[m.team] += m.totalScore;
   return totals;
@@ -961,7 +964,10 @@ export const getByCode = query({
       teamMode: room.teamMode ?? false,
       duelsMode: room.duelsMode ?? false,
       elimination: room.elimination ?? false,
-      teamTotals: teamTotalsOf(members),
+      // Derived from `standings` (round-start-adjusted), not raw `members`,
+      // so the team header total can't leak a hidden in-round score by
+      // subtracting the visible member rows from a still-live team total.
+      teamTotals: teamTotalsOf(standings),
       standings,
     };
 
