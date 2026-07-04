@@ -8,6 +8,7 @@ import { AchievementGrid } from "./achievement-grid";
 import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { bestCountryStreakOf } from "@/lib/progression";
 import { timeAgo } from "@/lib/format";
 import { useT } from "@/hooks/use-t";
 
@@ -67,6 +68,7 @@ export function PublicProfile({ username }: { username: string }) {
         dailyStreak={profile.streaks.daily}
         rating={profile.rating}
         ratingGamesPlayed={profile.ratingGamesPlayed}
+        bestCountryStreak={bestCountryStreakOf(profile.streaks.countryByMap)}
       />
       <AchievementGrid
         owned={achievements.map((a) => a.id)}

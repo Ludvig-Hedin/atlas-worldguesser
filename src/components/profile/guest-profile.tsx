@@ -12,6 +12,7 @@ import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { bestCountryStreakOf } from "@/lib/progression";
 import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
 import { BUILDING_LIST } from "@/lib/buildings";
@@ -108,6 +109,7 @@ function CloudProfile() {
         dailyStreak={profile.streaks.daily}
         rating={profile.rating}
         ratingGamesPlayed={profile.ratingGamesPlayed}
+        bestCountryStreak={bestCountryStreakOf(profile.streaks.countryByMap)}
       />
       <AvatarPicker
         avatarBuildingId={profile.avatarBuildingId}
@@ -217,7 +219,12 @@ function LocalProfileView() {
         </div>
       </header>
 
-      <StatsGrid stats={profile.stats} xp={profile.stats.xp} dailyStreak={profile.streaks.daily} />
+      <StatsGrid
+        stats={profile.stats}
+        xp={profile.stats.xp}
+        dailyStreak={profile.streaks.daily}
+        bestCountryStreak={bestCountryStreakOf(profile.streaks.countryByMap)}
+      />
 
       {profile.unlockedBuildings.length > 0 && (
         <div className="flex flex-col gap-3">
