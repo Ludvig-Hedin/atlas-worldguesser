@@ -127,3 +127,23 @@ describe("daily challenge locations", () => {
     expect(a).not.toEqual(b);
   });
 });
+
+describe("pickLocations with excludeKeys", () => {
+  it("avoids excluded locations when the fresh pool is large enough", () => {
+    const size = poolSize("usa");
+    const firstBatch = pickLocations("usa", size - 2, seededRandom(11));
+    const excludeKeys = new Set(firstBatch.map((l) => `${l.lat}:${l.lng}`));
+    const second = pickLocations("usa", 2, seededRandom(12), excludeKeys);
+    for (const loc of second) {
+      expect(excludeKeys.has(`${loc.lat}:${loc.lng}`)).toBe(false);
+    }
+  });
+
+  it("still returns `count` locations once excludeKeys covers the whole pool", () => {
+    const size = poolSize("usa");
+    const all = pickLocations("usa", size, seededRandom(1));
+    const excludeKeys = new Set(all.map((l) => `${l.lat}:${l.lng}`));
+    const picks = pickLocations("usa", 3, seededRandom(2), excludeKeys);
+    expect(picks).toHaveLength(3);
+  });
+});

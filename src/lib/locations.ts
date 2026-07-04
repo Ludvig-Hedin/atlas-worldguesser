@@ -1,7 +1,7 @@
 import { WORLD_LOCATIONS, COUNTRY_LOCATIONS, toGameLocation, type SeedLocation } from "@/data/locations";
 import { getMapConfig } from "./maps-config";
 import type { GameLocation } from "./types";
-import { sample } from "./utils";
+import { layeredSample, locationKey } from "@convex/gameLogic";
 
 /**
  * The candidate pool of seed locations for a given map. Driven entirely off the
@@ -22,21 +22,18 @@ export function poolSize(mapId: string): number {
 }
 
 /**
- * Sample `count` locations from a pool, allowing repeats only if the pool is
- * smaller than requested. Uses an injectable RNG for deterministic replays.
+ * Sample `count` locations from a pool. When `excludeKeys` is given, items not
+ * in it are used first, so callers can dedup against a player's recent
+ * history; either way, falls back to repeats only once the whole pool has
+ * been used once. Uses an injectable RNG for deterministic replays.
  */
 export function sampleLocations(
   pool: readonly GameLocation[],
   count: number,
   rng: () => number = Math.random,
+  excludeKeys?: ReadonlySet<string>,
 ): GameLocation[] {
-  const chosen = sample(pool, count, rng);
-  while (chosen.length < count && pool.length > 0) {
-    // Clamp against an rng() that returns exactly 1.0 (injected RNGs may) to
-    // avoid pushing `undefined` past the end of the pool.
-    chosen.push(pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]);
-  }
-  return chosen;
+  return layeredSample(pool, count, rng, locationKey, excludeKeys);
 }
 
 /**
@@ -46,7 +43,8 @@ export function pickLocations(
   mapId: string,
   count: number,
   rng: () => number = Math.random,
+  excludeKeys?: ReadonlySet<string>,
 ): GameLocation[] {
   const pool = getMapPool(mapId).map(toGameLocation);
-  return sampleLocations(pool, count, rng);
+  return sampleLocations(pool, count, rng, excludeKeys);
 }
