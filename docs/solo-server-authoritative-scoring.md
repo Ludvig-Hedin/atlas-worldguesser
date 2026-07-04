@@ -88,10 +88,28 @@ solo-sync path until wiring lands.
    plays-increment mutation).
 7. Update `README.md` Status + note the removed `recordSoloResult` API surface.
 
+## A lighter mitigation, already shipped (`convex/challenges.ts`)
+
+The async streak-challenge feature (`/challenge/[id]`) needed the same guarantee
+— a challenger's answer location must never be client-claimed — without waiting
+for the full migration above. It gets there with a smaller pattern than
+`solo.ts`'s session table: `submitAttempt` never accepts `results[i].actual`
+at all (only `guess`/`guessCountryCode` cross the wire), recomputes
+`pickMatchLocations(mapId, rounds, seed)` itself, and substitutes
+`locations[round-1]` as `actual` before calling `applySoloResults`. Since
+`applySoloResults` already recomputes `distanceMeters`/`score` from
+guess-vs-actual internally, overriding `actual` before the call is enough to
+close the hole for this one caller — no schema change, no new session table.
+`recordSoloResult`/`dailyChallenge.submit` could adopt the same override-before-call
+trick as a stopgap if step 6 above keeps stalling.
+
 ## Explicit non-goals
 
 - No anti-cheat beyond location validation (no fingerprinting, no timing heuristics).
   `guessCountryCode` stays client-trusted — matches `rooms.submitGuess`.
 - Custom maps (`convex/maps.ts`) stream their full location pool to the client — a different
   (owner-uploaded, non-leaderboard) trust model. Not converted here.
-- Survival mode has no Convex persistence today; not made server-authoritative.
+- Ad-hoc Survival play (outside the challenge flow) still has no Convex
+  persistence; not made server-authoritative. Challenge attempts
+  (`convex/challenges.ts`) are the one Survival path that IS
+  server-authoritative, per the section above.

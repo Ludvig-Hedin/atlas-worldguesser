@@ -124,6 +124,18 @@ by re-running the same prompt template per country code and re-keying.
   the lobby they're currently in — no group required — via a toast with a
   one-click Join action (`convex/rooms.ts` `inviteFriend`/`myInvites`,
   `src/components/multiplayer/room-invite-notifier.tsx`).
+- ✅ Battle Royale (elimination) — an optional room format toggled in the lobby
+  (`rooms.setElimination`), independent of and mutually exclusive with Team
+  mode and Duels. After each round, whoever scored worst among still-alive
+  players is cut (`convex/rooms.ts` `applyElimination`); a non-guesser scores
+  0, so timing out is naturally worst. Always guarantees at least one survivor
+  — if every alive player ties for worst, no one is cut that round. The match
+  ends the instant one player remains, even before the round cap
+  (`rooms.advance`); if the round cap is hit without reducing to exactly one
+  survivor, the normal score-based winner rule breaks the tie
+  (`rooms.finishMatch`). The reveal panel tags whoever was just eliminated,
+  and the results screen orders survivor first, then eliminated players in
+  reverse elimination order.
 - ✅ Guest multiplayer (no login) — a signed-out visitor can create/join rooms,
   chat, pick avatars, and play full rounds with complete parity, via an
   ephemeral guest account keyed by a `localStorage` id (`atlas.guestId`,
