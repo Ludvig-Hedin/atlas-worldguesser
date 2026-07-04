@@ -25,7 +25,7 @@
 - Modify: `src/lib/progression.test.ts`
 
 **Interfaces:**
-- Produces: `CountryMapStreak { current: number; best: number }`, `StreakState { daily, lastPlayedDay, win, bestWin, countryByMap: Record<string, CountryMapStreak> }`, `EMPTY_STREAKS: StreakState`, `resolveCountryByMap(streaks: { countryByMap?: Record<string, CountryMapStreak>; country?: number; bestCountry?: number }): Record<string, CountryMapStreak>`, `ProgressionInput` gains required `mapId: string`, `foldGame(input: ProgressionInput): ProgressionOutput` (same signature otherwise).
+- Produces: `CountryMapStreak { current: number; best: number }`, `StreakState { daily, lastPlayedDay, win, bestWin, countryByMap: Record<string, CountryMapStreak> }`, `EMPTY_STREAKS: StreakState`, `resolveCountryByMap(streaks: { countryByMap?: Record<string, CountryMapStreak>; country?: number; bestCountry?: number }): Record<string, CountryMapStreak>`, `bestCountryStreakOf(countryByMap: Record<string, CountryMapStreak>): number | undefined` (max `.best` across all maps, `undefined` if empty — shared by Task 8's two profile pages instead of being duplicated), `ProgressionInput` gains required `mapId: string`, `foldGame(input: ProgressionInput): ProgressionOutput` (same signature otherwise).
 - Consumes: nothing new from other tasks.
 
 - [ ] **Step 1: Rewrite the failing tests first**
