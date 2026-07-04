@@ -175,7 +175,9 @@ export function FlagMap({
 
     map.on("load", () => {
       loadedRef.current = true;
-      applyStatus(map, statusRef.current, {});
+      applyStatus(map, "pastStatus", pastStatusRef.current, {});
+      prevPastStatusRef.current = pastStatusRef.current;
+      applyStatus(map, "status", statusRef.current, {});
       prevStatusRef.current = statusRef.current;
     });
     mapRef.current = map;
@@ -201,7 +203,7 @@ export function FlagMap({
     const map = mapRef.current;
     statusRef.current = status;
     if (!map || !loadedRef.current) return;
-    applyStatus(map, status, prevStatusRef.current);
+    applyStatus(map, "status", status, prevStatusRef.current);
     prevStatusRef.current = status;
 
     const answerIso = Object.entries(status).find(([, s]) => s === "correct" || s === "revealed")?.[0];
@@ -225,6 +227,16 @@ export function FlagMap({
     }
   }, [status]);
 
+  // Muted trail of past rounds' final answers — diffed independently of the
+  // current round's `status` so both feature-state layers can coexist.
+  useEffect(() => {
+    const map = mapRef.current;
+    pastStatusRef.current = pastStatus;
+    if (!map || !loadedRef.current) return;
+    applyStatus(map, "pastStatus", pastStatus, prevPastStatusRef.current);
+    prevPastStatusRef.current = pastStatus;
+  }, [pastStatus]);
+
   // Recolor in place on theme change — never setStyle (would wipe feature-state).
   useEffect(() => {
     const map = mapRef.current;
@@ -247,16 +259,17 @@ export function FlagMap({
   );
 }
 
-/** Apply the new status map to feature-state, clearing entries that disappeared. */
+/** Apply the new status map to a feature-state key, clearing entries that disappeared. */
 function applyStatus(
   map: maplibregl.Map,
+  key: "status" | "pastStatus",
   next: Record<string, FlagCellStatus>,
   prev: Record<string, FlagCellStatus>,
 ) {
   for (const iso of Object.keys(prev)) {
-    if (!(iso in next)) map.removeFeatureState({ source: "countries", id: iso }, "status");
+    if (!(iso in next)) map.removeFeatureState({ source: "countries", id: iso }, key);
   }
   for (const [iso, s] of Object.entries(next)) {
-    if (prev[iso] !== s) map.setFeatureState({ source: "countries", id: iso }, { status: s });
+    if (prev[iso] !== s) map.setFeatureState({ source: "countries", id: iso }, { [key]: s });
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAP_STYLES, mapStyleFor, CARTO_LIGHT_STYLE, CARTO_DARK_STYLE } from "./map-style";
+import { MAP_STYLES, mapStyleFor, CARTO_LIGHT_STYLE, CARTO_DARK_STYLE, countryPaint, FLAG_STATUS_COLORS } from "./map-style";
 import type { MapType } from "./preferences";
 
 const ALL: MapType[] = ["normal", "satellite", "terrain", "hybrid"];
@@ -44,5 +44,30 @@ describe("mapStyleFor", () => {
     expect(CARTO_DARK_STYLE).not.toBe(CARTO_LIGHT_STYLE);
     expect(CARTO_DARK_STYLE.version).toBe(8);
     expect(Object.keys(CARTO_DARK_STYLE.sources).length).toBeGreaterThan(0);
+  });
+});
+
+describe("countryPaint — past-round trail", () => {
+  it("falls back to a muted pastStatus match when there is no live status", () => {
+    for (const dark of [false, true]) {
+      const { fillColor, land } = countryPaint(dark);
+      // ["match", ["feature-state","status"], ...pairs, <default>]
+      const fallback = fillColor[fillColor.length - 1] as unknown[];
+      expect(Array.isArray(fallback)).toBe(true);
+      expect(fallback[0]).toBe("match");
+      expect(fallback[1]).toEqual(["feature-state", "pastStatus"]);
+
+      // Muted colors must differ from both the full-saturation status color
+      // and the base land color, and must be a valid hex.
+      const pairs = fallback.slice(2, -1);
+      for (let i = 0; i < pairs.length; i += 2) {
+        const status = pairs[i] as keyof typeof FLAG_STATUS_COLORS | "revealed";
+        const mutedColor = pairs[i + 1] as string;
+        expect(mutedColor).toMatch(/^#[0-9a-f]{6}$/);
+        expect(mutedColor).not.toBe(land);
+        const full = FLAG_STATUS_COLORS[status === "revealed" ? "correct" : status];
+        expect(mutedColor).not.toBe(full);
+      }
+    }
   });
 });

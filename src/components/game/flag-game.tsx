@@ -108,6 +108,7 @@ export function FlagGame({ regionId, mode, length, pool, onExit }: FlagGameProps
     <div className="relative h-[100dvh] w-full overflow-hidden">
       <FlagMap
         status={game.status}
+        pastStatus={game.pastStatus}
         onPick={game.guess}
         initialView={region.view}
         interactive={!revealed}
