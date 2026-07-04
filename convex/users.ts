@@ -4,7 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import { settingsValidator } from "./schema";
 import { rateLimit } from "./rateLimit";
 import { ANTIPODE_METERS, clampSettings, computeGuessScore } from "./gameLogic";
-import { foldGame } from "../src/lib/progression";
+import { foldGame, resolveCountryByMap } from "../src/lib/progression";
 import { levelForXp } from "../src/lib/xp";
 import { DEFAULT_RATING, tierForRating } from "../src/lib/rating";
 import { ACHIEVEMENTS } from "../src/lib/achievements";
@@ -22,13 +22,18 @@ const statsShape = {
   countryCorrect: v.number(),
   countryTotal: v.number(),
 };
+// Shape of the streaks payload a client (guest → cloud import) sends. The
+// client always normalizes to the current shape before sending (see
+// loadProfile in src/lib/local-profile.ts) — legacy country/bestCountry are
+// never sent, only the DB-side schema.ts still carries them for old rows.
 const streaksShape = {
   daily: v.number(),
   lastPlayedDay: v.number(),
   win: v.number(),
   bestWin: v.number(),
-  country: v.number(),
-  bestCountry: v.number(),
+  countryByMap: v.optional(
+    v.record(v.string(), v.object({ current: v.number(), best: v.number() })),
+  ),
 };
 const clampInt = (n: number, max: number) =>
   Math.max(0, Math.min(Math.floor(Number.isFinite(n) ? n : 0), max));
@@ -47,8 +52,7 @@ const EMPTY_STREAKS = {
   lastPlayedDay: 0,
   win: 0,
   bestWin: 0,
-  country: 0,
-  bestCountry: 0,
+  countryByMap: {},
 };
 
 /**

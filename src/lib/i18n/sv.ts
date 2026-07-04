@@ -221,6 +221,14 @@ export const sv: LocaleDictionary = {
   "team.couldNotSwitch": "Kunde inte byta lag",
   "team.couldNotChangeFormat": "Kunde inte ändra format",
 
+  // Battle Royale (elimination mode)
+  "battle.label": "Elimination",
+  "battle.off": "Av",
+  "battle.on": "Battle Royale",
+  "battle.couldNotChangeFormat": "Kunde inte ändra format",
+  "battle.eliminatedTag": "Utslagen",
+  "battle.eliminatedAtRound": "Ute — runda {round}",
+
   // Multiplayer lobby
   "lobby.roomCode": "Rumskod",
   "lobby.copyInviteAria": "Kopiera inbjudningslänk",

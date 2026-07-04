@@ -94,7 +94,9 @@ export async function createRoomForUser(
   rawSettings: Doc<"rooms">["settings"],
   teamMode?: boolean,
   elimination?: boolean,
+  duelsMode?: boolean,
 ): Promise<{ roomId: Id<"rooms">; code: string }> {
+  if (teamMode && duelsMode) throw new Error("Choose either Teams or Duels, not both");
   const settings = clampSettings(rawSettings);
   const now = Date.now();
 
@@ -117,6 +119,7 @@ export async function createRoomForUser(
     mapId,
     settings,
     teamMode: teamMode ?? false,
+    duelsMode: duelsMode ?? false,
     elimination: elimination ?? false,
     currentRound: 0,
     locations,
@@ -145,16 +148,17 @@ export const create = mutation({
     settings: settingsValidator,
     teamMode: v.optional(v.boolean()),
     elimination: v.optional(v.boolean()),
+    duelsMode: v.optional(v.boolean()),
     guestId: v.optional(v.string()),
   },
-  handler: async (ctx, { mapId, settings, teamMode, elimination, guestId }) => {
+  handler: async (ctx, { mapId, settings, teamMode, elimination, duelsMode, guestId }) => {
     assertMultiplayerEnabled();
     if (elimination && teamMode) {
       throw new Error("Battle Royale can't be combined with team mode");
     }
     const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "roomCreate", user._id);
-    return await createRoomForUser(ctx, user, mapId, settings, teamMode, elimination);
+    return await createRoomForUser(ctx, user, mapId, settings, teamMode, elimination, duelsMode);
   },
 });
 

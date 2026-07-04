@@ -221,6 +221,14 @@ export const pl: LocaleDictionary = {
   "team.couldNotSwitch": "Nie udało się zmienić drużyny",
   "team.couldNotChangeFormat": "Nie udało się zmienić formatu",
 
+  // Battle Royale (elimination mode)
+  "battle.label": "Eliminacja",
+  "battle.off": "Wyłączone",
+  "battle.on": "Battle Royale",
+  "battle.couldNotChangeFormat": "Nie udało się zmienić formatu",
+  "battle.eliminatedTag": "Wyeliminowany",
+  "battle.eliminatedAtRound": "Odpadł — runda {round}",
+
   // Multiplayer lobby
   "lobby.roomCode": "Kod pokoju",
   "lobby.copyInviteAria": "Skopiuj link z zaproszeniem",

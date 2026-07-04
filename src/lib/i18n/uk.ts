@@ -221,6 +221,14 @@ export const uk: LocaleDictionary = {
   "team.couldNotSwitch": "Не вдалося змінити команду",
   "team.couldNotChangeFormat": "Не вдалося змінити формат",
 
+  // Battle Royale (elimination mode)
+  "battle.label": "Вибування",
+  "battle.off": "Вимкнено",
+  "battle.on": "Battle Royale",
+  "battle.couldNotChangeFormat": "Не вдалося змінити формат",
+  "battle.eliminatedTag": "Вибув",
+  "battle.eliminatedAtRound": "Вибув — раунд {round}",
+
   // Multiplayer lobby
   "lobby.roomCode": "Код кімнати",
   "lobby.copyInviteAria": "Скопіювати посилання-запрошення",
