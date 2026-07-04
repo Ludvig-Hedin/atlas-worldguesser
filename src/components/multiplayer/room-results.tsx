@@ -25,8 +25,23 @@ export function RoomResults({ room }: { room: RoomState }) {
   const guestId = useGuestId();
   const [busy, setBusy] = useState(false);
   const map = getMapConfig(room.mapId);
-  const winner = room.standings[0];
   const teamMode = room.teamMode;
+  const elimination = room.elimination;
+
+  // Battle Royale: survivor first, then eliminated players in reverse
+  // elimination order (last one out ranks above the first one out).
+  const survivors = room.standings.filter((s) => !s.eliminated);
+  const orderedStandings = elimination
+    ? [...room.standings].sort((a, b) => {
+        if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1;
+        if (a.eliminated && b.eliminated) {
+          return (b.eliminatedAtRound ?? 0) - (a.eliminatedAtRound ?? 0);
+        }
+        return b.totalScore - a.totalScore;
+      })
+    : room.standings;
+  const winner = elimination ? (survivors.length === 1 ? survivors[0] : orderedStandings[0]) : room.standings[0];
+
   const teamWinner: "A" | "B" | null = teamMode
     ? room.teamTotals.A === room.teamTotals.B
       ? null
@@ -36,7 +51,9 @@ export function RoomResults({ room }: { room: RoomState }) {
     : null;
   const competitive = teamMode
     ? teamWinner !== null && room.teamTotals.A + room.teamTotals.B > 0
-    : room.standings.length > 1 && (winner?.totalScore ?? 0) > 0;
+    : elimination
+      ? survivors.length === 1 || (room.standings.length > 1 && (winner?.totalScore ?? 0) > 0)
+      : room.standings.length > 1 && (winner?.totalScore ?? 0) > 0;
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col justify-center gap-6 px-4 py-10">
@@ -90,7 +107,7 @@ export function RoomResults({ room }: { room: RoomState }) {
         />
       ) : (
         <div className="flex flex-col gap-2">
-          {room.standings.map((s, i) => (
+          {orderedStandings.map((s, i) => (
             <motion.div
               key={s.userId}
               initial={{ opacity: 0, x: -8 }}
@@ -111,9 +128,16 @@ export function RoomResults({ room }: { room: RoomState }) {
                 buildingId={s.avatarBuildingId}
                 color={s.avatarColor}
               />
-              <span className="min-w-0 flex-1 truncate font-medium" title={s.username}>
-                {s.username}
-              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate font-medium" title={s.username}>
+                  {s.username}
+                </span>
+                {elimination && s.eliminated && (
+                  <span className="text-xs text-muted-foreground">
+                    {t("battle.eliminatedAtRound", { round: s.eliminatedAtRound ?? 0 })}
+                  </span>
+                )}
+              </div>
               <div className="flex flex-col items-end leading-tight">
                 <span className="text-lg font-semibold tabular text-primary-muted">
                   {formatNumber(s.totalScore)}

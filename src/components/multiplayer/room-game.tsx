@@ -191,6 +191,11 @@ export function RoomGame({ room }: { room: RoomState }) {
                 .map((g) => (
                   <div key={g.userId} className="flex items-center gap-2 text-sm">
                     <span className="min-w-0 flex-1 truncate" title={g.username}>{g.username}</span>
+                    {g.eliminatedAtRound === room.currentRound && (
+                      <span className="rounded-full bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive">
+                        {t("battle.eliminatedTag")}
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {g.distanceMeters !== null ? formatDistance(g.distanceMeters) : t("mp.noGuess")}
                     </span>

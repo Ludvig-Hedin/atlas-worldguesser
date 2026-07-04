@@ -100,6 +100,21 @@ by re-running the same prompt template per country code and re-keying.
   XP/levels (with a one-time level-up celebration toast + card pulse on the
   results screen), achievements, streaks, guest history.
 - ✅ Auth (Clerk) + cloud profiles, stats sync, global leaderboard.
+- ✅ Ranked rating (ELO-lite) — a single global rating (`users.rating`, default
+  1000) + 5 tiers (Bronze / Silver / Gold / Platinum / Diamond, see
+  `src/lib/rating.ts`) earned in **every** competitive multiplayer room (FFA,
+  Team, Duels, Battle Royale). Deliberately not full chess-Elo: no matchmaking
+  queue, no pairwise math — each rated player is scored once against a synthetic
+  average-opponent rating (which degenerates into classical 2-player Elo for a
+  1v1), with a wider K-factor during the first 5 placement games. Hooked into
+  `rooms.finishMatch` alongside XP, reusing the same `competitive` guard so idle
+  or walkover matches never move it. Guests never accrue or consume rating and
+  are excluded from the opponent average, so a guest in the room can't skew a
+  signed-in player's delta. The per-match delta shows on the results screen
+  (`roomMembers.ratingDelta`), and the rating + tier appear on profiles
+  (`convex/users.ts` `publicProfile`, profile stats tile). A ranked-only board
+  query (`convex/leaderboard.ts` `topRated`, `by_rating` index) is available for
+  a future ladder UI; the existing XP leaderboard is unchanged.
 - ✅ Realtime multiplayer — private rooms (code + invite link), lobby with
   host controls & ready status, synchronized live rounds, server-authoritative
   scoring, live scoreboard, chat, match results, rematch. Persistent parties
@@ -175,6 +190,20 @@ by re-running the same prompt template per country code and re-keying.
   the community-wiki "meta" knowledge taught in-product instead of only on
   third-party sites. Text-only for v1; reference photos/diagrams per category
   are a nice-to-have follow-up once assets are sourced.
+- ✅ Async streak-challenge links — mint a shareable `/challenge/{id}` link from
+  a finished Survival run ("Challenge a friend" on the results screen) so a
+  friend can attempt the **exact same** sequence of locations. Reuses Daily
+  Challenge's server-owned seed pipeline (`convex/gameLogic.ts`
+  `pickMatchLocations`, shared `SURVIVAL_BUFFER` constant) — only
+  `mapId`+`rounds`+`seed` are stored (`convex/challenges.ts`), never the
+  resolved locations, so both the invite page and the attempt submission
+  recompute the sequence fresh each time. A challenger plays via `SoloGame`
+  with `fixedOrder` (new prop, also usable by any future flow that injects
+  server-owned locations) so the round order can never drift from the
+  creator's. `submitAttempt` never trusts a client-claimed answer location —
+  only the guess crosses the wire; the actual location is always re-derived
+  from the recomputed sequence before scoring. One saved attempt per
+  (challenge, user); a signed-out guest can still play, just can't save.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.

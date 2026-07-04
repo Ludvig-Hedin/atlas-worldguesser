@@ -45,6 +45,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const setReady = useMutation(api.rooms.setReady);
   const setTeamMode = useMutation(api.rooms.setTeamMode);
   const setTeam = useMutation(api.rooms.setTeam);
+  const setElimination = useMutation(api.rooms.setElimination);
   const start = useMutation(api.rooms.start);
   const leave = useMutation(api.rooms.leave);
   const inviteFriend = useMutation(api.rooms.inviteFriend);
@@ -68,6 +69,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
       .catch((e) => toast.error(e instanceof Error ? e.message : t("lobby.couldNotInvite")));
 
   const teamMode = room.teamMode;
+  const elimination = room.elimination;
   const myTeam = me?.team ?? null;
   const teamCounts = {
     A: room.standings.filter((s) => s.team === "A").length,
@@ -221,6 +223,26 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   ]}
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-muted-foreground">{t("battle.label")}</label>
+                <Segmented
+                  size="sm"
+                  value={elimination ? "on" : "off"}
+                  onChange={(v: string) =>
+                    setElimination({
+                      roomId: room._id,
+                      elimination: v === "on",
+                      guestId: guestId ?? undefined,
+                    }).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : t("battle.couldNotChangeFormat")),
+                    )
+                  }
+                  options={[
+                    { value: "off", label: t("battle.off") },
+                    { value: "on", label: t("battle.on") },
+                  ]}
+                />
+              </div>
             </>
           ) : (
             <div className="flex flex-col gap-2">
@@ -235,6 +257,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   })}
                 </Badge>
                 <Badge variant="muted">{teamMode ? t("team.teams") : t("team.ffa")}</Badge>
+                {elimination && <Badge variant="muted">{t("battle.on")}</Badge>}
               </div>
             </div>
           )}
