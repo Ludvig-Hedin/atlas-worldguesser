@@ -361,4 +361,41 @@ export default defineSchema({
   })
     .index("by_to", ["toUserId"])
     .index("by_room_and_to", ["roomId", "toUserId"]),
+
+  // Async streak-challenge links — beat a friend's Survival-mode round
+  // sequence. mapId+rounds+seed pin the exact deterministic sequence (see
+  // gameLogic.pickMatchLocations); the resolved locations are never stored —
+  // both the challenge page and submitAttempt recompute them fresh from the
+  // seed each time, so there's never a client-supplied locations array to
+  // trust or not trust.
+  challenges: defineTable({
+    creatorId: v.id("users"),
+    mapId: v.string(),
+    rounds: v.number(),
+    settings: settingsValidator,
+    seed: v.number(),
+    // Cosmetic display only on the invite card — NOT re-verified. The
+    // creator's own stats already went through the normal progression fold
+    // separately when their survival run finished.
+    creatorStreak: v.number(),
+    creatorScore: v.number(),
+    // Denormalized count of saved attempts (same convention as maps.plays).
+    attemptCount: v.number(),
+    createdAt: v.number(),
+  }).index("by_creator", ["creatorId"]),
+
+  // One saved attempt per (challenge, user) — first attempt wins, mirrors
+  // Daily Challenge's one-per-day rule. Denormalizes username/avatar for a
+  // cheap head-to-head render without an extra join.
+  challengeAttempts: defineTable({
+    challengeId: v.id("challenges"),
+    userId: v.id("users"),
+    username: v.string(),
+    avatarUrl: v.optional(v.string()),
+    streak: v.number(),
+    score: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_challenge", ["challengeId"])
+    .index("by_challenge_user", ["challengeId", "userId"]),
 });
