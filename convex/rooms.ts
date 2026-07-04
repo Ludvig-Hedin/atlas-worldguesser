@@ -184,7 +184,8 @@ export const join = mutation({
     // Capacity only blocks new joiners — reconnects (handled above) always get
     // back in even at capacity.
     const members = await membersOf(ctx, room._id);
-    if (members.length >= MAX_MEMBERS) throw new Error("This room is full");
+    const capacity = room.duelsMode ? 2 : MAX_MEMBERS;
+    if (members.length >= capacity) throw new Error("This room is full");
     let team: Team | undefined;
     if (room.teamMode) {
       const a = members.filter((m) => m.team === "A").length;
@@ -460,6 +461,9 @@ export const start = mutation({
       const hasA = members.some((m) => m.team === "A");
       const hasB = members.some((m) => m.team === "B");
       if (!hasA || !hasB) throw new Error("Both teams need at least one player to start");
+    }
+    if (room.duelsMode && members.length !== 2) {
+      throw new Error("Duels needs exactly 2 players");
     }
     for (const m of members) {
       await ctx.db.patch(m._id, { totalScore: 0, eliminated: undefined, eliminatedAtRound: undefined });
