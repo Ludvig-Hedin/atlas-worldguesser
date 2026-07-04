@@ -10,11 +10,13 @@ export const lt: LocaleDictionary = {
   "nav.play": "Žaisti",
   "nav.singleplayer": "Vienas žaidėjas",
   "nav.multiplayer": "Keli žaidėjai",
+  "nav.profile": "Profilis",
 
   // Prisijungimas
   "auth.signIn": "Prisijungti",
   "auth.signUp": "Registruotis",
   "auth.signOut": "Atsijungti",
+  "auth.manageAccount": "Tvarkyti paskyrą",
   "auth.signInTooltip": "Išsaugokite pažangą, kilkite lyderių lentelėje ir žaiskite su draugais",
 
   // Nustatymų meniu

@@ -17,11 +17,13 @@ export const en = {
   "nav.play": "Play",
   "nav.singleplayer": "Singleplayer",
   "nav.multiplayer": "Multiplayer",
+  "nav.profile": "Profile",
 
   // Auth
   "auth.signIn": "Sign in",
   "auth.signUp": "Sign up",
   "auth.signOut": "Sign out",
+  "auth.manageAccount": "Manage account",
   "auth.signInTooltip": "Save your progress, climb the leaderboard, and play with friends",
 
   // Settings menu

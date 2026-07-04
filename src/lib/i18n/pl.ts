@@ -10,11 +10,13 @@ export const pl: LocaleDictionary = {
   "nav.play": "Graj",
   "nav.singleplayer": "Jeden gracz",
   "nav.multiplayer": "Wieloosobowa",
+  "nav.profile": "Profil",
 
   // Auth
   "auth.signIn": "Zaloguj się",
   "auth.signUp": "Zarejestruj się",
   "auth.signOut": "Wyloguj się",
+  "auth.manageAccount": "Zarządzaj kontem",
   "auth.signInTooltip": "Zapisuj postępy, wspinaj się w rankingu i graj ze znajomymi",
 
   // Settings menu

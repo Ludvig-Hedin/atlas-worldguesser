@@ -10,11 +10,13 @@ export const uk: LocaleDictionary = {
   "nav.play": "Грати",
   "nav.singleplayer": "Одиночна гра",
   "nav.multiplayer": "Багатокористувацька",
+  "nav.profile": "Профіль",
 
   // Auth
   "auth.signIn": "Увійти",
   "auth.signUp": "Зареєструватися",
   "auth.signOut": "Вийти",
+  "auth.manageAccount": "Керувати обліковим записом",
   "auth.signInTooltip": "Зберігайте прогрес, піднімайтеся в рейтингу та грайте з друзями",
 
   // Settings menu

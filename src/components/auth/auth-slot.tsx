@@ -1,6 +1,7 @@
 "use client";
 
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
+import { AccountWidget } from "@/components/auth/account-widget";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/use-t";
@@ -18,7 +19,7 @@ function AuthControls() {
   // Subtle skeleton (not an empty gap) while Clerk initializes.
   if (!isLoaded) return <div className="size-8 animate-pulse rounded-full bg-overlay" aria-hidden />;
   if (isSignedIn) {
-    return <UserButton appearance={{ elements: { avatarBox: { width: "2rem", height: "2rem" } } }} />;
+    return <AccountWidget />;
   }
   return (
     <Tooltip>

@@ -10,11 +10,13 @@ export const sv: LocaleDictionary = {
   "nav.play": "Spela",
   "nav.singleplayer": "En spelare",
   "nav.multiplayer": "Flerspelare",
+  "nav.profile": "Profil",
 
   // Auth
   "auth.signIn": "Logga in",
   "auth.signUp": "Skapa konto",
   "auth.signOut": "Logga ut",
+  "auth.manageAccount": "Hantera konto",
   "auth.signInTooltip": "Spara dina framsteg, klättra på topplistan och spela med vänner",
 
   // Settings menu
