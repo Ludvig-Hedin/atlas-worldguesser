@@ -387,6 +387,20 @@ Reviewed the full diff between `origin/main` and local `HEAD` (backend leaderboa
 - i18n — all 5 locales (en/lt/pl/sv/uk) have exact key parity (430 keys each), including the new `settings.darkMap*` and `profile.*Avatars*` keys.
 - `AvatarPicker`'s `limit !== undefined` strict check is correct (distinguishes `limit={0}` from "no limit"), dark-map wiring is correct across all 7 `mapStyleFor` call sites, `button.tsx`'s `transition-all` → explicit property list is a no-op for existing callers.
 
+### CodeRabbit pass (8 findings — 7 fixed, 1 backlogged)
+
+- `src/hooks/use-flag-game.ts` (MAJOR) — `next()`'s history merge (`{...s.history, ...buildStatus(s)}`) let a later round's decoy click on a country downgrade an earlier round's finalized `"correct"`/`"revealed"` entry, corrupting the muted past-rounds trail. Fixed: merge now skips any iso already finalized in history.
+- `src/components/game/map-sheet.tsx` (MAJOR) — collapsing the mini-map did an early `return` that unmounted `GuessMap` entirely, recreating the maplibre-gl instance (losing pan/zoom, plus contributing to the known WebGL-context-leak issue) every toggle. Fixed: `GuessMap` now stays mounted; the collapsed/expanded panels toggle via `hidden`, relying on `GuessMap`'s existing `ResizeObserver` to re-`resize()` when shown again.
+- `src/components/game/solo-game.tsx` (MAJOR) — the per-round reset effect cleared `forceDemo`/`forceDemoReason` unconditionally, so a session-wide `"auth"` failure (bad/blocked Google Maps key) got wiped every round, sending each new round back through a doomed real-Street-View attempt (flicker + wasted call) before falling back again. Fixed: `"auth"` now stays sticky across rounds; only transient `"load"`/`"coverage"` reasons reset.
+- `src/components/profile/all-avatars-view.tsx` + `src/components/profile/guest-profile.tsx` (minor, same fix — this is the AuthGate flash already flagged in the bug-hunt above) — both `AuthGate`s now gate on `isLoading` and render a skeleton instead of briefly choosing the wrong (guest) view for a signed-in user.
+- `src/components/preferences/settings-menu.tsx` (minor) — the settings trigger button's `aria-label` was always `t("settings.open")` even when `showLabel` renders visible text, so the accessible name didn't match the visible label (WCAG Label-in-Name). Fixed: `aria-label` is now `undefined` when the label is visible.
+- `src/components/multiplayer/multiplayer-entry.tsx` (minor) — a single shared `creating` boolean showed a loading spinner on *both* the "create room" and "create duel" buttons whenever either was in flight. Fixed: `creating` is now `"room" | "duel" | null` so only the clicked button spins.
+- `src/components/profile/stats-grid.tsx` (minor) — merging the Level/rating cards and the compact stat tiles into one `grid-cols-2 sm:grid-cols-3` shrank the Level card (which holds a progress bar) down to the same 1/3-width cell as a 2-line stat tile, losing its original `flex-1`-dominant sizing. Fixed: Level card now gets `col-span-2`.
+- `convex/flags.ts` (minor, backlogged, not fixed) — the region leaderboard's `n + 20` over-fetch margin can still return fewer than `n` rows if more than 20 test accounts land in that window. Same accepted tradeoff already used by `leaderboard.ts`'s `top` (n + 150) and `dailyChallenge.ts`; a real fix means looping/expanding the fetch window until `n` non-test rows are found or a safe cap is hit. Left as a follow-up rather than an architecture change right before push.
+
 ### Validation
 
-- Pending: `bun typecheck`, `bun lint`, `bun test:run`, `bun run build` (run before commit/push).
+- `bun typecheck` ✓ (0 errors)
+- `bun lint` ✓ (0 errors, 17 warnings — all pre-existing or the codebase's existing raw-`<img>` convention, none are regressions)
+- `bun test:run` ✓ (230/230, 27 files)
+- `bun run build` ✓ (production build succeeds; sandbox's local proxy briefly broke Next.js's font-fetch on the very first local attempt — not a code issue, confirmed by a clean retry with direct network)
