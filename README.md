@@ -99,6 +99,19 @@ by re-running the same prompt template per country code and re-keying.
   (Moving / No Move / NMPZ), rounds, timer, scoring, reveal, match results,
   XP/levels (with a one-time level-up celebration toast + card pulse on the
   results screen), achievements, streaks, guest history.
+- ✅ Streak freezes — a free retention hook GeoGuessr itself lacks (an open,
+  unresolved complaint on their own feedback board). The daily play-streak
+  silently survives a single skipped day by auto-spending a banked "freeze".
+  It's auto-apply, not a prompt: the streak gap is only ever evaluated lazily
+  inside `foldGame` when a game finishes, so there's nowhere to hang a pre-game
+  "use a freeze?" dialog without a whole new round-trip. Freezes are earned one
+  per 7-day streak milestone (capped at 3) and only bridge an **exact** one-day
+  gap — a 2+ day absence still resets the streak, and a brand-new account never
+  spends one. The results screen surfaces the otherwise-silent save with a
+  "Streak saved — used a freeze, N left" toast (`match.streakFrozen`), reusing
+  the same local-fold toast mechanism as the level-up moment. Shape:
+  `freezesAvailable` on `users.streaks` / `StreakState`; logic in
+  `src/lib/progression.ts` (`foldGame`).
 - ✅ Auth (Clerk) + cloud profiles, stats sync, global leaderboard.
 - ✅ Ranked rating (ELO-lite) — a single global rating (`users.rating`, default
   1000) + 5 tiers (Bronze / Silver / Gold / Platinum / Diamond, see

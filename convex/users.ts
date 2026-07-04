@@ -134,6 +134,10 @@ function publicProfile(user: Doc<"users">) {
       win: user.streaks.win,
       bestWin: user.streaks.bestWin,
       countryByMap: resolveCountryByMap(user.streaks),
+      // Surface the banked freeze count so a signed-in client reseeding its
+      // local profile from getMe keeps the real count (else the next local
+      // fold would compute a wrong freeze decision from a reset-to-0 value).
+      freezesAvailable: user.streaks.freezesAvailable ?? 0,
     },
     createdAt: user.createdAt,
   };
