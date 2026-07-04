@@ -48,10 +48,55 @@ interface PlayClientProps {
   resume: boolean;
 }
 
-export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps) {
-  const t = useT();
-  const { isAuthenticated } = useConvexAuth();
+type MintSession = (args: {
+  mapId: string;
+  settings: GameSettings;
+}) => Promise<{ sessionId: Id<"soloSessions">; mapId: string; settings: GameSettings; locations: GameLocation[] }>;
+
+/**
+ * `useConvexAuth()` throws when rendered without a `ConvexProviderWithClerk`
+ * ancestor (see providers.tsx: that provider only wraps the tree when
+ * `features.auth` is true) — this component is only ever mounted in that
+ * branch, so calling it here is safe. `PlayClient` below picks this branch vs.
+ * the plain one based on the same static `features.auth` flag, never both, so
+ * there's no conditional-hook-call risk despite the two code paths.
+ */
+function PlayClientWithAuth(props: PlayClientProps) {
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const mintSession = useMutation(api.solo.startGame);
+  return (
+    <PlayClientCore
+      {...props}
+      isAuthenticated={isAuthenticated}
+      authLoading={isLoading}
+      mintSession={mintSession}
+    />
+  );
+}
+
+export function PlayClient(props: PlayClientProps) {
+  if (features.auth) return <PlayClientWithAuth {...props} />;
+  return <PlayClientCore {...props} isAuthenticated={false} authLoading={false} mintSession={null} />;
+}
+
+interface PlayClientCoreProps extends PlayClientProps {
+  isAuthenticated: boolean;
+  /** True until Clerk/Convex auth has resolved — quick-start/resume must wait
+   * for this before deciding guest vs. server-session, or a signed-in user on
+   * a cold load would silently fall through to the less-secure guest path. */
+  authLoading: boolean;
+  mintSession: MintSession | null;
+}
+
+function PlayClientCore({
+  initialMapId,
+  quickStart,
+  resume,
+  isAuthenticated,
+  authLoading,
+  mintSession,
+}: PlayClientCoreProps) {
+  const t = useT();
   const [config, setConfig] = useState<Config | null>(null);
   // True while minting a server-authoritative session (initial start, quick
   // start, resume, or "Play Again") — shows the same beat SoloGame's own
@@ -73,7 +118,7 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
       // maps — guests, keyless deployments, and Survival keep today's fully
       // client-side path (zero pre-game round-trip). Custom maps go through
       // their own CustomPlay route, never through here.
-      if (features.convex && isAuthenticated && next.mode === "classic") {
+      if (mintSession && isAuthenticated && next.mode === "classic") {
         setMinting(true);
         try {
           const session = await mintSession({ mapId: next.mapId, settings: next.settings });
@@ -104,7 +149,7 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
   // locations) rather than reseeding client-side — the old session is already
   // consumed server-side and can't be replayed.
   const playAgain = useCallback(async () => {
-    if (!config) return;
+    if (!config || !mintSession) return;
     setMinting(true);
     try {
       const session = await mintSession({ mapId: config.mapId, settings: config.settings });
@@ -125,24 +170,27 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
   }, [config, mintSession]);
 
   // Quick-play and Resume both funnel through `start` so every entry point
-  // gets the same server-session treatment for signed-in classic play.
-  const quickStarted = useRef(false);
+  // gets the same server-session treatment for signed-in classic play. Both
+  // wait for auth to settle first: `isAuthenticated` starts false while Clerk/
+  // Convex are still resolving, so firing on the very first render would make
+  // a signed-in user on a cold load (e.g. a bookmarked `/play?quick=1`) take
+  // the guest branch and never get a server session — silently reopening the
+  // fabricated-score gap this whole flow exists to close. Mutually exclusive
+  // (one shared latch) since a URL could in principle set both flags.
+  const autoStarted = useRef(false);
   useEffect(() => {
-    if (quickStart && !quickStarted.current) {
-      quickStarted.current = true;
+    if (authLoading || autoStarted.current) return;
+    if (quickStart) {
+      autoStarted.current = true;
       void start({ mapId: initialMapId, settings: DEFAULT_SETTINGS, mode: "classic" });
+      return;
     }
-  }, [quickStart, initialMapId, start]);
-
-  // Resume: restore the last setup from localStorage on mount (client-only, so
-  // it runs in an effect to stay hydration-safe). Falls back to setup if none.
-  const resumed = useRef(false);
-  useEffect(() => {
-    if (!resume || resumed.current) return;
-    resumed.current = true;
-    const last = loadLastGame();
-    if (last) void start({ mapId: last.mapId, settings: last.settings, mode: "classic" });
-  }, [resume, start]);
+    if (resume) {
+      autoStarted.current = true;
+      const last = loadLastGame();
+      if (last) void start({ mapId: last.mapId, settings: last.settings, mode: "classic" });
+    }
+  }, [authLoading, quickStart, resume, initialMapId, start]);
 
   if (minting) {
     return (
