@@ -402,9 +402,9 @@ async function startRound(ctx: MutationCtx, roomId: Id<"rooms">, round: number) 
 }
 
 export const start = mutation({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, { roomId }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can start");
     if (room.status !== "lobby") throw new Error("Already started");
@@ -437,9 +437,10 @@ export const submitGuess = mutation({
     roomId: v.id("rooms"),
     guess: v.union(latLng, v.null()),
     guessCountryCode: v.union(v.string(), v.null()),
+    guestId: v.optional(v.string()),
   },
-  handler: async (ctx, { roomId, guess, guessCountryCode }) => {
-    const user = await requireUser(ctx);
+  handler: async (ctx, { roomId, guess, guessCountryCode, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "guess", user._id);
     if (
       guess &&
@@ -640,9 +641,9 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
 }
 
 export const rematch = mutation({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, { roomId }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can start a rematch");
     if (room.status !== "finished") throw new Error("Match still in progress");
@@ -682,15 +683,15 @@ export const rematch = mutation({
 // ── Reactive public state ────────────────────────────────────────────────
 
 export const getByCode = query({
-  args: { code: v.string() },
-  handler: async (ctx, { code }) => {
+  args: { code: v.string(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { code, guestId }) => {
     const room = await ctx.db
       .query("rooms")
       .withIndex("by_code", (q) => q.eq("code", code.toUpperCase()))
       .unique();
     if (!room) return null;
 
-    const me = await currentUser(ctx);
+    const me = await currentUser(ctx, guestId);
     const members = await membersOf(ctx, room._id);
     const round = room.currentRound;
 
