@@ -146,8 +146,8 @@ by re-running the same prompt template per country code and re-keying.
   dashboard** — generate a pair with `bunx web-push generate-vapid-keys`.
   Without keys, sends are skipped with a console warning; without a browser
   granting permission, the Settings toggle simply doesn't render.
-- ✅ Unlockable avatars — 145 curated iconic-building avatars (~69% of all 209
-  countries), unlocked by correctly guessing that country in any game mode.
+- ✅ Unlockable avatars — a curated iconic-building avatar for all 209 countries
+  (100% coverage), unlocked by correctly guessing that country in any game mode.
   Free background-color customization. Cloud accounts persist unlocks
   server-side (`convex/users.setAvatar`); guests track locally and merge into
   their account on sign-in. Art generated via Nano Banana, chroma-keyed to
