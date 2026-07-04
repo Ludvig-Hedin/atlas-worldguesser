@@ -4,6 +4,28 @@ Deferred work surfaced during the UX assessment + bug hunt (2026-07-03). Ordered
 roughly by value. Items here were intentionally NOT done in that pass because they
 need a product decision, a schema/data migration, or a larger build.
 
+## Google Maps cost follow-ups (added 2026-07-04)
+
+- **Pre-vet `src/data/locations.ts` for Street View coverage offline.** The
+  pool is raw city-center coords from Natural Earth, never checked against
+  Street View — low-coverage entries (e.g. some capitals) burn a reroll
+  (billed lookup) every time they're drawn. Write a one-off script using
+  `GOOGLE_MAPS_SERVER_KEY` (declared in `.env.example`, currently unused) to
+  batch-resolve each entry once, drop uncovered ones, and populate the
+  already-modeled-but-empty `panoId` field on `GameLocation`
+  (`src/lib/types.ts`) so normal play skips the live metadata call entirely.
+  Area: `src/data/locations.ts`, `src/lib/types.ts`. Impact: high — this plus
+  the reroll cap (done) and localStorage cache (done) are the main levers on
+  Street View spend.
+- **Multiplayer: resolve panorama once per round, not once per player.**
+  `convex/rooms.ts` already knows the round's location server-side, but each
+  client in a room independently calls Google for the identical coordinate
+  (N players × M rounds = N× the necessary lookups). Have one client report
+  the resolved `panoId` back (or resolve server-side once
+  `GOOGLE_MAPS_SERVER_KEY` exists) and broadcast it via room state. Area:
+  `convex/rooms.ts`, `src/components/multiplayer/room-game.tsx`. Impact:
+  medium, scales with concurrent room size.
+
 ## Guest multiplayer follow-ups (added 2026-07-04)
 
 - **Ephemeral guest cleanup (TTL / cascade delete).** Guest accounts
