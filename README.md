@@ -99,6 +99,20 @@ by re-running the same prompt template per country code and re-keying.
   (Moving / No Move / NMPZ), rounds, timer, scoring, reveal, match results,
   XP/levels (with a one-time level-up celebration toast + card pulse on the
   results screen), achievements, streaks, guest history.
+- ✅ Server-authoritative solo & Daily Challenge scoring — closes a fairness gap
+  where a modified client could claim any "actual" answer location to fabricate
+  perfect rounds and inflate XP/leaderboards. For signed-in classic (official
+  map) play, `play-client.tsx` mints a session (`convex/solo.ts` `startGame`)
+  before the round starts; the server resolves + stores the round locations
+  (`pickMatchLocations`, same pipeline rooms/Daily already use) and the client
+  plays them verbatim in order (`useSoloGame`'s `fixedOrder`). `submitGame`
+  re-derives every round's answer from the session, never the client — only
+  the guess and named country cross the wire. Daily Challenge's `submit`
+  re-derives the day's locations itself the same way. Guests, keyless
+  deployments, and Survival keep the original fully client-side path (no
+  pre-game round-trip); custom maps keep the legacy `recordSoloResult` path
+  too, since they already stream their full owner-uploaded location pool to
+  the client (a different, accepted trust model).
 - ✅ Streak freezes — a free retention hook GeoGuessr itself lacks (an open,
   unresolved complaint on their own feedback board). The daily play-streak
   silently survives a single skipped day by auto-spending a banked "freeze".

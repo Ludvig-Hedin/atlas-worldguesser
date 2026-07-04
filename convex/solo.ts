@@ -14,36 +14,35 @@ import { requireUser } from "./users";
 import type { RoundResult } from "../src/lib/types";
 
 /**
- * Server-authoritative solo scoring (classic solo — distance maps).
+ * Server-authoritative solo scoring (classic solo — distance maps — and Daily
+ * Challenge, which calls `persistSoloGame` directly from `dailyChallenge.ts`).
  *
  * `startGame` mints a session whose round locations the SERVER owns: resolved
  * once via the same `pickMatchLocations` rooms + daily already use, stored hidden
- * on `soloSessions`. `submitGame` re-derives each round's answer from
- * `session.locations[round-1]` — the client's claimed answer coordinates are
- * never trusted. Only its guess and the ISO country it names (for the country
- * bonus) come from the client, exactly matching the multiplayer reference
- * (`rooms.submitGuess`). This closes the score-stuffing gap where a modified
- * client could send `guess === actual` to farm XP and top leaderboards.
+ * on `soloSessions`. `submitGame`/`persistSoloGame` re-derive each round's answer
+ * from the server-owned locations array — the client's claimed answer
+ * coordinates are never trusted. Only its guess and the ISO country it names
+ * (for the country bonus) come from the client, exactly matching the
+ * multiplayer reference (`rooms.submitGuess`). This closes the score-stuffing
+ * gap where a modified client could send `guess === actual` to farm XP and top
+ * leaderboards.
  *
- * WIRING STATUS (see docs/solo-server-authoritative-scoring.md): the client half
- * — use-solo-game playing `session.locations` IN ORDER via `fixedOrder`,
- * play-client minting the session, solo-cloud-sync calling `submitGame` — lands
- * separately (it overlaps files under active parallel edit). Until then these
- * mutations are deployed but unused, and legacy `users.recordSoloResult` stays
- * the live solo-sync path. The client MUST play the returned `locations` in the
- * exact order given (no resample, no easter-egg roll) or per-round scoring here
- * desyncs — `use-solo-game`'s `fixedOrder` guarantees that.
+ * Wired client-side via: `use-solo-game`'s `fixedOrder` (plays injected
+ * locations verbatim, in order — required whenever the server owns round
+ * order), `play-client.tsx` (mints a session before rendering `SoloGame` for
+ * signed-in classic play), `daily-client.tsx` (same, for Daily), and
+ * `solo-cloud-sync.tsx` (calls `submitGame` when a `sessionId` is present).
  *
- * `persistSoloGame` intentionally mirrors `users.applySoloResults`; the two get
- * consolidated (applySoloResults rewritten to take a `locations` array,
- * recordSoloResult removed) once the overlapping in-flight work lands. Kept
- * self-contained for now so this file touches no actively-edited module.
+ * Custom maps (`convex/maps.ts`) are NOT covered — they stream their full
+ * owner-uploaded location pool to the client already (a different, accepted
+ * trust model, not leaderboard-critical the same way). They keep using the
+ * legacy `users.recordSoloResult` path, unchanged.
  */
 
 // Trimmed round payload: the server owns `actual` (via session.locations) and
 // recomputes distance/score/countryCorrect, so the client sends only its guess
 // and the country it named for that round.
-const soloRoundArg = v.object({
+export const soloRoundArg = v.object({
   round: v.number(),
   guess: v.union(v.object({ lat: v.number(), lng: v.number() }), v.null()),
   guessCountryCode: v.union(v.string(), v.null()),
@@ -66,9 +65,10 @@ const validGuess = (p: { lat: number; lng: number } | null) =>
  * Fold a finished solo game into the user's profile and write the games-history
  * row, scoring each round against the server-owned `locations`. Mirrors
  * `users.applySoloResults` but takes the authoritative locations instead of
- * trusting client-submitted `actual` coordinates.
+ * trusting client-submitted `actual` coordinates. Shared by `submitGame` below
+ * and `dailyChallenge.submit`.
  */
-async function persistSoloGame(
+export async function persistSoloGame(
   ctx: MutationCtx,
   user: Doc<"users">,
   mapId: string,
@@ -174,7 +174,7 @@ async function persistSoloGame(
     createdAt: now,
   });
 
-  return out;
+  return { out, results };
 }
 
 /**
@@ -218,7 +218,7 @@ export const submitGame = mutation({
     if (!session || session.userId !== user._id) throw new Error("Session not found");
     if (session.consumedAt) throw new Error("Already submitted");
     const now = Date.now();
-    const out = await persistSoloGame(
+    const { out } = await persistSoloGame(
       ctx,
       user,
       session.mapId,

@@ -41,14 +41,13 @@ export function DailyClient() {
     submittedRef.current = true;
     void submit({
       day: today.day,
+      // The server re-derives `actual` from its own day-seeded locations and
+      // recomputes distance/score/countryCorrect — only the guess and the
+      // named country are ever sent.
       results: results.map((r) => ({
         round: r.round,
-        actual: { lat: r.actual.lat, lng: r.actual.lng, countryCode: r.actual.countryCode },
         guess: r.guess,
-        distanceMeters: r.distanceMeters,
-        score: r.score,
         guessCountryCode: r.guessCountryCode,
-        countryCorrect: r.countryCorrect,
       })),
     })
       .then((res) => {
@@ -71,6 +70,7 @@ export function DailyClient() {
         mapId="daily"
         settings={today.settings}
         customLocations={today.locations}
+        fixedOrder
         cloudSync={false}
         onComplete={handleComplete}
         onExit={() => setPlaying(false)}

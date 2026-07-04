@@ -49,6 +49,14 @@ interface SoloGameProps {
    * can bump its play counter. `mapId` stays the "custom" sentinel used for
    * scoring/location-pool lookups above — this is separate and optional. */
   customMapId?: Id<"maps">;
+  /** Server-authoritative session id (official/classic maps, signed-in users)
+   * — when present, SoloCloudSync submits through `solo.submitGame` instead
+   * of the legacy `recordSoloResult` path. */
+  sessionId?: Id<"soloSessions">;
+  /** When provided, "Play Again" calls this instead of the local `restart()` —
+   * used by the session-backed flow, which must mint a NEW server session
+   * (a fresh `sessionId` + locations) rather than just reseeding client-side. */
+  onPlayAgain?: () => void;
 }
 
 export function SoloGame({
@@ -61,6 +69,8 @@ export function SoloGame({
   cloudSync = true,
   onComplete,
   customMapId,
+  sessionId,
+  onPlayAgain,
 }: SoloGameProps) {
   const t = useT();
   const engine = useSoloGame({ mapId, settings, customLocations, mode, fixedOrder });
@@ -207,9 +217,13 @@ export function SoloGame({
   }, [game.phase, game.round]);
 
   const handlePlayAgain = useCallback(() => {
+    if (onPlayAgain) {
+      onPlayAgain();
+      return;
+    }
     setApplied(null);
     restart();
-  }, [restart]);
+  }, [onPlayAgain, restart]);
 
   // Mirror RoundReveal's 450ms mash-guard: without it, held-down Space
   // (key-repeat) from submitting skips the reveal instantly.
@@ -250,7 +264,7 @@ export function SoloGame({
     return (
       <>
         {features.convex && cloudSync && game.mode !== "survival" && (
-          <SoloCloudSync game={game} customMapId={customMapId} />
+          <SoloCloudSync game={game} customMapId={customMapId} sessionId={sessionId} />
         )}
         <MatchResults game={game} applied={applied} onPlayAgain={handlePlayAgain} onNewGame={onExit} />
       </>

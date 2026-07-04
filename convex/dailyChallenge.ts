@@ -2,16 +2,19 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { rateLimit } from "./rateLimit";
 import { pickMatchLocations } from "./gameLogic";
-import { applySoloResults, currentUser, requireUser, roundArg } from "./users";
+import { currentUser, requireUser } from "./users";
+import { persistSoloGame, soloRoundArg } from "./solo";
 
 /**
  * Daily Challenge: the same set of world locations for everyone each UTC day,
  * one attempt per player, ranked on a per-day leaderboard.
  *
  * The server owns the day's locations (derived deterministically from the day
- * number) so every player faces identical rounds. Scoring is still recomputed
- * server-side in applySoloResults; solo remains client-authoritative for the
- * `actual` coordinates, so this is a casual board, not an anti-cheat system.
+ * number) so every player faces identical rounds — `submit` re-derives that
+ * same location set itself (`pickMatchLocations(DAILY_MAP, DAILY_ROUNDS, day)`)
+ * and scores against it via `persistSoloGame`, the same server-authoritative
+ * path `solo.submitGame` uses. The client never gets to claim an `actual`
+ * answer location — only its guess and the named country cross the wire.
  */
 
 const DAY_MS = 86_400_000;
@@ -48,7 +51,7 @@ export const today = query({
 export const submit = mutation({
   args: {
     day: v.number(),
-    results: v.array(roundArg),
+    results: v.array(soloRoundArg),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -65,14 +68,19 @@ export const submit = mutation({
       .unique();
     if (existing) throw new Error("You've already played today's challenge.");
 
-    const { out, results } = await applySoloResults(
+    // Re-derive the day's answer locations ourselves — never trust a
+    // client-claimed `actual`. Must match `today`'s query exactly (same
+    // map/rounds/seed) so round i always scores against the same location
+    // every player saw.
+    const locations = pickMatchLocations(DAILY_MAP, DAILY_ROUNDS, day);
+    const { out, results } = await persistSoloGame(
       ctx,
       user,
       DAILY_MAP,
       DAILY_SETTINGS,
       args.results,
+      locations,
       now,
-      { maxRounds: DAILY_ROUNDS },
     );
     const correctCount = results.filter((r) => r.countryCorrect).length;
     await ctx.db.insert("dailyResults", {
