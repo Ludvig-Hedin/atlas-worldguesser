@@ -59,6 +59,7 @@ export function loadProfile(): LocalProfile {
       win: rawStreaks?.win ?? EMPTY_STREAKS.win,
       bestWin: rawStreaks?.bestWin ?? EMPTY_STREAKS.bestWin,
       countryByMap: rawStreaks ? resolveCountryByMap(rawStreaks) : {},
+      freezesAvailable: rawStreaks?.freezesAvailable ?? EMPTY_STREAKS.freezesAvailable,
     };
     return {
       ...emptyProfile(),
@@ -158,6 +159,8 @@ export interface ApplyResult {
   newAchievements: string[];
   newBuildings: string[];
   leveledUp: boolean;
+  /** A banked freeze auto-saved the daily streak this game (drives the toast). */
+  streakFreezeUsed: boolean;
   won: boolean;
   totalScore: number;
 }
@@ -205,6 +208,7 @@ export function applyGame(
     newAchievements: out.newAchievements,
     newBuildings: out.newBuildings,
     leveledUp: out.leveledUp,
+    streakFreezeUsed: out.streakFreezeUsed,
     won: out.won,
     totalScore: out.totalScore,
   };

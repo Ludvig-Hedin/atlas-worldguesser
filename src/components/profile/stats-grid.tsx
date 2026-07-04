@@ -1,4 +1,4 @@
-import { Flame, Gamepad2, Globe2, Medal, Ruler, Target, Trophy } from "lucide-react";
+import { Award, Flame, Gamepad2, Globe2, Medal, Ruler, Target, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { formatDistance, formatNumber, formatPercent } from "@/lib/format";
 import { levelProgress } from "@/lib/xp";

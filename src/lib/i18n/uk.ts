@@ -174,6 +174,7 @@ export const uk: LocaleDictionary = {
   "match.setAsAvatar": "Встановити як аватар",
   "match.signInToClaim": "Увійдіть, щоб отримати",
   "match.levelUp": "Новий рівень! Тепер рівень {level}",
+  "match.streakFrozen": "Серію збережено — використано заморозку, залишилось {count}",
   "match.countryStreak": "Серія: {map}",
   "match.countryStreakCurrent": "Поточна",
   "match.countryStreakBest": "Найкраща",

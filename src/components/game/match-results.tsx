@@ -63,6 +63,20 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
     }
   }, [applied.leveledUp, level.level, t]);
 
+  // One-time "streak saved" notice when a banked freeze auto-bridged a skipped
+  // day. Same locally-computed `applied` fold + ref-guard pattern as the level-up
+  // toast above, so it surfaces the otherwise-silent auto-apply identically for
+  // guests and signed-in users. `freezesAvailable` is the post-fold remaining count.
+  const freezeNoticed = useRef(false);
+  useEffect(() => {
+    if (applied.streakFreezeUsed && !freezeNoticed.current) {
+      freezeNoticed.current = true;
+      toast.success(
+        t("match.streakFrozen", { count: applied.profile.streaks.freezesAvailable ?? 0 }),
+      );
+    }
+  }, [applied.streakFreezeUsed, applied.profile.streaks.freezesAvailable, t]);
+
   return (
     <div className="min-h-full w-full overflow-y-auto bg-background">
       <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:py-12">

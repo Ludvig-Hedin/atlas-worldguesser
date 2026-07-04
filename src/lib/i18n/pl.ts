@@ -174,6 +174,7 @@ export const pl: LocaleDictionary = {
   "match.setAsAvatar": "Ustaw jako awatar",
   "match.signInToClaim": "Zaloguj się, aby odebrać",
   "match.levelUp": "Nowy poziom! Teraz poziom {level}",
+  "match.streakFrozen": "Seria uratowana — użyto zamrożenia, zostało {count}",
   "match.countryStreak": "Seria: {map}",
   "match.countryStreakCurrent": "Obecna",
   "match.countryStreakBest": "Najlepsza",

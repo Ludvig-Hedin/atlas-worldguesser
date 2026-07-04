@@ -174,6 +174,7 @@ export const sv: LocaleDictionary = {
   "match.setAsAvatar": "Använd som avatar",
   "match.signInToClaim": "Logga in för att hämta ut",
   "match.levelUp": "Ny nivå! Nu på nivå {level}",
+  "match.streakFrozen": "Svit räddad — använde en frysning, {count} kvar",
   "match.countryStreak": "{map}-serie",
   "match.countryStreakCurrent": "Nuvarande",
   "match.countryStreakBest": "Bästa",

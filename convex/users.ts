@@ -34,6 +34,7 @@ const streaksShape = {
   countryByMap: v.optional(
     v.record(v.string(), v.object({ current: v.number(), best: v.number() })),
   ),
+  freezesAvailable: v.optional(v.number()),
 };
 const clampInt = (n: number, max: number) =>
   Math.max(0, Math.min(Math.floor(Number.isFinite(n) ? n : 0), max));
@@ -53,6 +54,7 @@ const EMPTY_STREAKS = {
   win: 0,
   bestWin: 0,
   countryByMap: {},
+  freezesAvailable: 0,
 };
 
 /**
@@ -604,6 +606,9 @@ export const importGuestProfile = mutation({
       win: clampInt(args.streaks.win, 100_000),
       bestWin: clampInt(args.streaks.bestWin, 100_000),
       countryByMap,
+      // Capped at the same 3-freeze ceiling foldGame enforces so an imported
+      // guest can't smuggle in more freezes than a legit player could ever bank.
+      freezesAvailable: clampInt(args.streaks.freezesAvailable ?? 0, 3),
     };
     const now = Date.now();
     await ctx.db.patch(user._id, {

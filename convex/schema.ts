@@ -78,6 +78,11 @@ export default defineSchema({
       countryByMap: v.optional(
         v.record(v.string(), v.object({ current: v.number(), best: v.number() })),
       ),
+      // Banked daily-streak "freezes": each auto-bridges exactly one missed
+      // day so a single skipped day doesn't reset the daily play streak (see
+      // foldGame in src/lib/progression.ts). Earned at every 7-day milestone,
+      // capped at 3. Optional/additive — absent on pre-feature rows, read as 0.
+      freezesAvailable: v.optional(v.number()),
     }),
   })
     .index("by_clerk", ["clerkId"])

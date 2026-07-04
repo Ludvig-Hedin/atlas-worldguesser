@@ -174,6 +174,7 @@ export const lt: LocaleDictionary = {
   "match.setAsAvatar": "Nustatyti kaip avatarą",
   "match.signInToClaim": "Prisijunkite, kad gautumėte",
   "match.levelUp": "Naujas lygis! Dabar {level} lygis",
+  "match.streakFrozen": "Serija išsaugota — panaudotas užšaldymas, liko {count}",
   "match.countryStreak": "{map} serija",
   "match.countryStreakCurrent": "Dabartinė",
   "match.countryStreakBest": "Geriausia",

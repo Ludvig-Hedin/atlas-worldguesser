@@ -186,6 +186,7 @@ export const en = {
   "match.setAsAvatar": "Set as avatar",
   "match.signInToClaim": "Sign in to claim",
   "match.levelUp": "Level up! Now level {level}",
+  "match.streakFrozen": "Streak saved — used a freeze, {count} left",
   "match.countryStreak": "{map} streak",
   "match.countryStreakCurrent": "Current",
   "match.countryStreakBest": "Best",
