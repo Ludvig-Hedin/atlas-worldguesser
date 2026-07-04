@@ -33,7 +33,12 @@ export function MultiplayerEntry() {
       </Authenticated>
       <Unauthenticated>
         <SignInButton mode="modal">
-          <Button className="w-full" variant="secondary">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <Users className="size-3.5" />
             {t("mp.signInForMultiplayer")}
           </Button>
         </SignInButton>

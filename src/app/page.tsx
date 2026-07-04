@@ -16,8 +16,8 @@ export default function Home() {
           in sooner on first load. */}
       <link rel="preload" href="/globe.json" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
 
-      {/* Spinning dotted globe, fixed behind everything */}
-      <GlobeBackground className="pointer-events-none fixed inset-0 -z-20 block h-full w-full" />
+      {/* Spinning dotted globe, fixed behind everything. Drag to spin it. */}
+      <GlobeBackground className="fixed inset-0 -z-20 block h-full w-full" />
 
       {/* Readability compositing over the globe — theme-aware scrim so it works on
           both the near-black dark canvas and the near-white light canvas */}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Flag, Globe2, MapPin, Timer, Trophy } from "lucide-react";
+import { ArrowRight, Flag, Globe2, MapPin, Timer, Trophy, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
@@ -43,7 +43,7 @@ export function HomeContent() {
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero — full viewport so the globe has room to breathe */}
-      <section className="relative flex min-h-[calc(100svh-4.25rem)] flex-col items-center justify-center px-4 pb-12 text-center animate-[fade-up_0.5s_ease-out]">
+      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center pointer-events-none animate-[fade-up_0.5s_ease-out]">
         <Badge
           variant="muted"
           className="mb-6 gap-1.5 border-border bg-overlay backdrop-blur-sm"
@@ -52,7 +52,7 @@ export function HomeContent() {
           {t("home.badge")}
         </Badge>
 
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl">
+        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl">
           {t("home.title1")}
           <br />
           <span className="text-primary-muted">{t("home.title2")}</span>
@@ -62,7 +62,7 @@ export function HomeContent() {
           {t("home.subhead")}
         </p>
 
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+        <div className="pointer-events-auto mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <ResumeCta />
           <Button size="lg" asChild className="min-w-44 shadow-lg shadow-primary/20">
             <Link href="/play?map=world&quick=1">
@@ -91,7 +91,7 @@ export function HomeContent() {
         )}
 
         {features.multiplayer && (
-          <div className="mt-10 flex w-full justify-center max-w-xl">
+          <div className="pointer-events-auto mt-6 flex w-full max-w-xl justify-center">
             <MultiplayerEntry />
           </div>
         )}
@@ -131,6 +131,19 @@ export function HomeContent() {
               <div className="min-w-0 flex-1 text-left">
                 <p className="text-sm font-semibold">{t("home.flagsCardTitle")}</p>
                 <p className="text-xs text-muted-foreground">{t("home.flagsCardBody")}</p>
+              </div>
+              <ArrowRight className="size-4 text-muted-foreground transition-transform duration-200 ease-fluid group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/countries"
+              className="group mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+                <Type className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-sm font-semibold">{t("home.countriesCardTitle")}</p>
+                <p className="text-xs text-muted-foreground">{t("home.countriesCardBody")}</p>
               </div>
               <ArrowRight className="size-4 text-muted-foreground transition-transform duration-200 ease-fluid group-hover:translate-x-0.5" />
             </Link>
