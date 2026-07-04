@@ -4,6 +4,42 @@ Deferred work surfaced during the UX assessment + bug hunt (2026-07-03). Ordered
 roughly by value. Items here were intentionally NOT done in that pass because they
 need a product decision, a schema/data migration, or a larger build.
 
+## Anti-repeat location tracking follow-ups (added 2026-07-04)
+
+Minor, non-blocking findings from the final review of the location-repeat fix
+(`docs/superpowers/plans/2026-07-04-location-repeat-fix.md`). None affect
+correctness of the shipped fix — deferred as polish.
+
+- **Street View reroll doesn't dedup.** `src/components/game/solo-game.tsx:161`
+  calls `pickLocations(mapId, 1)` with no `excludeKeys` when swapping in a
+  replacement for a badly-covered panorama — the replacement can land on a
+  recently-seen location. Rare path (only fires on Street View coverage
+  misses); the replacement still gets recorded at game end via the normal
+  finish-recording path. Area: `src/components/game/solo-game.tsx`.
+- **Battle Royale eliminated members over-record exposure.** `finishMatch`
+  (`convex/rooms.ts`) records all of `room.locations` for every match member,
+  including someone eliminated before later rounds played out — unlike solo,
+  which only records rounds actually shown
+  (`prev.locations.slice(0, prev.round)` in `use-solo-game.ts`). Low impact
+  (slightly more aggressive dedup for early-eliminated players, not a
+  correctness bug). Area: `convex/rooms.ts` `finishMatch`.
+- **Nordics exclusion test has an undocumented size dependency.** The
+  `usesOfficialPool` exclusion test in `src/hooks/use-solo-game.test.ts` needs
+  the Nordics pool to stay at or under `RECENT_LOCATIONS_CAP` (30) or the
+  exclusion assertion goes flaky for reasons unrelated to the code under test
+  (see the Task 7 review in the plan above for the full mechanism). Currently
+  safe (~18 locations). Consider adding an explicit
+  `expect(pool.length).toBeLessThanOrEqual(RECENT_LOCATIONS_CAP)` guard so a
+  future seed-data or cap change fails loudly instead of silently flaking.
+  Area: `src/hooks/use-solo-game.test.ts`.
+- **Survival mode tracks locally even for signed-in users.** Signed-in classic
+  solo dedups server-side (`convex/recentLocations.ts`); Survival mode always
+  dedups via the client-only `src/lib/recent-locations.ts` localStorage
+  mirror, even when signed in — the two histories never cross-inform for one
+  user. Inherent to Survival's fully-client-side design (unchanged by this
+  fix); would need a schema/product decision to unify. Area:
+  `src/hooks/use-solo-game.ts`, `convex/recentLocations.ts`.
+
 ## Google Maps cost follow-ups (added 2026-07-04)
 
 - **Pre-vet `src/data/locations.ts` for Street View coverage offline.** The
