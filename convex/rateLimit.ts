@@ -11,12 +11,17 @@ export const LIMITS = {
   chat: { max: 30, windowMs: MINUTE },
   friendRequest: { max: 30, windowMs: DAY },
   mapCreate: { max: 10, windowMs: DAY },
+  soloStart: { max: 300, windowMs: DAY },
   soloRecord: { max: 300, windowMs: DAY },
   dailyRecord: { max: 20, windowMs: DAY },
   flagRecord: { max: 300, windowMs: DAY },
   partyInvite: { max: 60, windowMs: MINUTE },
   roomInvite: { max: 60, windowMs: MINUTE },
   mapLike: { max: 60, windowMs: MINUTE },
+  // Keyed on the guest session id being provisioned (not a user id). Only the
+  // create path consumes it, so a stable device is never locked out of
+  // reconnecting; it just caps repeated fresh-account creation for one id.
+  guestProvision: { max: 20, windowMs: DAY },
 } as const;
 
 /**

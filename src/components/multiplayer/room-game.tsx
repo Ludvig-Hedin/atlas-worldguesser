@@ -15,6 +15,7 @@ import { MapSheet } from "@/components/game/map-sheet";
 import type { HintCircle } from "@/components/game/guess-map";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
+import { useGuestId } from "@/components/guest/guest-session-provider";
 import { useT } from "@/hooks/use-t";
 import { continentOf, countryAtAsync } from "@/lib/geo";
 import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
@@ -27,6 +28,7 @@ import type { LatLng } from "@/lib/types";
 export function RoomGame({ room }: { room: RoomState }) {
   const t = useT();
   const submitGuess = useMutation(api.rooms.submitGuess);
+  const guestId = useGuestId();
   const [guess, setGuess] = useState<LatLng | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
@@ -77,13 +79,13 @@ export function RoomGame({ room }: { room: RoomState }) {
           cc = null;
         }
       }
-      await submitGuess({ roomId: room._id, guess, guessCountryCode: cc });
+      await submitGuess({ roomId: room._id, guess, guessCountryCode: cc, guestId: guestId ?? undefined });
     } catch {
       // round may have already ended
     } finally {
       setSubmitting(false);
     }
-  }, [iGuessed, submitting, room.status, room._id, guess, submitGuess]);
+  }, [iGuessed, submitting, room.status, room._id, guess, submitGuess, guestId]);
 
   // Always arm the deadline auto-submit: even "no timer" rooms are hard-capped
   // server-side (roundEndsAt is always set), and a placed pin should never be

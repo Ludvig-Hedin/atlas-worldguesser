@@ -11,6 +11,7 @@
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
 import type * as dailyChallenge from "../dailyChallenge.js";
+import type * as email from "../email.js";
 import type * as flags from "../flags.js";
 import type * as friends from "../friends.js";
 import type * as gameLogic from "../gameLogic.js";
@@ -21,6 +22,7 @@ import type * as parties from "../parties.js";
 import type * as presence from "../presence.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as rooms from "../rooms.js";
+import type * as solo from "../solo.js";
 import type * as users from "../users.js";
 
 import type {
@@ -33,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   crons: typeof crons;
   dailyChallenge: typeof dailyChallenge;
+  email: typeof email;
   flags: typeof flags;
   friends: typeof friends;
   gameLogic: typeof gameLogic;
@@ -43,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   rateLimit: typeof rateLimit;
   rooms: typeof rooms;
+  solo: typeof solo;
   users: typeof users;
 }>;
 

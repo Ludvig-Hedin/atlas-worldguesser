@@ -71,6 +71,15 @@ async function membersOf(ctx: QueryCtx | MutationCtx, roomId: Id<"rooms">) {
     .collect();
 }
 
+/** Consume (delete) a pending ad-hoc invite once its target has joined the room. */
+async function clearInvite(ctx: MutationCtx, roomId: Id<"rooms">, toUserId: Id<"users">) {
+  const invite = await ctx.db
+    .query("roomInvites")
+    .withIndex("by_room_and_to", (q) => q.eq("roomId", roomId).eq("toUserId", toUserId))
+    .unique();
+  if (invite) await ctx.db.delete(invite._id);
+}
+
 // ── Lobby ────────────────────────────────────────────────────────────────
 
 /**
@@ -178,6 +187,7 @@ export const join = mutation({
       joinedAt: Date.now(),
       lastSeenAt: Date.now(),
     });
+    await clearInvite(ctx, room._id, user._id);
     return { roomId: room._id, code: room.code };
   },
 });
@@ -329,6 +339,16 @@ export const inviteFriend = mutation({
       toUserId: friendId,
       createdAt: Date.now(),
     });
+
+    if (friend.email) {
+      await ctx.scheduler.runAfter(0, internal.email.send, {
+        kind: "roomInvite",
+        to: friend.email,
+        toUsername: friend.username,
+        fromUsername: user.username,
+        roomCode: room.code,
+      });
+    }
   },
 });
 
@@ -637,6 +657,16 @@ export const rematch = mutation({
     }
     const members = await membersOf(ctx, roomId);
     for (const m of members) await ctx.db.patch(m._id, { totalScore: 0, ready: false });
+
+    // Clear stale ad-hoc invites — the room reuses this same roomId/code, so
+    // without this a rematch would resurrect old invites: re-toasting people
+    // already in the room, and silently no-opping genuine new invites for
+    // anyone who left (the dedup index still sees their old row).
+    const staleInvites = await ctx.db
+      .query("roomInvites")
+      .withIndex("by_room_and_to", (q) => q.eq("roomId", roomId))
+      .take(50);
+    for (const inv of staleInvites) await ctx.db.delete(inv._id);
 
     const seed = Math.floor(Math.random() * 0xffffffff);
     await ctx.db.patch(roomId, {

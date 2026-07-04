@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { MapGlyph } from "@/components/map-glyph";
+import { useGuestId } from "@/components/guest/guest-session-provider";
 import { useT } from "@/hooks/use-t";
 import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import type { Movement } from "@/lib/types";
@@ -48,6 +49,9 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const leave = useMutation(api.rooms.leave);
   const inviteFriend = useMutation(api.rooms.inviteFriend);
   const friendsData = useQuery(api.friends.list);
+  // null for signed-in users (Clerk wins server-side); the guest's ephemeral id
+  // otherwise. Threaded into every room mutation so guests can act in the lobby.
+  const guestId = useGuestId();
   const [starting, setStarting] = useState(false);
 
   const me = room.standings.find((s) => s.userId === room.myUserId);
@@ -72,7 +76,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const bothTeamsFilled = teamCounts.A > 0 && teamCounts.B > 0;
 
   const patch = (mapId: string, settings: RoomState["settings"]) =>
-    updateSettings({ roomId: room._id, mapId, settings }).catch((e) =>
+    updateSettings({ roomId: room._id, mapId, settings, guestId: guestId ?? undefined }).catch((e) =>
       toast.error(e instanceof Error ? e.message : t("lobby.couldNotUpdate")),
     );
 
@@ -85,7 +89,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const doStart = async () => {
     setStarting(true);
     try {
-      await start({ roomId: room._id });
+      await start({ roomId: room._id, guestId: guestId ?? undefined });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("lobby.couldNotStart"));
       setStarting(false);
@@ -143,7 +147,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
               </Dialog>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => leave({ roomId: room._id }).catch(() => {})} asChild>
+          <Button variant="ghost" size="sm" onClick={() => leave({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {})} asChild>
             <Link href="/">
               <LogOut className="size-4" />
               {t("mp.leave")}
@@ -207,7 +211,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   size="sm"
                   value={teamMode ? "teams" : "ffa"}
                   onChange={(v: string) =>
-                    setTeamMode({ roomId: room._id, teamMode: v === "teams" }).catch((e) =>
+                    setTeamMode({ roomId: room._id, teamMode: v === "teams", guestId: guestId ?? undefined }).catch((e) =>
                       toast.error(e instanceof Error ? e.message : t("team.couldNotChangeFormat")),
                     )
                   }
@@ -245,7 +249,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   key={team}
                   type="button"
                   onClick={() =>
-                    setTeam({ roomId: room._id, team }).catch((e) =>
+                    setTeam({ roomId: room._id, team, guestId: guestId ?? undefined }).catch((e) =>
                       toast.error(e instanceof Error ? e.message : t("team.couldNotSwitch")),
                     )
                   }
@@ -272,7 +276,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   variant={me?.ready ? "secondary" : "primary"}
                   size="lg"
                   className="flex-1"
-                  onClick={() => setReady({ roomId: room._id, ready: !me?.ready }).catch(() => {})}
+                  onClick={() => setReady({ roomId: room._id, ready: !me?.ready, guestId: guestId ?? undefined }).catch(() => {})}
                 >
                   <Check className="size-4" />
                   {me?.ready ? t("mp.ready") : t("lobby.imReady")}

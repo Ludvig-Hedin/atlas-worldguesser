@@ -13,9 +13,9 @@ async function assertMember(ctx: QueryCtx | MutationCtx, roomId: Id<"rooms">, us
 }
 
 export const send = mutation({
-  args: { roomId: v.id("rooms"), text: v.string() },
-  handler: async (ctx, { roomId, text }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), text: v.string(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, text, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     await assertMember(ctx, roomId, user._id);
     await rateLimit(ctx, "chat", user._id);
     const clean = text.trim().slice(0, 300);
@@ -31,12 +31,12 @@ export const send = mutation({
 });
 
 export const list = query({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, { roomId }) => {
+  args: { roomId: v.id("rooms"), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, guestId }) => {
     // Members only — room ids are resolvable from public codes, and chat in a
     // private room shouldn't be world-readable. Return [] (not throw) so the
     // panel renders empty while auth/provisioning settles, then goes live.
-    const user = await currentUser(ctx);
+    const user = await currentUser(ctx, guestId);
     if (!user) return [];
     const member = await ctx.db
       .query("roomMembers")

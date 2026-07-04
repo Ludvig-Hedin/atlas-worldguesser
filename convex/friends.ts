@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, type QueryCtx, type MutationCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { currentUser, requireUser } from "./users";
 import { rateLimit } from "./rateLimit";
@@ -54,6 +55,15 @@ export const sendRequest = mutation({
       requestedBy: me._id,
       createdAt: Date.now(),
     });
+
+    if (target.email) {
+      await ctx.scheduler.runAfter(0, internal.email.send, {
+        kind: "friendRequest",
+        to: target.email,
+        toUsername: target.username,
+        fromUsername: me.username,
+      });
+    }
   },
 });
 
@@ -65,8 +75,20 @@ export const respond = mutation({
     if (!row || row.friendId !== me._id || row.status !== "pending") {
       throw new Error("No such request");
     }
-    if (accept) await ctx.db.patch(requestId, { status: "accepted" });
-    else await ctx.db.delete(requestId);
+    if (accept) {
+      await ctx.db.patch(requestId, { status: "accepted" });
+      const requester = await ctx.db.get(row.requestedBy);
+      if (requester?.email) {
+        await ctx.scheduler.runAfter(0, internal.email.send, {
+          kind: "friendAccepted",
+          to: requester.email,
+          toUsername: requester.username,
+          fromUsername: me.username,
+        });
+      }
+    } else {
+      await ctx.db.delete(requestId);
+    }
   },
 });
 

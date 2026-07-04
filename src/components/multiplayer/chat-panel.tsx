@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { useGuestId } from "@/components/guest/guest-session-provider";
 import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,8 @@ interface ChatPanelProps {
 
 export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
   const t = useT();
-  const messages = useQuery(api.chat.list, { roomId });
+  const guestId = useGuestId();
+  const messages = useQuery(api.chat.list, { roomId, guestId: guestId ?? undefined });
   const send = useMutation(api.chat.send);
   const [text, setText] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -33,7 +35,7 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
     if (!value) return;
     setText("");
     // Restore the draft on failure (e.g. rate limited) instead of losing it.
-    await send({ roomId, text: value }).catch(() => {
+    await send({ roomId, text: value, guestId: guestId ?? undefined }).catch(() => {
       setText(value);
       toast.error(t("chat.notSent"));
     });

@@ -18,9 +18,22 @@ export const latLng = v.object({ lat: v.number(), lng: v.number() });
 
 export default defineSchema({
   users: defineTable({
-    clerkId: v.string(),
+    // Clerk identity — absent for ephemeral guest accounts (see isGuest).
+    // Optional widening is non-breaking: every existing row already has one.
+    clerkId: v.optional(v.string()),
+    // Guest accounts: signed-out players who get full multiplayer parity but
+    // never persist long-term (filtered out of the all-time leaderboard, and
+    // never counted in appStats.totalUsers). guestSessionId is the client id
+    // from localStorage ("atlas.guestId"), resolved via by_guest_session.
+    isGuest: v.optional(v.boolean()),
+    guestSessionId: v.optional(v.string()),
     username: v.string(),
     usernameLower: v.string(),
+    // Synced from the Clerk identity on every ensureUser call (login).
+    // Optional/additive: pre-existing rows lack it until their next login.
+    // Used to send transactional emails (see convex/email.ts) — never shown
+    // to other users.
+    email: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     // Iconic-building avatar customization. avatarBuildingId is a curated
     // country code (see src/lib/buildings.ts); unlockedBuildings is the
@@ -54,6 +67,7 @@ export default defineSchema({
   })
     .index("by_clerk", ["clerkId"])
     .index("by_username", ["usernameLower"])
+    .index("by_guest_session", ["guestSessionId"])
     .index("by_xp", ["xp"]),
 
   achievements: defineTable({

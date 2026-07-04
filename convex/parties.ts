@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { settingsValidator } from "./schema";
 import { currentUser, requireUser } from "./users";
@@ -142,6 +143,15 @@ export const invite = mutation({
       invitedBy: user._id,
       createdAt: Date.now(),
     });
+
+    if (friend.email) {
+      await ctx.scheduler.runAfter(0, internal.email.send, {
+        kind: "partyInvite",
+        to: friend.email,
+        toUsername: friend.username,
+        fromUsername: user.username,
+      });
+    }
   },
 });
 

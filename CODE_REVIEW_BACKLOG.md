@@ -1,5 +1,31 @@
 # Code Review Backlog
 
+## Solo/Daily server-authoritative scoring — backend landed 2026-07-04 (client wiring deferred)
+
+Addresses the "client-supplied `actual` coordinates" trust gap below (Needs-human-review
+item under the 2026-07-03 hunt). Landed the **backend, isolated half** only, because the
+working tree had large uncommitted parallel work (friend room-invites + custom-map
+plays/likes) editing the exact files the client half touches (`recordSoloResult`,
+`solo-cloud-sync.tsx`, `solo-game.tsx`). Full spec + remaining steps:
+**`docs/solo-server-authoritative-scoring.md`**.
+
+- ✅ `convex/schema.ts` — new `soloSessions` table (server-owned round locations, `consumedAt` idempotency).
+- ✅ `convex/rateLimit.ts` — new `soloStart` bucket (300/day, mirrors `soloRecord`).
+- ✅ `convex/solo.ts` (new) — `startGame` (mints session, resolves locations server-side via
+  `pickMatchLocations`, returns them) + `submitGame` (re-derives each answer from
+  `session.locations[round-1]`, never trusts client `actual`; rejects length/round/dup
+  abuse; one submit per session). Self-contained; deployed but **unused** until wiring lands.
+- ✅ `src/hooks/use-solo-game.ts` — `fixedOrder` opt: play injected locations verbatim/in-order
+  (no resample, no easter-egg roll) so the server can re-derive answers by index. Also fixed
+  the easter-egg gate to skip whenever locations are injected (prevents double-roll).
+- ⛔ **Deferred (conflict with parallel work)** — client wiring: `play-client.tsx` mint a
+  session for authed classic solo + pass `fixedOrder`; `solo-game.tsx` accept `sessionId`/
+  `onPlayAgain`; `solo-cloud-sync.tsx` call `solo.submitGame`; `dailyChallenge.submit`
+  re-derive from `pickMatchLocations(day)`; `daily-client.tsx` + `use-solo-game` daily path
+  pass `fixedOrder`; consolidate `applySoloResults` to take `locations` and remove
+  `recordSoloResult`. Custom-map `plays`-counter path (added by the parallel work to
+  `recordSoloResult`) must be preserved during that consolidation.
+
 ## Bug Hunt — 2026-07-03 (changed-files review, session 2)
 
 Focused review of the uncommitted working-tree changes (4 parallel subagents:

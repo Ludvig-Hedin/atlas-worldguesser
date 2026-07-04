@@ -22,6 +22,22 @@ need a product decision, a schema/data migration, or a larger build.
 
 ## Larger builds (structural)
 
+- **Web push notifications (real background push, not just in-tab toasts) for
+  friend requests / accepts / room + party invites.** Requested as phase 2
+  after transactional email (2026-07-04): needs a service worker, VAPID keys,
+  a `pushSubscriptions` table keyed by user, and a permission-prompt UX. Email
+  (`convex/email.ts`) ships first; wire push the same way — schedule from the
+  same mutations (`friends.sendRequest`/`respond`, `rooms.inviteFriend`,
+  `parties.invite`) alongside the existing `internal.email.send` calls.
+
+- **`src/components/guest/guest-session-provider.tsx` calls a mutation that
+  doesn't exist** — `api.users.ensureGuestUser` (only `ensureUser` exists in
+  `convex/users.ts`). Fails `tsc --noEmit`. Found 2026-07-04 while typechecking
+  an unrelated change; the file is untracked (never committed), so this is
+  in-progress/abandoned guest-mode work, not a regression from that change.
+  Needs whoever owns that feature to either implement `ensureGuestUser` or
+  finish wiring it to `ensureUser`.
+
 - **Replay for guests + shareable replay links.** Guest (localStorage) games have
   no `replayId`, so guests can't review past games and replays aren't shareable.
   Needs local replay storage and/or a public replay route. Area: `src/lib/local-profile.ts`,

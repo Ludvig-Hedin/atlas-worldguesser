@@ -96,8 +96,28 @@ by re-running the same prompt template per country code and re-keying.
 - ✅ Auth (Clerk) + cloud profiles, stats sync, global leaderboard.
 - ✅ Realtime multiplayer — private rooms (code + invite link), lobby with
   host controls & ready status, synchronized live rounds, server-authoritative
-  scoring, live scoreboard, chat, match results, rematch.
-- ✅ Social — friends (requests / accept / remove), recent players, per-user profiles.
+  scoring, live scoreboard, chat, match results, rematch. Persistent parties
+  let a leader invite friends into a standing group that one-click-joins
+  whatever room the leader starts (`convex/parties.ts`). Any room member can
+  also send a lighter, one-off invite to a single online friend straight into
+  the lobby they're currently in — no group required — via a toast with a
+  one-click Join action (`convex/rooms.ts` `inviteFriend`/`myInvites`,
+  `src/components/multiplayer/room-invite-notifier.tsx`).
+- ✅ Social — friends (requests / accept / remove), recent players, per-user
+  profiles, and an online/offline indicator on each friend row. Online status
+  rides the existing presence heartbeat (~45s from any open tab) rather than a
+  separate timer — a signed-in user counts as online if that heartbeat landed
+  within the last 100s (`convex/presence.ts`, `convex/friends.ts` `list`).
+- ✅ Transactional email (Resend) — friend request received, friend request
+  accepted, room invite, and party invite each send a branded email so the
+  recipient hears about it even with the tab closed (in-app toasts stay
+  real-time-only). Fire-and-forget: scheduled from the mutation via
+  `ctx.scheduler.runAfter(0, internal.email.send, ...)` so a slow/failed
+  Resend call never blocks the user-facing action (`convex/email.ts`). Needs
+  a per-user `email` synced from Clerk on login (`convex/users.ts`
+  `ensureUser`) and `RESEND_API_KEY` set **in the Convex dashboard** (not
+  `.env.local` — Convex functions don't read Next.js env files); without the
+  key, sends are skipped with a console warning, not an error.
 - ✅ Unlockable avatars — 145 curated iconic-building avatars (~69% of all 209
   countries), unlocked by correctly guessing that country in any game mode.
   Free background-color customization. Cloud accounts persist unlocks

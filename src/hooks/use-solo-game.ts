@@ -40,6 +40,15 @@ interface CreateOpts {
   mode?: SoloMode;
   /** Explicit location pool (custom maps); falls back to the official pool. */
   customLocations?: GameLocation[];
+  /**
+   * Treat `customLocations` as the exact, already-ordered round set and play
+   * them verbatim — no resample, no easter-egg roll. Set by the
+   * server-authoritative flows (Daily Challenge, cloud solo) where the SERVER
+   * owns the rounds and re-derives each answer by index (locations[round-1]);
+   * any client reshuffle or egg roll would desync that scoring. Custom maps
+   * leave this false so each game samples a fresh subset.
+   */
+  fixedOrder?: boolean;
 }
 
 /** Hometown easter eggs — a small chance any round drops here. */
@@ -49,18 +58,35 @@ const GRUNDBRO: GameLocation = { lat: 59.3089, lng: 17.0899, countryCode: "SE" }
 /** Survival pre-picks a deep buffer up front; a run rarely reaches this many. */
 const SURVIVAL_BUFFER = 200;
 
-function createGame({ mapId, settings, seed, customLocations, mode = "classic" }: CreateOpts): SoloGame {
+function createGame({
+  mapId,
+  settings,
+  seed,
+  customLocations,
+  mode = "classic",
+  fixedOrder = false,
+}: CreateOpts): SoloGame {
   const resolvedSeed = seed ?? hashString(crypto.randomUUID());
   const rng = seededRandom(resolvedSeed);
   const count = mode === "survival" ? SURVIVAL_BUFFER : settings.rounds;
-  const picked =
-    customLocations && customLocations.length > 0
-      ? sampleLocations(customLocations, count, rng)
-      : pickLocations(mapId, count, rng);
-  // World map only — a Sweden drop inside USA/Europe/custom maps breaks the
-  // map's region contract. Each egg gets an independent 3% roll off the same draw.
+  const custom = customLocations ?? [];
+  const hasCustom = custom.length > 0;
+  // fixedOrder (Daily / cloud solo): the server already resolved + ordered these
+  // rounds, so play them verbatim — the server re-derives each answer by index
+  // and any client reshuffle would desync scoring. Otherwise sample as before
+  // (custom-map pool, or the official pool for this map).
+  const picked = hasCustom
+    ? fixedOrder
+      ? custom.slice(0, count)
+      : sampleLocations(custom, count, rng)
+    : pickLocations(mapId, count, rng);
+  // Hometown easter eggs — world map only (a Sweden drop inside USA/Europe/custom
+  // maps breaks the region contract) AND never when locations were injected: the
+  // server has already finalized those (it does its own egg roll), so re-rolling
+  // here would both desync cloud scoring and double-apply on the daily set. Each
+  // egg gets an independent 3% roll off the same draw.
   const locations =
-    mapId === "world"
+    mapId === "world" && !hasCustom
       ? picked.map((loc) => {
           const r = rng();
           if (r < 0.03) return AKERS;
@@ -186,13 +212,14 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
           settings: initial.settings,
           customLocations: initial.customLocations,
           mode: initial.mode,
+          fixedOrder: initial.fixedOrder,
           ...opts,
         }),
       );
       setGuess(null);
       setSubmitting(false);
     },
-    [initial.mapId, initial.settings, initial.customLocations, initial.mode],
+    [initial.mapId, initial.settings, initial.customLocations, initial.mode, initial.fixedOrder],
   );
 
   const replaceCurrentLocation = useCallback((loc: GameLocation) => {

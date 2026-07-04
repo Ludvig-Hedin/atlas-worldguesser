@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { EnsureUser } from "@/components/auth/ensure-user";
 import { PresencePing } from "@/components/presence-ping";
 import { RoomInviteNotifier } from "@/components/multiplayer/room-invite-notifier";
+import { GuestSessionProvider } from "@/components/guest/guest-session-provider";
 import { PreferencesProvider } from "@/components/preferences/preferences-provider";
 import { clerkPublishableKey, convexUrl, features } from "@/lib/env";
 
@@ -36,7 +37,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <EnsureUser />
           <PresencePing />
           <RoomInviteNotifier />
-          {inner}
+          <GuestSessionProvider>{inner}</GuestSessionProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>
     );

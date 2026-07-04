@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Authenticated, Unauthenticated, useMutation } from "convex/react";
+import { Authenticated, Unauthenticated, useConvexAuth, useMutation } from "convex/react";
 import { SignInButton } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { ArrowRight, Users } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { useGuestSession } from "@/components/guest/guest-session-provider";
 import { useT } from "@/hooks/use-t";
 import { DEFAULT_SETTINGS } from "@/lib/maps-config";
 import { features } from "@/lib/env";
@@ -32,17 +33,43 @@ export function MultiplayerEntry() {
         <MultiplayerControls />
       </Authenticated>
       <Unauthenticated>
-        <SignInButton mode="modal">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-          >
-            <Users className="size-3.5" />
-            {t("mp.signInForMultiplayer")}
-          </Button>
-        </SignInButton>
+        <GuestEntry />
       </Unauthenticated>
+    </div>
+  );
+}
+
+/**
+ * Signed-out multiplayer entry: once the visitor opts into guest mode they get
+ * the full create/join controls (as an ephemeral guest); otherwise they can
+ * start as a guest or sign in.
+ * TODO(i18n): "Play as guest" is hardcoded English — add an `mp.playAsGuest`
+ * key across src/lib/i18n/* once the parallel i18n edits settle.
+ */
+function GuestEntry() {
+  const t = useT();
+  const { guestActive, enableGuest } = useGuestSession();
+  if (guestActive) return <MultiplayerControls />;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={enableGuest}
+        className="gap-1.5 text-muted-foreground hover:text-foreground"
+      >
+        <Users className="size-3.5" />
+        Play as guest
+      </Button>
+      <SignInButton mode="modal">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          {t("mp.signInForMultiplayer")}
+        </Button>
+      </SignInButton>
     </div>
   );
 }
@@ -51,13 +78,21 @@ function MultiplayerControls() {
   const t = useT();
   const router = useRouter();
   const create = useMutation(api.rooms.create);
+  const { guestId, provisionGuest } = useGuestSession();
+  const { isAuthenticated } = useConvexAuth();
   const [code, setCode] = useState("");
   const [creating, setCreating] = useState(false);
 
   const createRoom = async () => {
     setCreating(true);
     try {
-      const { code: newCode } = await create({ mapId: "world", settings: DEFAULT_SETTINGS });
+      // Guests need their ephemeral account row before create() can requireUser.
+      if (!isAuthenticated) await provisionGuest();
+      const { code: newCode } = await create({
+        mapId: "world",
+        settings: DEFAULT_SETTINGS,
+        guestId: guestId ?? undefined,
+      });
       router.push(`/room/${newCode}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("mp.couldNotCreateRoom"));

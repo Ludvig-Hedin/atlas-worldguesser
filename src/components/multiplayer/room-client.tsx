@@ -2,7 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useConvexAuth,
+  useMutation,
+  useQuery,
+} from "convex/react";
 import { SignInButton } from "@clerk/nextjs";
 import { Globe2, Loader2 } from "lucide-react";
 import { api } from "@convex/_generated/api";
@@ -10,6 +17,7 @@ import { RoomLobby } from "./room-lobby";
 import { RoomGame } from "./room-game";
 import { RoomResults } from "./room-results";
 import { Button } from "@/components/ui/button";
+import { useGuestSession } from "@/components/guest/guest-session-provider";
 import { features } from "@/lib/env";
 
 function FullscreenMessage({ children }: { children: React.ReactNode }) {
@@ -21,23 +29,36 @@ function FullscreenMessage({ children }: { children: React.ReactNode }) {
 }
 
 function RoomInner({ code }: { code: string }) {
-  const room = useQuery(api.rooms.getByCode, { code });
+  const { guestId, guestReady, provisionGuest } = useGuestSession();
+  const { isAuthenticated } = useConvexAuth();
+  const room = useQuery(api.rooms.getByCode, { code, guestId: guestId ?? undefined });
   const join = useMutation(api.rooms.join);
   const heartbeat = useMutation(api.rooms.heartbeat);
   const joinedRef = useRef(false);
 
+  // A guest can only join once their ephemeral account row exists; signed-in
+  // users are always ready. Kick off provisioning for guests on mount.
+  const ready = isAuthenticated || guestReady;
   useEffect(() => {
+    if (!isAuthenticated) void provisionGuest().catch(() => {});
+  }, [isAuthenticated, provisionGuest]);
+
+  useEffect(() => {
+    if (!ready) return;
     if (room && !room.amMember && room.status === "lobby" && !joinedRef.current) {
       joinedRef.current = true;
-      join({ code }).catch(() => {});
+      join({ code, guestId: guestId ?? undefined }).catch(() => {});
     }
-  }, [room, join, code]);
+  }, [ready, room, join, code, guestId]);
 
   useEffect(() => {
     if (!room?._id) return;
-    const id = window.setInterval(() => heartbeat({ roomId: room._id }).catch(() => {}), 15000);
+    const id = window.setInterval(
+      () => heartbeat({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {}),
+      15000,
+    );
     return () => window.clearInterval(id);
-  }, [room?._id, heartbeat]);
+  }, [room?._id, heartbeat, guestId]);
 
   if (room === undefined) {
     return (
@@ -102,20 +123,42 @@ export function RoomClient({ code }: { code: string }) {
         </FullscreenMessage>
       </AuthLoading>
       <Unauthenticated>
-        <FullscreenMessage>
-          <Globe2 className="size-8 text-primary-muted" />
-          <h1 className="text-xl font-semibold">Join the match</h1>
-          <p className="max-w-xs text-sm text-muted-foreground">
-            Sign in to join room <span className="font-mono font-semibold">{code}</span> and play with friends.
-          </p>
-          <SignInButton mode="modal">
-            <Button size="lg">Sign in to join</Button>
-          </SignInButton>
-        </FullscreenMessage>
+        <GuestGate code={code} />
       </Unauthenticated>
       <Authenticated>
         <RoomInner code={code} />
       </Authenticated>
     </>
+  );
+}
+
+/**
+ * Signed-out entry to a room: offers signing in (to save stats) or jumping in
+ * as an ephemeral guest. Once the visitor has opted into guest mode the gate
+ * renders the room directly — the provider auto-provisions the guest account —
+ * so returning from an invite link never re-prompts.
+ */
+function GuestGate({ code }: { code: string }) {
+  const { guestActive, enableGuest } = useGuestSession();
+  if (guestActive) return <RoomInner code={code} />;
+  return (
+    <FullscreenMessage>
+      <Globe2 className="size-8 text-primary-muted" />
+      <h1 className="text-xl font-semibold">Join the match</h1>
+      <p className="max-w-xs text-sm text-muted-foreground">
+        Jump into room <span className="font-mono font-semibold">{code}</span> as a guest, or sign
+        in to save your stats and XP.
+      </p>
+      <div className="flex flex-col items-center gap-2">
+        <Button size="lg" onClick={enableGuest}>
+          Play as guest
+        </Button>
+        <SignInButton mode="modal">
+          <Button variant="ghost" size="sm">
+            Sign in to join
+          </Button>
+        </SignInButton>
+      </div>
+    </FullscreenMessage>
   );
 }

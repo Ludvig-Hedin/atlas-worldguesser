@@ -50,18 +50,42 @@ const EMPTY_STREAKS = {
   bestCountry: 0,
 };
 
-export async function currentUser(ctx: QueryCtx | MutationCtx): Promise<Doc<"users"> | null> {
+/**
+ * Resolve the acting user. Clerk identity ALWAYS wins: only when there is no
+ * Clerk session AND a non-empty `guestId` is supplied do we fall back to the
+ * ephemeral guest account keyed by that id. This ordering means a device that
+ * later signs in never has to clear a leftover guest id, and — crucially — only
+ * callers that explicitly thread `guestId` (rooms.ts, chat.ts) opt into guest
+ * access; every other Clerk-only caller passes no arg and stays Clerk-only.
+ */
+export async function currentUser(
+  ctx: QueryCtx | MutationCtx,
+  guestId?: string,
+): Promise<Doc<"users"> | null> {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
+  if (identity) {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_clerk", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+  }
+  const trimmed = guestId?.trim();
+  if (!trimmed) return null;
+  // `.first()` (not `.unique()`): a rare double-provision race across two tabs
+  // could leave two rows for one guest id; the read path must degrade to the
+  // earliest row rather than throw and break the guest's whole session.
   return await ctx.db
     .query("users")
-    .withIndex("by_clerk", (q) => q.eq("clerkId", identity.subject))
-    .unique();
+    .withIndex("by_guest_session", (q) => q.eq("guestSessionId", trimmed))
+    .first();
 }
 
-/** Throw unless authenticated + provisioned. */
-export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<Doc<"users">> {
-  const user = await currentUser(ctx);
+/** Throw unless authenticated + provisioned (Clerk, or a provisioned guest). */
+export async function requireUser(
+  ctx: QueryCtx | MutationCtx,
+  guestId?: string,
+): Promise<Doc<"users">> {
+  const user = await currentUser(ctx, guestId);
   if (!user) throw new Error("Not authenticated");
   return user;
 }
@@ -138,10 +162,13 @@ export const ensureUser = mutation({
       .unique();
 
     const now = Date.now();
+    const email = identity.email as string | undefined;
     if (existing) {
       await ctx.db.patch(existing._id, {
         lastActiveAt: now,
         ...(args.avatarUrl ? { avatarUrl: args.avatarUrl } : {}),
+        // Keep in sync in case the user changes their email in Clerk.
+        ...(email && email !== existing.email ? { email } : {}),
       });
       return existing._id;
     }
@@ -150,13 +177,14 @@ export const ensureUser = mutation({
       args.username ||
       (identity.nickname as string | undefined) ||
       (identity.name as string | undefined) ||
-      (identity.email ? identity.email.split("@")[0] : "player");
+      (email ? email.split("@")[0] : "player");
     const username = await uniqueUsername(ctx, base);
 
     const userId = await ctx.db.insert("users", {
       clerkId: identity.subject,
       username,
       usernameLower: username.toLowerCase(),
+      email,
       avatarUrl: args.avatarUrl ?? (identity.pictureUrl as string | undefined),
       xp: 0,
       createdAt: now,
@@ -165,6 +193,58 @@ export const ensureUser = mutation({
       streaks: EMPTY_STREAKS,
     });
     await bumpUserCount(ctx);
+    return userId;
+  },
+});
+
+/**
+ * Idempotently provision an EPHEMERAL guest account keyed by a client-generated
+ * session id (localStorage "atlas.guestId"), giving signed-out visitors full
+ * multiplayer parity. Deliberately does NOT call bumpUserCount — guests must
+ * not inflate the all-time total-players counter (presence.homeStats) — and
+ * they are kept off the persistent leaderboard by the isGuest filter in
+ * convex/leaderboard.ts.
+ *
+ * Ephemeral cleanup is intentionally DEFERRED for v1: guest rows (and the
+ * roomMembers/guesses/chat/games they generate) persist until manually pruned.
+ * A TTL / cascading-delete cron is a documented follow-up (see BACKLOG.md),
+ * not built here — unnecessary complexity at current scale.
+ */
+export const ensureGuestUser = mutation({
+  args: { guestId: v.string() },
+  handler: async (ctx, { guestId }) => {
+    const trimmed = guestId.trim().slice(0, 64);
+    // A real client id (crypto.randomUUID / fallback) is always ≥ 8 chars;
+    // reject shorter values so a stray "" or "x" can't mint an account.
+    if (trimmed.length < 8) throw new Error("Invalid guest session");
+
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_guest_session", (q) => q.eq("guestSessionId", trimmed))
+      .first();
+    const now = Date.now();
+    if (existing) {
+      await ctx.db.patch(existing._id, { lastActiveAt: now });
+      return existing._id;
+    }
+
+    // Rate-limit only genuine creation (each id creates at most one row), so a
+    // legit guest reconnecting is never locked out — see rateLimit.guestProvision.
+    await rateLimit(ctx, "guestProvision", trimmed);
+
+    const username = await uniqueUsername(ctx, "Guest");
+    const userId = await ctx.db.insert("users", {
+      // clerkId omitted — guests have no Clerk identity.
+      isGuest: true,
+      guestSessionId: trimmed,
+      username,
+      usernameLower: username.toLowerCase(),
+      xp: 0,
+      createdAt: now,
+      lastActiveAt: now,
+      stats: EMPTY_STATS,
+      streaks: EMPTY_STREAKS,
+    });
     return userId;
   },
 });

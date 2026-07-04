@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/format";
 import { getMapConfig, mapNameKey } from "@/lib/maps-config";
+import { useGuestId } from "@/components/guest/guest-session-provider";
 import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function RoomResults({ room }: { room: RoomState }) {
   const t = useT();
   const rematch = useMutation(api.rooms.rematch);
   const leave = useMutation(api.rooms.leave);
+  const guestId = useGuestId();
   const [busy, setBusy] = useState(false);
   const map = getMapConfig(room.mapId);
   const winner = room.standings[0];
@@ -128,7 +130,7 @@ export function RoomResults({ room }: { room: RoomState }) {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              await rematch({ roomId: room._id }).catch(() => {});
+              await rematch({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {});
               setBusy(false);
             }}
           >
@@ -136,7 +138,7 @@ export function RoomResults({ room }: { room: RoomState }) {
             {t("mp.rematch")}
           </Button>
         )}
-        <Button size="lg" variant="secondary" className="flex-1" asChild onClick={() => leave({ roomId: room._id }).catch(() => {})}>
+        <Button size="lg" variant="secondary" className="flex-1" asChild onClick={() => leave({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {})}>
           <Link href="/">
             <Home className="size-4" />
             {t("mp.leave")}

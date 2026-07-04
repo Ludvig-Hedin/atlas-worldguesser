@@ -25,7 +25,15 @@ export const top = query({
   handler: async (ctx, { limit }) => {
     // Clamp both ends — a client-sent negative/NaN limit would make .take() throw.
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
-    const users = await ctx.db.query("users").withIndex("by_xp").order("desc").take(n);
+    // Guests accrue XP mid-match and are interleaved in the by_xp index, but must
+    // never appear on the persistent (all-time) board. Over-fetch a bounded
+    // margin, drop guest rows, then slice to n. If an implausible number of
+    // high-XP guests ever crowd the window the board simply shows fewer rows —
+    // it never leaks a guest.
+    const pool = Math.min(n + 150, 500);
+    const users = (await ctx.db.query("users").withIndex("by_xp").order("desc").take(pool))
+      .filter((u) => !u.isGuest)
+      .slice(0, n);
     // Competition ranking (ties share a rank) so this list agrees with
     // myRank's "(# strictly higher) + 1" for tied XP values.
     const rows: ReturnType<typeof row>[] = [];
@@ -46,7 +54,9 @@ export const myRank = query({
   args: {},
   handler: async (ctx) => {
     const me = await currentUser(ctx);
-    if (!me) return null;
+    // Guests (no Clerk identity) never resolve here, but guard defensively so a
+    // guest can never be ranked on the persistent board.
+    if (!me || me.isGuest) return null;
     // Bounded read: `.collect()` would materialize every higher-XP user and
     // can blow Convex's per-query read limits for low-ranked players. Past
     // the cap the rank is reported as RANK_CAP + 1 ("you're way down there").
@@ -57,7 +67,9 @@ export const myRank = query({
       .query("users")
       .withIndex("by_xp", (q) => q.gt("xp", me.xp))
       .take(RANK_CAP);
-    return row(me, higher.length + 1);
+    // Exclude guests so this rank stays consistent with `top` (which drops them).
+    const higherReal = higher.filter((u) => !u.isGuest).length;
+    return row(me, higherReal + 1);
   },
 });
 

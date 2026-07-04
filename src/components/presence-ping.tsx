@@ -3,26 +3,11 @@
 import { useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { getClientId } from "@/lib/client-id";
 import { features } from "@/lib/env";
 
 const PING_INTERVAL_MS = 45_000;
 const STORAGE_KEY = "atlas.sid";
-
-function getSessionId(): string {
-  try {
-    const existing = localStorage.getItem(STORAGE_KEY);
-    if (existing) return existing;
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    localStorage.setItem(STORAGE_KEY, id);
-    return id;
-  } catch {
-    // Private mode / storage blocked — fall back to a volatile per-load id.
-    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  }
-}
 
 /**
  * Invisible heartbeat: records this tab in the presence table so the homepage
@@ -35,7 +20,7 @@ export function PresencePing() {
 
   useEffect(() => {
     if (!features.convex) return;
-    const sessionId = getSessionId();
+    const sessionId = getClientId(STORAGE_KEY);
     let cancelled = false;
 
     const beat = () => {
