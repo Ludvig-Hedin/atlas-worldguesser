@@ -125,6 +125,11 @@ export const sv: LocaleDictionary = {
   "mp.noGuess": "Ingen gissning",
   "mp.finalResults": "Slutresultat",
   "mp.wins": "vinner",
+
+  // Ranked rating (ELO-lite)
+  "rating.title": "Rating",
+  "rating.unranked": "Oplacerad",
+  "rating.placement": "Spela rankat för att placeras",
   "mp.pointsValue": "{points} poäng",
   "mp.rematch": "Revansch",
   "mp.leave": "Lämna",

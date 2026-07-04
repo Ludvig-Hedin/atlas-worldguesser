@@ -93,6 +93,7 @@ export async function createRoomForUser(
   mapId: string,
   rawSettings: Doc<"rooms">["settings"],
   teamMode?: boolean,
+  elimination?: boolean,
 ): Promise<{ roomId: Id<"rooms">; code: string }> {
   const settings = clampSettings(rawSettings);
   const now = Date.now();
@@ -116,6 +117,7 @@ export async function createRoomForUser(
     mapId,
     settings,
     teamMode: teamMode ?? false,
+    elimination: elimination ?? false,
     currentRound: 0,
     locations,
     createdAt: now,
@@ -138,12 +140,21 @@ export async function createRoomForUser(
 }
 
 export const create = mutation({
-  args: { mapId: v.string(), settings: settingsValidator, teamMode: v.optional(v.boolean()), guestId: v.optional(v.string()) },
-  handler: async (ctx, { mapId, settings, teamMode, guestId }) => {
+  args: {
+    mapId: v.string(),
+    settings: settingsValidator,
+    teamMode: v.optional(v.boolean()),
+    elimination: v.optional(v.boolean()),
+    guestId: v.optional(v.string()),
+  },
+  handler: async (ctx, { mapId, settings, teamMode, elimination, guestId }) => {
     assertMultiplayerEnabled();
+    if (elimination && teamMode) {
+      throw new Error("Battle Royale can't be combined with team mode");
+    }
     const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "roomCreate", user._id);
-    return await createRoomForUser(ctx, user, mapId, settings, teamMode);
+    return await createRoomForUser(ctx, user, mapId, settings, teamMode, elimination);
   },
 });
 
@@ -238,7 +249,7 @@ export const leave = mutation({
         .withIndex("by_room_round", (q) => q.eq("roomId", roomId).eq("round", room.currentRound))
         .collect();
       const guessed = new Set(guesses.map((g) => g.userId));
-      if (remaining.every((m) => guessed.has(m.userId))) {
+      if (remaining.every((m) => m.eliminated || guessed.has(m.userId))) {
         await enterRoundResult(ctx, roomId, room.currentRound);
       }
     }
@@ -269,6 +280,9 @@ export const setTeamMode = mutation({
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can change teams");
     if (room.status !== "lobby") throw new Error("Match already started");
+    if (teamMode && room.elimination) {
+      throw new Error("Team mode can't be combined with Battle Royale");
+    }
     const members = await membersOf(ctx, roomId);
     if (teamMode) {
       // Balance existing members into A/B by join order (alternating).
@@ -281,6 +295,25 @@ export const setTeamMode = mutation({
       for (const m of members) await ctx.db.patch(m._id, { team: undefined });
     }
     await ctx.db.patch(roomId, { teamMode });
+  },
+});
+
+/**
+ * Battle Royale toggle — its own independent format flag (not folded into
+ * teamMode/duelsMode). Mutually exclusive with both: enforced here and in
+ * `start` as a race-condition backstop.
+ */
+export const setElimination = mutation({
+  args: { roomId: v.id("rooms"), elimination: v.boolean(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, elimination, guestId }) => {
+    const user = await requireUser(ctx, guestId);
+    const room = await ctx.db.get(roomId);
+    if (!room || room.hostId !== user._id) throw new Error("Only the host can change the match format");
+    if (room.status !== "lobby") throw new Error("Match already started");
+    if (elimination && (room.teamMode || room.duelsMode)) {
+      throw new Error("Battle Royale can't be combined with team mode or Duels");
+    }
+    await ctx.db.patch(roomId, { elimination });
   },
 });
 
@@ -415,20 +448,54 @@ export const start = mutation({
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can start");
     if (room.status !== "lobby") throw new Error("Already started");
+    if (room.elimination && (room.teamMode || room.duelsMode)) {
+      throw new Error("Battle Royale can't be combined with team mode or Duels");
+    }
     const members = await membersOf(ctx, roomId);
     if (room.teamMode) {
       const hasA = members.some((m) => m.team === "A");
       const hasB = members.some((m) => m.team === "B");
       if (!hasA || !hasB) throw new Error("Both teams need at least one player to start");
     }
-    for (const m of members) await ctx.db.patch(m._id, { totalScore: 0 });
+    for (const m of members) {
+      await ctx.db.patch(m._id, { totalScore: 0, eliminated: undefined, eliminatedAtRound: undefined });
+    }
     await startRound(ctx, roomId, 1);
   },
 });
 
+/**
+ * Battle Royale: cut the worst scorer(s) among still-alive members this
+ * round. A non-guesser's score is 0, so timing out is naturally worst — no
+ * special case needed. Guarantees at least one survivor always remains: if
+ * every alive member tied for worst (e.g. everyone timed out), no one is
+ * cut this round.
+ */
+async function applyElimination(ctx: MutationCtx, room: Doc<"rooms">, round: number) {
+  const members = await membersOf(ctx, room._id);
+  const alive = members.filter((m) => !m.eliminated);
+  if (alive.length <= 1) return;
+
+  const guesses = await ctx.db
+    .query("guesses")
+    .withIndex("by_room_round", (q) => q.eq("roomId", room._id).eq("round", round))
+    .collect();
+  const scoreByUser = new Map(guesses.map((g) => [g.userId, g.score]));
+
+  let minScore = Infinity;
+  for (const m of alive) minScore = Math.min(minScore, scoreByUser.get(m.userId) ?? 0);
+  const worst = alive.filter((m) => (scoreByUser.get(m.userId) ?? 0) === minScore);
+  if (worst.length >= alive.length) return; // would eliminate everyone alive — skip
+
+  for (const m of worst) {
+    await ctx.db.patch(m._id, { eliminated: true, eliminatedAtRound: round });
+  }
+}
+
 async function enterRoundResult(ctx: MutationCtx, roomId: Id<"rooms">, round: number) {
   const room = await ctx.db.get(roomId);
   if (!room || room.status !== "active" || room.currentRound !== round) return;
+  if (room.elimination) await applyElimination(ctx, room, round);
   // Repoint roundEndsAt at the reveal deadline so the client's "Next round in
   // Xs" countdown matches when `advance` will actually fire.
   await ctx.db.patch(roomId, { status: "roundResult", roundEndsAt: Date.now() + REVEAL_MS });
@@ -506,7 +573,9 @@ export const submitGuess = mutation({
       .collect();
     const guessed = new Set(guesses.map((g) => g.userId));
     const stillPlaying = members.filter(
-      (m) => m.userId === user._id || now - m.lastSeenAt < CONNECTED_WINDOW_MS,
+      // Eliminated members can still submit a harmless guess, but a Battle
+      // Royale round must never wait on them to auto-advance.
+      (m) => !m.eliminated && (m.userId === user._id || now - m.lastSeenAt < CONNECTED_WINDOW_MS),
     );
     if (stillPlaying.every((m) => guessed.has(m.userId))) {
       await enterRoundResult(ctx, roomId, round);
@@ -532,6 +601,14 @@ export const advance = internalMutation({
     const room = await ctx.db.get(roomId);
     if (!room || room.status !== "roundResult" || room.currentRound !== round) return;
     if (startedAt !== undefined && room.roundStartedAt !== startedAt) return;
+    if (room.elimination) {
+      const members = await membersOf(ctx, roomId);
+      const aliveCount = members.filter((m) => !m.eliminated).length;
+      if (aliveCount <= 1) {
+        await finishMatch(ctx, room);
+        return;
+      }
+    }
     if (round >= room.settings.rounds) {
       await finishMatch(ctx, room);
     } else {
@@ -550,7 +627,22 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
   // inflate win streaks.
   let competitive: boolean;
   let wonFor: (m: Doc<"roomMembers">) => boolean;
-  if (room.teamMode) {
+  if (room.elimination) {
+    // Winner = the sole survivor. If the match hit settings.rounds without
+    // reducing to exactly one (a tied final round can skip elimination —
+    // see applyElimination), fall back to the normal score-based tiebreaker
+    // instead of throwing.
+    const alive = members.filter((m) => !m.eliminated);
+    if (alive.length === 1) {
+      const survivorId = alive[0].userId;
+      competitive = members.length > 1;
+      wonFor = (m) => m.userId === survivorId;
+    } else {
+      const maxScore = members.reduce((m, x) => Math.max(m, x.totalScore), 0);
+      competitive = members.length > 1 && maxScore > 0;
+      wonFor = (m) => competitive && m.totalScore === maxScore;
+    }
+  } else if (room.teamMode) {
     const totals = teamTotalsOf(members);
     const winningTeam: Team | null = totals.A === totals.B ? null : totals.A > totals.B ? "A" : "B";
     // Require BOTH teams still present so a walkover (the opposing team all
@@ -712,9 +804,17 @@ export const rematch = mutation({
     const members = await membersOf(ctx, roomId);
     // Clear ratingDelta too: a rematch that turns out non-competitive (or
     // includes a guest) won't overwrite it, so a stale delta from the prior
-    // match would otherwise surface on the next results screen.
+    // match would otherwise surface on the next results screen. Same for
+    // eliminated/eliminatedAtRound — a Battle Royale rematch starts everyone
+    // alive again.
     for (const m of members)
-      await ctx.db.patch(m._id, { totalScore: 0, ready: false, ratingDelta: undefined });
+      await ctx.db.patch(m._id, {
+        totalScore: 0,
+        ready: false,
+        ratingDelta: undefined,
+        eliminated: undefined,
+        eliminatedAtRound: undefined,
+      });
 
     // Clear stale ad-hoc invites — the room reuses this same roomId/code, so
     // without this a rematch would resurrect old invites: re-toasting people
@@ -795,6 +895,8 @@ export const getByCode = query({
             // has run (status === "finished"), null otherwise. Read by the
             // results screen — no extra query needed.
             ratingDelta: m.ratingDelta ?? null,
+            eliminated: m.eliminated ?? false,
+            eliminatedAtRound: m.eliminatedAtRound ?? null,
           };
         }),
       )
@@ -818,6 +920,7 @@ export const getByCode = query({
       myUserId: me?._id ?? null,
       teamMode: room.teamMode ?? false,
       duelsMode: room.duelsMode ?? false,
+      elimination: room.elimination ?? false,
       teamTotals: teamTotalsOf(members),
       standings,
     };
@@ -843,6 +946,8 @@ export const getByCode = query({
               score: g?.score ?? 0,
               distanceMeters: g && g.guessed ? g.distanceMeters : null,
               countryCorrect: g?.countryCorrect ?? false,
+              eliminated: m.eliminated ?? false,
+              eliminatedAtRound: m.eliminatedAtRound ?? null,
             };
           }),
         },

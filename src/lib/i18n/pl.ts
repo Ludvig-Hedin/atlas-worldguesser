@@ -125,6 +125,11 @@ export const pl: LocaleDictionary = {
   "mp.noGuess": "Brak typu",
   "mp.finalResults": "Wyniki końcowe",
   "mp.wins": "wygrywa",
+
+  // Ranked rating (ELO-lite)
+  "rating.title": "Ranking",
+  "rating.unranked": "Bez rankingu",
+  "rating.placement": "Zagraj w trybie rankingowym, aby uzyskać pozycję",
   "mp.pointsValue": "{points} pkt",
   "mp.rematch": "Rewanż",
   "mp.leave": "Opuść",
@@ -294,6 +299,20 @@ export const pl: LocaleDictionary = {
   "daily.countriesOf5": "{count}/5 krajów",
   "daily.submitSuccess": "Wysłano wynik dnia — {score} pkt · {correct}/5 krajów",
   "daily.submitErrorFallback": "Nie udało się wysłać wyniku.",
+
+  "challenge.solo": "Solo",
+  "challenge.badge": "Wyzwanie serii",
+  "challenge.unknownPlayer": "Nieznany gracz",
+  "challenge.subtitle": "{count} z rzędu. Te same lokalizacje, ta sama kolejność — myślisz, że dasz radę to pobić?",
+  "challenge.attemptsSoFar": "Próby do tej pory: {count}",
+  "challenge.playButton": "Pobij serię",
+  "challenge.signInNudge": "Zaloguj się, aby zapisać próbę i porównać wyniki.",
+  "challenge.notFound": "Nie znaleziono wyzwania",
+  "challenge.you": "Ty",
+  "challenge.youWon": "Pobiłeś serię!",
+  "challenge.youLost": "Seria gracza {name} wciąż się utrzymuje",
+  "challenge.attemptSaved": "Próba zapisana — {streak} z rzędu · {score} pkt",
+  "challenge.attemptErrorFallback": "Nie udało się zapisać próby.",
 
   // Generic / shared
   "common.loading": "Ładowanie…",

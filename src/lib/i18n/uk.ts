@@ -125,6 +125,11 @@ export const uk: LocaleDictionary = {
   "mp.noGuess": "Без здогадки",
   "mp.finalResults": "Підсумкові результати",
   "mp.wins": "перемагає",
+
+  // Ranked rating (ELO-lite)
+  "rating.title": "Рейтинг",
+  "rating.unranked": "Без рейтингу",
+  "rating.placement": "Зіграйте рейтингові матчі, щоб отримати місце",
   "mp.pointsValue": "{points} очок",
   "mp.rematch": "Реванш",
   "mp.leave": "Вийти",
@@ -294,6 +299,20 @@ export const uk: LocaleDictionary = {
   "daily.countriesOf5": "{count}/5 країн",
   "daily.submitSuccess": "Результат надіслано — {score} очок · {correct}/5 країн",
   "daily.submitErrorFallback": "Не вдалося надіслати ваш результат.",
+
+  "challenge.solo": "Соло",
+  "challenge.badge": "Виклик на серію",
+  "challenge.unknownPlayer": "Невідомий гравець",
+  "challenge.subtitle": "{count} поспіль. Ті самі місця, той самий порядок — думаєш, зможеш побити цей результат?",
+  "challenge.attemptsSoFar": "Спроб поки що: {count}",
+  "challenge.playButton": "Побити серію",
+  "challenge.signInNudge": "Увійдіть, щоб зберегти спробу і порівняти результати.",
+  "challenge.notFound": "Виклик не знайдено",
+  "challenge.you": "Ти",
+  "challenge.youWon": "Ти побив серію!",
+  "challenge.youLost": "Серія {name} досі тримається",
+  "challenge.attemptSaved": "Спробу збережено — {streak} поспіль · {score} балів",
+  "challenge.attemptErrorFallback": "Не вдалося зберегти спробу.",
 
   // Generic / shared
   "common.loading": "Завантаження…",

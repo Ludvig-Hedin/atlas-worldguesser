@@ -138,6 +138,11 @@ export const en = {
   "mp.finalResults": "Final results",
   "mp.wins": "wins",
   "mp.pointsValue": "{points} points",
+
+  // Ranked rating (ELO-lite)
+  "rating.title": "Rating",
+  "rating.unranked": "Unranked",
+  "rating.placement": "Play ranked to place",
   "mp.rematch": "Rematch",
   "mp.leave": "Leave",
   "mp.waitingForHost": "Waiting for the host to start a rematch…",
@@ -227,6 +232,14 @@ export const en = {
   "team.pointsVs": "{a} vs {b} points",
   "team.couldNotSwitch": "Could not switch team",
   "team.couldNotChangeFormat": "Could not change format",
+
+  // Battle Royale (elimination mode)
+  "battle.label": "Elimination",
+  "battle.off": "Off",
+  "battle.on": "Battle Royale",
+  "battle.couldNotChangeFormat": "Could not change format",
+  "battle.eliminatedTag": "Eliminated",
+  "battle.eliminatedAtRound": "Out — round {round}",
 
   // Multiplayer lobby
   "lobby.roomCode": "Room code",

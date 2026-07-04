@@ -125,6 +125,11 @@ export const lt: LocaleDictionary = {
   "mp.noGuess": "Nėra spėjimo",
   "mp.finalResults": "Galutiniai rezultatai",
   "mp.wins": "laimi",
+
+  // Ranked rating (ELO-lite)
+  "rating.title": "Reitingas",
+  "rating.unranked": "Be reitingo",
+  "rating.placement": "Žaiskite reitinguojamas, kad gautumėte vietą",
   "mp.pointsValue": "{points} taškų",
   "mp.rematch": "Revanšas",
   "mp.leave": "Išeiti",
@@ -294,6 +299,20 @@ export const lt: LocaleDictionary = {
   "daily.countriesOf5": "{count}/5 šalių",
   "daily.submitSuccess": "Rezultatas išsiųstas — {score} tšk. · {correct}/5 šalių",
   "daily.submitErrorFallback": "Nepavyko išsiųsti jūsų rezultato.",
+
+  "challenge.solo": "Solo",
+  "challenge.badge": "Serijos iššūkis",
+  "challenge.unknownPlayer": "Nežinomas žaidėjas",
+  "challenge.subtitle": "{count} iš eilės. Tos pačios vietos, ta pati tvarka — manai, kad pavyktų tai įveikti?",
+  "challenge.attemptsSoFar": "Bandymų kol kas: {count}",
+  "challenge.playButton": "Įveik seriją",
+  "challenge.signInNudge": "Prisijunkite, kad išsaugotumėte bandymą ir palygintumėte rezultatus.",
+  "challenge.notFound": "Iššūkis nerastas",
+  "challenge.you": "Tu",
+  "challenge.youWon": "Tu įveikei seriją!",
+  "challenge.youLost": "{name} serija vis dar galioja",
+  "challenge.attemptSaved": "Bandymas išsaugotas — {streak} iš eilės · {score} tšk.",
+  "challenge.attemptErrorFallback": "Nepavyko išsaugoti bandymo.",
 
   // Bendra / dažni
   "common.loading": "Įkeliama…",
