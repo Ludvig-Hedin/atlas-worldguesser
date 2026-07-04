@@ -216,6 +216,16 @@ by re-running the same prompt template per country code and re-keying.
   only the guess crosses the wire; the actual location is always re-derived
   from the recomputed sequence before scoring. One saved attempt per
   (challenge, user); a signed-out guest can still play, just can't save.
+- ✅ Per-map country streak — the country-correct streak (`streaks.countryByMap`)
+  is tracked **per map** instead of one flat global counter, so a streak on the
+  USA map and a streak on the World map no longer share the same number. Shown
+  on the match-results screen for the just-played map, plus a
+  best-across-all-maps summary on the profile page. A pre-existing account's
+  old single flat `country`/`bestCountry` pair is folded into the `world` map
+  key lazily on read (`resolveCountryByMap` in `src/lib/progression.ts`) — no
+  migration script needed; those old fields stay on the schema as
+  deprecated-optional since Convex won't let a field be dropped while existing
+  rows still hold data in it.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.
