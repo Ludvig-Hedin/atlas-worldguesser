@@ -212,20 +212,20 @@ function PartyInner() {
           party.activeRoomCode ? (
             <Button
               size="lg"
-              className="flex-1"
+              className="flex-1 basis-auto"
               onClick={() => router.push(`/room/${party.activeRoomCode}`)}
             >
               <ArrowRight className="size-4" /> {t("party.rejoinRoom")}
             </Button>
           ) : (
-            <Button size="lg" className="flex-1" onClick={handleStart} disabled={busy}>
+            <Button size="lg" className="flex-1 basis-auto" onClick={handleStart} disabled={busy}>
               <Play className="size-4" /> {t("party.startRoomTogether")}
             </Button>
           )
         ) : party.activeRoomCode ? (
           <Button
             size="lg"
-            className="flex-1"
+            className="flex-1 basis-auto"
             onClick={() => router.push(`/room/${party.activeRoomCode}`)}
           >
             <ArrowRight className="size-4" /> {t("party.joinRoom")}
@@ -238,6 +238,7 @@ function PartyInner() {
         <Button
           size="lg"
           variant="secondary"
+          className="flex-1 basis-auto"
           onClick={() => leave({ partyId: party._id }).catch(() => {})}
         >
           <LogOut className="size-4" /> {t("mp.leave")}

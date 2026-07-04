@@ -240,15 +240,15 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
         </motion.div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button size="lg" className="flex-1" onClick={onPlayAgain}>
+          <Button size="lg" className="flex-1 basis-auto" onClick={onPlayAgain}>
             <RotateCcw className="size-4" />
             {t("match.playAgain")}
           </Button>
-          <Button size="lg" variant="secondary" className="flex-1" onClick={onNewGame}>
+          <Button size="lg" variant="secondary" className="flex-1 basis-auto" onClick={onNewGame}>
             <Settings2 className="size-4" />
             {t("match.newGame")}
           </Button>
-          <Button size="lg" variant="ghost" className="flex-1" asChild>
+          <Button size="lg" variant="ghost" className="flex-1 basis-auto" asChild>
             <Link href="/">
               <Home className="size-4" />
               {t("match.home")}

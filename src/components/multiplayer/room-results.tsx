@@ -166,7 +166,7 @@ export function RoomResults({ room }: { room: RoomState }) {
         {room.amHost && (
           <Button
             size="lg"
-            className="flex-1"
+            className="flex-1 basis-auto"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -178,7 +178,7 @@ export function RoomResults({ room }: { room: RoomState }) {
             {t("mp.rematch")}
           </Button>
         )}
-        <Button size="lg" variant="secondary" className="flex-1" asChild onClick={() => leave({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {})}>
+        <Button size="lg" variant="secondary" className="flex-1 basis-auto" asChild onClick={() => leave({ roomId: room._id, guestId: guestId ?? undefined }).catch(() => {})}>
           <Link href="/">
             <Home className="size-4" />
             {t("mp.leave")}

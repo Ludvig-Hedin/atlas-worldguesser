@@ -49,15 +49,15 @@ export function LocalPartyResults({ players, totals, onPlayAgain, onNewGame }: L
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button size="lg" className="flex-1" onClick={onPlayAgain}>
+          <Button size="lg" className="flex-1 basis-auto" onClick={onPlayAgain}>
             <RotateCcw className="size-4" />
             {t("party.playAgain")}
           </Button>
-          <Button size="lg" variant="secondary" className="flex-1" onClick={onNewGame}>
+          <Button size="lg" variant="secondary" className="flex-1 basis-auto" onClick={onNewGame}>
             <Settings2 className="size-4" />
             {t("party.newGame")}
           </Button>
-          <Button size="lg" variant="ghost" asChild>
+          <Button size="lg" variant="ghost" className="flex-1 basis-auto" asChild>
             <Link href="/">
               <Home className="size-4" />
               {t("party.home")}
