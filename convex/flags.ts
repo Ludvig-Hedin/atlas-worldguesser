@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { rateLimit } from "./rateLimit";
-import { currentUser, requireUser } from "./users";
+import { currentUser, isTestUser, requireUser } from "./users";
 import { FLAG_MAX_WRONG, flagRunScore, flagXpForRun } from "../src/lib/flags/scoring";
 
 /**
@@ -82,18 +82,29 @@ export const leaderboard = query({
   args: { region: v.string(), mode: modeValidator, limit: v.optional(v.number()) },
   handler: async (ctx, { region, mode, limit }) => {
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
-    const rows = await ctx.db
+    // Over-fetch a small margin beyond n so dropping test accounts doesn't
+    // shrink the board below its requested size.
+    const pool = await ctx.db
       .query("flagResults")
       .withIndex("by_region_mode_score", (q) => q.eq("region", region).eq("mode", mode))
       .order("desc")
-      .take(n);
+      .take(Math.min(n + 20, 200));
+
+    // Live-join avatar building/color so a change shows immediately — also
+    // doubles as the test-account check below. A row whose user was since
+    // deleted is kept (never a test account, since it no longer exists).
+    const rows = (
+      await Promise.all(pool.map(async (r) => ({ r, u: await ctx.db.get(r.userId) })))
+    )
+      .filter(({ u }) => !u || !isTestUser(u))
+      .slice(0, n);
 
     const me = await currentUser(ctx);
     let mine: { rank: number; bestScore: number } | null = null;
     if (me) {
-      const inTop = rows.findIndex((r) => r.userId === me._id);
+      const inTop = rows.findIndex(({ r }) => r.userId === me._id);
       if (inTop >= 0) {
-        mine = { rank: inTop + 1, bestScore: rows[inTop].bestScore };
+        mine = { rank: inTop + 1, bestScore: rows[inTop].r.bestScore };
       } else {
         const own = await ctx.db
           .query("flagResults")
@@ -104,23 +115,17 @@ export const leaderboard = query({
       }
     }
 
-    // Live-join avatar building/color so a change shows immediately.
-    const entries = await Promise.all(
-      rows.map(async (r, i) => {
-        const u = await ctx.db.get(r.userId);
-        return {
-          rank: i + 1,
-          userId: r.userId,
-          username: r.username,
-          avatarUrl: r.avatarUrl,
-          avatarBuildingId: u?.avatarBuildingId,
-          avatarColor: u?.avatarColor,
-          bestScore: r.bestScore,
-          correctCount: r.correctCount,
-          flagCount: r.flagCount,
-        };
-      }),
-    );
+    const entries = rows.map(({ r, u }, i) => ({
+      rank: i + 1,
+      userId: r.userId,
+      username: r.username,
+      avatarUrl: r.avatarUrl,
+      avatarBuildingId: u?.avatarBuildingId,
+      avatarColor: u?.avatarColor,
+      bestScore: r.bestScore,
+      correctCount: r.correctCount,
+      flagCount: r.flagCount,
+    }));
     return { region, entries, mine };
   },
 });

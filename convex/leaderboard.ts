@@ -4,7 +4,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { levelForXp } from "../src/lib/xp";
 import { DEFAULT_RATING, tierForRating } from "../src/lib/rating";
-import { currentUser } from "./users";
+import { currentUser, isTestUser } from "./users";
 
 const periodValidator = v.union(v.literal("week"), v.literal("month"));
 
@@ -31,12 +31,12 @@ export const top = query({
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
     // Guests accrue XP mid-match and are interleaved in the by_xp index, but must
     // never appear on the persistent (all-time) board. Over-fetch a bounded
-    // margin, drop guest rows, then slice to n. If an implausible number of
-    // high-XP guests ever crowd the window the board simply shows fewer rows —
-    // it never leaks a guest.
+    // margin, drop guest and test-account rows, then slice to n. If an
+    // implausible number of high-XP guests ever crowd the window the board
+    // simply shows fewer rows — it never leaks a guest or test account.
     const pool = Math.min(n + 150, 500);
     const users = (await ctx.db.query("users").withIndex("by_xp").order("desc").take(pool))
-      .filter((u) => !u.isGuest)
+      .filter((u) => !u.isGuest && !isTestUser(u))
       .slice(0, n);
     // Competition ranking (ties share a rank) so this list agrees with
     // myRank's "(# strictly higher) + 1" for tied XP values.
@@ -77,11 +77,11 @@ export const topRated = query({
   handler: async (ctx, { limit }) => {
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
     // by_rating sorts undefined-rating rows lowest, so `.order("desc")` puts the
-    // real rated players first; over-fetch a margin, drop guests + never-rated
-    // rows, then slice to n (same shape as `top`).
+    // real rated players first; over-fetch a margin, drop guests + test
+    // accounts + never-rated rows, then slice to n (same shape as `top`).
     const pool = Math.min(n + 150, 500);
     const users = (await ctx.db.query("users").withIndex("by_rating").order("desc").take(pool))
-      .filter((u) => !u.isGuest && u.rating !== undefined)
+      .filter((u) => !u.isGuest && !isTestUser(u) && u.rating !== undefined)
       .slice(0, n);
     // Competition ranking (ties share a rank), matching `top`.
     const rows: ReturnType<typeof ratingRow>[] = [];
@@ -102,9 +102,9 @@ export const myRank = query({
   args: {},
   handler: async (ctx) => {
     const me = await currentUser(ctx);
-    // Guests (no Clerk identity) never resolve here, but guard defensively so a
-    // guest can never be ranked on the persistent board.
-    if (!me || me.isGuest) return null;
+    // Guests (no Clerk identity) and test accounts never resolve here, but
+    // guard defensively so neither can ever be ranked on the persistent board.
+    if (!me || me.isGuest || isTestUser(me)) return null;
     // Bounded read: `.collect()` would materialize every higher-XP user and
     // can blow Convex's per-query read limits for low-ranked players. Past
     // the cap the rank is reported as RANK_CAP + 1 ("you're way down there").
@@ -115,8 +115,8 @@ export const myRank = query({
       .query("users")
       .withIndex("by_xp", (q) => q.gt("xp", me.xp))
       .take(RANK_CAP);
-    // Exclude guests so this rank stays consistent with `top` (which drops them).
-    const higherReal = higher.filter((u) => !u.isGuest).length;
+    // Exclude guests + test accounts so this rank stays consistent with `top`.
+    const higherReal = higher.filter((u) => !u.isGuest && !isTestUser(u)).length;
     return row(me, higherReal + 1);
   },
 });
@@ -137,7 +137,7 @@ export const friends = query({
       ids.add(r.userId === me._id ? r.friendId : r.userId);
     }
     const users = (await Promise.all([...ids].map((id) => ctx.db.get(id)))).filter(
-      (u): u is Doc<"users"> => u !== null,
+      (u): u is Doc<"users"> => u !== null && !isTestUser(u),
     );
     users.sort((a, b) => b.xp - a.xp);
     return users.map((u, i) => row(u, i + 1));
@@ -229,7 +229,7 @@ export const topPeriod = query({
     const gains: { user: Doc<"users">; gain: number }[] = [];
     for (const snap of snapshots) {
       const user = await ctx.db.get(snap.userId);
-      if (!user || user.isGuest) continue;
+      if (!user || user.isGuest || isTestUser(user)) continue;
       gains.push({ user, gain: Math.max(0, user.xp - snap.xpAtStart) });
     }
     gains.sort((a, b) => b.gain - a.gain);

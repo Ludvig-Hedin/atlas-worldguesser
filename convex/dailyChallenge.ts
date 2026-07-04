@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { rateLimit } from "./rateLimit";
 import { pickMatchLocations } from "./gameLogic";
-import { currentUser, requireUser } from "./users";
+import { currentUser, isTestUser, requireUser } from "./users";
 import { persistSoloGame, soloRoundArg } from "./solo";
 
 /**
@@ -103,17 +103,30 @@ export const leaderboard = query({
   handler: async (ctx, { day, limit }) => {
     const d = day ?? dayNumber(Date.now());
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
-    const rows = await ctx.db
+    // Over-fetch a small margin beyond n so dropping test accounts doesn't
+    // shrink the board below its requested size.
+    const pool = await ctx.db
       .query("dailyResults")
       .withIndex("by_day_score", (q) => q.eq("day", d))
       .order("desc")
-      .take(n);
+      .take(Math.min(n + 20, 200));
+    // Live-joined for avatarBuildingId/avatarColor (not denormalized like
+    // avatarUrl/username above) so a color change shows up immediately
+    // instead of only on the next daily run — also doubles as the test-account
+    // check below. A row whose user was since deleted is kept (never a test
+    // account, since it no longer exists) rather than silently dropped.
+    const rows = (
+      await Promise.all(pool.map(async (r) => ({ r, u: await ctx.db.get(r.userId) })))
+    )
+      .filter(({ u }) => !u || !isTestUser(u))
+      .slice(0, n);
+
     const me = await currentUser(ctx);
     let mine: { rank: number; score: number; correctCount: number } | null = null;
     if (me) {
-      const inTop = rows.findIndex((r) => r.userId === me._id);
+      const inTop = rows.findIndex(({ r }) => r.userId === me._id);
       if (inTop >= 0) {
-        mine = { rank: inTop + 1, score: rows[inTop].score, correctCount: rows[inTop].correctCount };
+        mine = { rank: inTop + 1, score: rows[inTop].r.score, correctCount: rows[inTop].r.correctCount };
       } else {
         const own = await ctx.db
           .query("dailyResults")
@@ -123,24 +136,16 @@ export const leaderboard = query({
         if (own) mine = { rank: 0, score: own.score, correctCount: own.correctCount };
       }
     }
-    // Live-joined for avatarBuildingId/avatarColor (not denormalized like
-    // avatarUrl/username above) so a color change shows up immediately
-    // instead of only on the next daily run.
-    const entries = await Promise.all(
-      rows.map(async (r, i) => {
-        const u = await ctx.db.get(r.userId);
-        return {
-          rank: i + 1,
-          userId: r.userId,
-          username: r.username,
-          avatarUrl: r.avatarUrl,
-          avatarBuildingId: u?.avatarBuildingId,
-          avatarColor: u?.avatarColor,
-          score: r.score,
-          correctCount: r.correctCount,
-        };
-      }),
-    );
+    const entries = rows.map(({ r, u }, i) => ({
+      rank: i + 1,
+      userId: r.userId,
+      username: r.username,
+      avatarUrl: r.avatarUrl,
+      avatarBuildingId: u?.avatarBuildingId,
+      avatarColor: u?.avatarColor,
+      score: r.score,
+      correctCount: r.correctCount,
+    }));
     return { day: d, entries, mine };
   },
 });

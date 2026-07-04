@@ -98,6 +98,18 @@ export async function requireUser(
 }
 
 /**
+ * Clerk's E2E test-mode convention: sign-in emails contain "+clerk_test@" to
+ * bypass real verification codes (https://clerk.com/docs/testing/e2e-testing).
+ * These accounts are real rows (never deleted) but must never show up on any
+ * public leaderboard — check both email and username since either can carry
+ * the marker depending on how the account was provisioned.
+ */
+export function isTestUser(user: Pick<Doc<"users">, "username" | "email">): boolean {
+  const needle = "clerk_test";
+  return user.username.toLowerCase().includes(needle) || (user.email?.toLowerCase().includes(needle) ?? false);
+}
+
+/**
  * Increment the denormalized total-users counter. Called only when a brand-new
  * user row is inserted (see appStats in schema.ts). Read by presence.homeStats.
  */
