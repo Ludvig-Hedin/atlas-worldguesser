@@ -63,7 +63,8 @@ export function RoomResults({ room }: { room: RoomState }) {
         className="flex flex-col items-center gap-2 text-center"
       >
         <Badge variant="muted" className="gap-1.5">
-          <MapGlyph mapId={room.mapId} className="size-3" /> {t(mapNameKey(map.id))} · {t("mp.finalResults")}
+          <MapGlyph mapId={room.mapId} className="size-3" />{" "}
+          {t(mapNameKey(map.id))} · {room.duelsMode ? t("duels.badge") : t("mp.finalResults")}
         </Badge>
         {teamMode ? (
           competitive && teamWinner ? (
