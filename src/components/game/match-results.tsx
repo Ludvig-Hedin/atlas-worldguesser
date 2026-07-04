@@ -166,8 +166,8 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
                   key={id}
                   className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center shadow-1"
                 >
-                  <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-overlay">
-                    <img src={b.image} alt="" className="size-full object-contain p-2" />
+                  <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-overlay">
+                    <img src={b.image} alt="" className="size-full object-contain p-4" />
                   </span>
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">

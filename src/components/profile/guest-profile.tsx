@@ -93,10 +93,20 @@ function CloudProfile() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && saveName()}
                 maxLength={20}
-                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none transition-colors hover:border-border-strong focus-visible:border-ring"
+                disabled={savingName}
+                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none transition-colors hover:border-border-strong focus-visible:border-ring disabled:opacity-60"
               />
-              <Button size="icon-sm" onClick={saveName} aria-label={t("profile.saveName")}>
-                <Check className="size-4" />
+              <Button
+                size="icon-sm"
+                onClick={saveName}
+                disabled={savingName}
+                aria-label={t("profile.saveName")}
+              >
+                {savingName ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Check className="size-4" />
+                )}
               </Button>
             </div>
           ) : (
