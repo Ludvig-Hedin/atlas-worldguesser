@@ -81,7 +81,7 @@ export function HeroMenu() {
             expandedId={openSection}
             onToggle={toggle}
           >
-            <MultiplayerEntry />
+            <MultiplayerEntry startExpanded />
           </AccordionSection>
         )}
 

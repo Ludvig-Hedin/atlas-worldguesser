@@ -24,15 +24,15 @@ function normalizeRoomInput(raw: string): string {
   return base.toUpperCase().slice(0, 6);
 }
 
-export function MultiplayerEntry() {
+export function MultiplayerEntry({ startExpanded = false }: { startExpanded?: boolean } = {}) {
   if (!features.multiplayer) return null;
   return (
     <div className="w-full">
       <Authenticated>
-        <MultiplayerControls />
+        <MultiplayerControls startExpanded={startExpanded} />
       </Authenticated>
       <Unauthenticated>
-        <GuestEntry />
+        <GuestEntry startExpanded={startExpanded} />
       </Unauthenticated>
     </div>
   );
@@ -45,10 +45,10 @@ export function MultiplayerEntry() {
  * TODO(i18n): "Play as guest" is hardcoded English — add an `mp.playAsGuest`
  * key across src/lib/i18n/* once the parallel i18n edits settle.
  */
-function GuestEntry() {
+function GuestEntry({ startExpanded }: { startExpanded?: boolean }) {
   const t = useT();
   const { guestActive, enableGuest } = useGuestSession();
-  if (guestActive) return <MultiplayerControls />;
+  if (guestActive) return <MultiplayerControls startExpanded={startExpanded} />;
   return (
     <div className="flex flex-col gap-1.5">
       <Button
@@ -73,7 +73,7 @@ function GuestEntry() {
   );
 }
 
-function MultiplayerControls() {
+function MultiplayerControls({ startExpanded = false }: { startExpanded?: boolean }) {
   const t = useT();
   const router = useRouter();
   const create = useMutation(api.rooms.create);
@@ -81,7 +81,7 @@ function MultiplayerControls() {
   const { isAuthenticated } = useConvexAuth();
   const [code, setCode] = useState("");
   const [creating, setCreating] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(startExpanded);
 
   const createRoom = async () => {
     setCreating(true);
