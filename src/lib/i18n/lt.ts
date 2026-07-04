@@ -8,6 +8,8 @@ export const lt: LocaleDictionary = {
   "nav.friends": "Draugai",
   "nav.stats": "Statistika",
   "nav.play": "Žaisti",
+  "nav.singleplayer": "Vienas žaidėjas",
+  "nav.multiplayer": "Keli žaidėjai",
 
   // Prisijungimas
   "auth.signIn": "Prisijungti",
@@ -43,6 +45,7 @@ export const lt: LocaleDictionary = {
   "friends.couldNotSendRequest": "Nepavyko išsiųsti užklausos",
   "friends.requestWithdrawn": "Užklausa atšaukta",
   "friends.couldNotWithdrawRequest": "Nepavyko atšaukti užklausos",
+  "friends.couldNotRespond": "Nepavyko atsakyti į užklausą",
   "friends.usernamePlaceholder": "pvz. mapmaster",
   "friends.add": "Pridėti",
   "friends.requests": "Užklausos",
@@ -104,6 +107,7 @@ export const lt: LocaleDictionary = {
   // Profilis
   "profile.saveName": "Išsaugoti vardą",
   "profile.editName": "Keisti vardą",
+  "profile.couldNotSaveName": "Nepavyko išsaugoti vardo",
   "profile.statsOnDevice": "Statistika išsaugota šiame įrenginyje",
   "profile.recentGames": "Neseni žaidimai",
   "profile.playerNotFound": "Žaidėjas nerastas",
@@ -381,6 +385,7 @@ export const lt: LocaleDictionary = {
   "home.continue": "Tęsti · {label}",
   "home.playingNow": "{count} žaidžia dabar",
   "home.players": "{count} žaidėjų",
+  "home.online": "{count} prisijungę",
 
   // Oficialūs žemėlapiai
   "map.world.name": "Pasaulis",

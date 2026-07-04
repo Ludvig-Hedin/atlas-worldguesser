@@ -8,6 +8,8 @@ export const sv: LocaleDictionary = {
   "nav.friends": "Vänner",
   "nav.stats": "Statistik",
   "nav.play": "Spela",
+  "nav.singleplayer": "En spelare",
+  "nav.multiplayer": "Flerspelare",
 
   // Auth
   "auth.signIn": "Logga in",
@@ -43,6 +45,7 @@ export const sv: LocaleDictionary = {
   "friends.couldNotSendRequest": "Kunde inte skicka förfrågan",
   "friends.requestWithdrawn": "Förfrågan tillbakadragen",
   "friends.couldNotWithdrawRequest": "Kunde inte dra tillbaka förfrågan",
+  "friends.couldNotRespond": "Kunde inte svara på förfrågan",
   "friends.usernamePlaceholder": "t.ex. kartmästare",
   "friends.add": "Lägg till",
   "friends.requests": "Förfrågningar",
@@ -104,6 +107,7 @@ export const sv: LocaleDictionary = {
   // Profile
   "profile.saveName": "Spara namn",
   "profile.editName": "Ändra namn",
+  "profile.couldNotSaveName": "Kunde inte spara namnet",
   "profile.statsOnDevice": "Statistik sparad på den här enheten",
   "profile.recentGames": "Senaste spelen",
   "profile.playerNotFound": "Spelaren hittades inte",
@@ -381,6 +385,7 @@ export const sv: LocaleDictionary = {
   "home.continue": "Fortsätt · {label}",
   "home.playingNow": "{count} spelar just nu",
   "home.players": "{count} spelare",
+  "home.online": "{count} online",
 
   // Official maps
   "map.world.name": "Världen",

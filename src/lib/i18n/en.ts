@@ -15,6 +15,8 @@ export const en = {
   "nav.stats": "Stats",
   "nav.flags": "Flags",
   "nav.play": "Play",
+  "nav.singleplayer": "Singleplayer",
+  "nav.multiplayer": "Multiplayer",
 
   // Auth
   "auth.signIn": "Sign in",
@@ -55,6 +57,7 @@ export const en = {
   "friends.couldNotSendRequest": "Could not send request",
   "friends.requestWithdrawn": "Request withdrawn",
   "friends.couldNotWithdrawRequest": "Could not withdraw request",
+  "friends.couldNotRespond": "Could not respond to request",
   "friends.usernamePlaceholder": "e.g. mapmaster",
   "friends.add": "Add",
   "friends.requests": "Requests",
@@ -116,6 +119,7 @@ export const en = {
   // Profile
   "profile.saveName": "Save name",
   "profile.editName": "Edit name",
+  "profile.couldNotSaveName": "Could not save name",
   "profile.statsOnDevice": "Stats saved on this device",
   "profile.recentGames": "Recent games",
   "profile.playerNotFound": "Player not found",
@@ -394,6 +398,7 @@ export const en = {
   "home.continue": "Continue · {label}",
   "home.playingNow": "{count} playing now",
   "home.players": "{count} players",
+  "home.online": "{count} online",
 
   // Official maps
   "map.world.name": "World",

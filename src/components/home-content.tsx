@@ -1,23 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Flag, Globe2, MapPin, Timer, Trophy, Type } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
-import { LiveStats } from "@/components/live-stats";
-import { ResumeCta } from "@/components/resume-cta";
+import { MapPin, Timer, Trophy } from "lucide-react";
+import { HeroOverlay } from "@/components/home/hero-overlay";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, mapNameKey, mapTaglineKey } from "@/lib/maps-config";
-import { features } from "@/lib/env";
 import { useT } from "@/hooks/use-t";
 import type { TKey } from "@/lib/i18n";
-
-const MODE_TILES: { icon: typeof MapPin; titleKey: TKey; bodyKey: TKey; href: string }[] = [
-  { icon: MapPin, titleKey: "home.classicCardTitle", bodyKey: "home.classicCardBody", href: "/play" },
-  { icon: Flag, titleKey: "home.flagsCardTitle", bodyKey: "home.flagsCardBody", href: "/flags" },
-  { icon: Type, titleKey: "home.countriesCardTitle", bodyKey: "home.countriesCardBody", href: "/countries" },
-];
 
 const HIGHLIGHTS: { icon: typeof MapPin; titleKey: TKey; bodyKey: TKey }[] = [
   { icon: MapPin, titleKey: "home.highlightStreetsTitle", bodyKey: "home.highlightStreetsBody" },
@@ -48,71 +37,9 @@ export function HomeContent() {
 
   return (
     <main className="pointer-events-none flex flex-1 flex-col">
-      {/* Hero — full viewport so the globe has room to breathe */}
-      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center">
-        <Badge
-          variant="muted"
-          className="mb-6 gap-1.5 border-border bg-overlay shadow-1 backdrop-blur-sm opacity-0 animate-[fade-up_0.5s_ease-out_forwards]"
-        >
-          <Globe2 className="size-3" />
-          {t("home.badge")}
-        </Badge>
-
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:60ms]">
-          {t("home.title1")}
-          <br />
-          <span className="text-primary-muted">{t("home.title2")}</span>
-        </h1>
-
-        <p className="mt-5 max-w-xl text-pretty text-base text-muted-foreground drop-shadow-[0_1px_12px_rgba(0,0,0,0.7)] sm:text-lg opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:120ms]">
-          {t("home.subhead")}
-        </p>
-
-        <div className="pointer-events-auto mt-8 flex flex-col items-center gap-3 sm:flex-row opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:180ms]">
-          <ResumeCta />
-          <Button size="lg" asChild className="min-w-44 shadow-lg shadow-primary/20">
-            <Link href="/play?map=world&quick=1">
-              {t("home.quickPlay")}
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {features.auth && (
-          <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:210ms]">
-            <LiveStats />
-          </div>
-        )}
-
-        <div className="pointer-events-auto mt-6 grid w-full max-w-xl grid-cols-3 gap-3 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms]">
-          {MODE_TILES.map((m) => (
-            <Link
-              key={m.href}
-              href={m.href}
-              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97]"
-            >
-              <m.icon className="size-6 text-primary-muted transition-transform duration-200 ease-fluid group-hover:scale-110" />
-              <span className="line-clamp-1 text-sm font-semibold">{t(m.titleKey)}</span>
-              <span className="hidden line-clamp-1 text-[11px] text-muted-foreground sm:block">{t(m.bodyKey)}</span>
-            </Link>
-          ))}
-        </div>
-
-        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:270ms]">
-          <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
-            {t("home.quickPlayHelper")}
-          </p>
-
-          {!features.googleMaps && (
-            <p className="mt-4 text-xs text-subtle">{t("home.demoMode")}</p>
-          )}
-
-          {features.multiplayer && (
-            <div className="pointer-events-auto mt-5 flex w-full justify-center">
-              <MultiplayerEntry />
-            </div>
-          )}
-        </div>
+      {/* Hero — full viewport four-corner overlay over the globe */}
+      <section className="relative min-h-[100svh] select-none">
+        <HeroOverlay />
       </section>
 
       {/* Below the fold — sits on solid ground so the globe fades out cleanly */}

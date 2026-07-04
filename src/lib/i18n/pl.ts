@@ -8,6 +8,8 @@ export const pl: LocaleDictionary = {
   "nav.friends": "Znajomi",
   "nav.stats": "Statystyki",
   "nav.play": "Graj",
+  "nav.singleplayer": "Jeden gracz",
+  "nav.multiplayer": "Wieloosobowa",
 
   // Auth
   "auth.signIn": "Zaloguj się",
@@ -43,6 +45,7 @@ export const pl: LocaleDictionary = {
   "friends.couldNotSendRequest": "Nie udało się wysłać zaproszenia",
   "friends.requestWithdrawn": "Zaproszenie wycofane",
   "friends.couldNotWithdrawRequest": "Nie udało się wycofać zaproszenia",
+  "friends.couldNotRespond": "Nie udało się odpowiedzieć na zaproszenie",
   "friends.usernamePlaceholder": "np. mapmaster",
   "friends.add": "Dodaj",
   "friends.requests": "Zaproszenia",
@@ -104,6 +107,7 @@ export const pl: LocaleDictionary = {
   // Profile
   "profile.saveName": "Zapisz nazwę",
   "profile.editName": "Edytuj nazwę",
+  "profile.couldNotSaveName": "Nie udało się zapisać nazwy",
   "profile.statsOnDevice": "Statystyki zapisane na tym urządzeniu",
   "profile.recentGames": "Ostatnie gry",
   "profile.playerNotFound": "Nie znaleziono gracza",
@@ -381,6 +385,7 @@ export const pl: LocaleDictionary = {
   "home.continue": "Kontynuuj · {label}",
   "home.playingNow": "{count} gra teraz",
   "home.players": "{count} graczy",
+  "home.online": "{count} online",
 
   // Official maps
   "map.world.name": "Świat",

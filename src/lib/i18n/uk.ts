@@ -8,6 +8,8 @@ export const uk: LocaleDictionary = {
   "nav.friends": "Друзі",
   "nav.stats": "Статистика",
   "nav.play": "Грати",
+  "nav.singleplayer": "Одиночна гра",
+  "nav.multiplayer": "Багатокористувацька",
 
   // Auth
   "auth.signIn": "Увійти",
@@ -43,6 +45,7 @@ export const uk: LocaleDictionary = {
   "friends.couldNotSendRequest": "Не вдалося надіслати запит",
   "friends.requestWithdrawn": "Запит відкликано",
   "friends.couldNotWithdrawRequest": "Не вдалося відкликати запит",
+  "friends.couldNotRespond": "Не вдалося відповісти на запит",
   "friends.usernamePlaceholder": "напр. mapmaster",
   "friends.add": "Додати",
   "friends.requests": "Запити",
@@ -104,6 +107,7 @@ export const uk: LocaleDictionary = {
   // Profile
   "profile.saveName": "Зберегти імʼя",
   "profile.editName": "Змінити імʼя",
+  "profile.couldNotSaveName": "Не вдалося зберегти імʼя",
   "profile.statsOnDevice": "Статистика збережена на цьому пристрої",
   "profile.recentGames": "Нещодавні ігри",
   "profile.playerNotFound": "Гравця не знайдено",
@@ -381,6 +385,7 @@ export const uk: LocaleDictionary = {
   "home.continue": "Продовжити · {label}",
   "home.playingNow": "{count} грають зараз",
   "home.players": "{count} гравців",
+  "home.online": "{count} онлайн",
 
   // Official maps
   "map.world.name": "Світ",

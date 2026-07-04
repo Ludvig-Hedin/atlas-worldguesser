@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/site-header";
 import { GlobeBackground } from "@/components/globe-background";
 import { HomeContent } from "@/components/home-content";
 
@@ -31,7 +30,6 @@ export default function Home() {
         <div className="absolute left-1/2 top-[46%] size-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[140px]" />
       </div>
 
-      <SiteHeader />
       <HomeContent />
     </div>
   );
