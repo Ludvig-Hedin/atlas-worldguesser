@@ -193,6 +193,11 @@ by re-running the same prompt template per country code and re-keying.
   never counted in the total-players stat. Friends/parties/custom-map/daily/flag
   features stay sign-in-only by construction. (Guest data cleanup — a TTL cron —
   is a deferred follow-up; see `BACKLOG.md`.)
+- ✅ Test accounts (Clerk's E2E test-mode `+clerk_test@` sign-in convention) are
+  detected via `convex/users.ts` `isTestUser` (checks username + email) and
+  excluded from every leaderboard — global XP/rating, `myRank`, friends,
+  weekly/monthly, Daily Challenge, and Flags. Unlike guests, they're real,
+  persistent accounts; they just never appear in any public ranking.
 - ✅ Social — friends (requests / accept / remove), recent players, per-user
   profiles, and an online/offline indicator on each friend row. Online status
   rides the existing presence heartbeat (~45s from any open tab) rather than a
