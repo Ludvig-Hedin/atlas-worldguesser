@@ -173,6 +173,10 @@ export default defineSchema({
     ratingDelta: v.optional(v.number()),
     // Team assignment when the room is in team mode; absent = unassigned/FFA.
     team: v.optional(v.union(v.literal("A"), v.literal("B"))),
+    // Battle Royale: true once cut (worst score of eliminatedAtRound).
+    // Absent/false = still alive.
+    eliminated: v.optional(v.boolean()),
+    eliminatedAtRound: v.optional(v.number()),
     joinedAt: v.number(),
     lastSeenAt: v.number(),
   })
