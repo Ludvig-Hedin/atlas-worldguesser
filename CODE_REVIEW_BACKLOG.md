@@ -365,3 +365,28 @@ found — the earlier full-repo pass had already hardened the risky paths.
 
 - `src/data/locations.ts` is generated ("do not edit by hand") — the Singapore/`MY` entries remain until `bun run build:geo` is re-run with the fixed generator.
 - Deploying `convex/` changes requires `npx convex deploy` (or the Vercel build hook that runs it).
+
+## Bug Hunt — 2026-07-05 (pre-push review of 26 unpushed commits)
+
+Reviewed the full diff between `origin/main` and local `HEAD` (backend leaderboard/test-user filtering, easter-egg rate changes, dark-map toggle, in-game settings access, Street View auth/coverage distinction, round-reveal pin occlusion fix, map-sheet redesign) via 5 parallel subagents split by area (Convex backend, core game components, flag/party/match games, multiplayer/profile/social, home/lib/i18n).
+
+### Auto-fixed (1 issue)
+
+- `src/components/game/map-sheet.tsx` — the mini-map's bottom action bar (Hint/Guess buttons) was recently made `absolute` over the map without `pointer-events-none`, silently blocking guess-clicks on the bottom ~56px band of the mini-map (regression vs. the previous below-map row layout). Added `pointer-events-none` to the footer row and `pointer-events-auto` to the two button-wrapper divs, matching the pattern already used in `game-hud.tsx`/`flag-game.tsx`.
+
+### Needs human review (1 issue — TODO in code)
+
+- `src/components/profile/all-avatars-view.tsx:70` — the new `AuthGate` has no `isLoading` guard, so a signed-in user briefly renders the guest (local-only) avatar grid before flipping to the cloud grid. Same latent flash already present in `guest-profile.tsx:170` (pre-existing pattern, not a regression from this diff) — both should be fixed together by gating on `isLoading` with a skeleton.
+
+### Verified clean (no changes needed)
+
+- Convex backend: `isTestUser` filtering applied consistently across every public leaderboard path (top, myRank, friends, topPeriod, daily challenge, flags regional); easter-egg roll math (10%/10%/80% partitions) is correct; daily/flag `{r,u}` join restructure keeps `mine.rank` consistent with the filtered/sliced rows.
+- `flag-map.tsx` — `applyStatus`'s new `key: "status" | "pastStatus"` parameter is applied consistently at all 4 call sites (including on initial map `load`), so the muted past-rounds trail and current-round status coexist correctly.
+- `guess-map.tsx` / `round-reveal.tsx` — the `bottomInset` prop (measured via `ResizeObserver` + `useLayoutEffect` on the result card) is correctly threaded into `fitBounds`/`flyTo` padding and cleaned up on unmount.
+- `google-street-view.tsx` / `street-view-canvas.tsx` / `solo-game.tsx` — the new `"auth"` unavailable-reason (distinguishing `RefererNotAllowedMapError` from real no-coverage) is wired through the full chain: emitted only when `hasGoogleMapsAuthFailed()` is true, typed through `StreetViewUnavailableReason`, and handled explicitly in `solo-game.tsx`'s re-roll guard.
+- i18n — all 5 locales (en/lt/pl/sv/uk) have exact key parity (430 keys each), including the new `settings.darkMap*` and `profile.*Avatars*` keys.
+- `AvatarPicker`'s `limit !== undefined` strict check is correct (distinguishes `limit={0}` from "no limit"), dark-map wiring is correct across all 7 `mapStyleFor` call sites, `button.tsx`'s `transition-all` → explicit property list is a no-op for existing callers.
+
+### Validation
+
+- Pending: `bun typecheck`, `bun lint`, `bun test:run`, `bun run build` (run before commit/push).
