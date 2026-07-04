@@ -20,6 +20,7 @@ import {
 import { rateLimit } from "./rateLimit";
 import { areFriends } from "./friends";
 import { foldGame, resolveCountryByMap } from "../src/lib/progression";
+import { getRecentLocationKeys, recordSeenLocations } from "./recentLocations";
 import { DEFAULT_RATING, computeRatingDelta, kFactorFor } from "../src/lib/rating";
 import type { RoundResult } from "../src/lib/types";
 
@@ -113,7 +114,8 @@ export async function createRoomForUser(
   }
 
   const seed = Math.floor(Math.random() * 0xffffffff);
-  const locations = pickMatchLocations(mapId, settings.rounds, seed);
+  const excludeKeys = await getRecentLocationKeys(ctx, user._id, mapId);
+  const locations = pickMatchLocations(mapId, settings.rounds, seed, excludeKeys);
 
   const roomId = await ctx.db.insert("rooms", {
     code,
@@ -276,10 +278,11 @@ export const updateSettings = mutation({
     if (room.status !== "lobby") throw new Error("Match already started");
     const settings = clampSettings(rawSettings);
     const seed = Math.floor(Math.random() * 0xffffffff);
+    const excludeKeys = await getRecentLocationKeys(ctx, user._id, mapId);
     await ctx.db.patch(roomId, {
       mapId,
       settings,
-      locations: pickMatchLocations(mapId, settings.rounds, seed),
+      locations: pickMatchLocations(mapId, settings.rounds, seed, excludeKeys),
     });
   },
 });
@@ -771,6 +774,7 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
 
     const user = await ctx.db.get(member.userId);
     if (user) {
+      await recordSeenLocations(ctx, user._id, room.mapId, room.locations);
       const owned = await ctx.db
         .query("achievements")
         .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -870,12 +874,13 @@ export const rematch = mutation({
     for (const inv of staleInvites) await ctx.db.delete(inv._id);
 
     const seed = Math.floor(Math.random() * 0xffffffff);
+    const excludeKeys = await getRecentLocationKeys(ctx, user._id, room.mapId);
     await ctx.db.patch(roomId, {
       status: "lobby",
       currentRound: 0,
       roundStartedAt: undefined,
       roundEndsAt: undefined,
-      locations: pickMatchLocations(room.mapId, room.settings.rounds, seed),
+      locations: pickMatchLocations(room.mapId, room.settings.rounds, seed, excludeKeys),
     });
   },
 });
