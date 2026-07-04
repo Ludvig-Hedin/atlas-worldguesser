@@ -61,8 +61,16 @@ export default defineSchema({
       lastPlayedDay: v.number(),
       win: v.number(),
       bestWin: v.number(),
-      country: v.number(),
-      bestCountry: v.number(),
+      // Deprecated: the old flat, cross-map country streak (implicitly the
+      // "world" map). Convex can't drop a field existing rows still hold, so
+      // this stays optional-and-unwritten going forward; new writes only set
+      // countryByMap. Folded into countryByMap.world on read — see
+      // resolveCountryByMap in src/lib/progression.ts.
+      country: v.optional(v.number()),
+      bestCountry: v.optional(v.number()),
+      countryByMap: v.optional(
+        v.record(v.string(), v.object({ current: v.number(), best: v.number() })),
+      ),
     }),
   })
     .index("by_clerk", ["clerkId"])
