@@ -92,7 +92,7 @@ export function MapSheet({
       className={fullscreen ? "fixed inset-x-3 bottom-3 top-16 z-40" : "fixed bottom-4 right-4 z-30"}
       style={fullscreen ? undefined : { width: size.w }}
     >
-      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-card shadow-3">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-card shadow-3 relative">
         <div className="relative w-full" style={fullscreen ? { flex: 1 } : { height: size.h }}>
           <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive hintCircle={hintCircle} />
 
@@ -142,7 +142,7 @@ export function MapSheet({
           )}
 
           {!guess && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-2">
+            <div className="pointer-events-none absolute left-2 top-2 flex justify-center px-2">
               <span className="flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white/80 shadow-1 backdrop-blur-md">
                 <MapPin className="size-3" />
                 Click the map to place your guess
@@ -151,7 +151,8 @@ export function MapSheet({
           )}
         </div>
 
-        <div className="flex h-14 shrink-0 items-center gap-2 p-2">
+        <div className="flex h-14 shrink-0 items-center gap-2 p-2 absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/30 to-black/0 w-full">
+          <div className="bg-black/10 backdrop-blur-lg rounded-full">
           {onHint && (
             <Button
               variant="secondary"
@@ -165,12 +166,15 @@ export function MapSheet({
               Hint
             </Button>
           )}
-          <Button className="flex-1" size="md" disabled={!guess || submitting} onClick={onSubmit}>
+          </div>
+         <div className="bg-black/10 backdrop-blur-lg flex-1 rounded-full flex items-center justify-center">
+            <Button className="flex-1" size="md" disabled={!guess || submitting} onClick={onSubmit}>
             {guess ? "Guess" : "Place a pin"}
             {guess && hasKeyboard && (
               <Kbd className="ml-1 border-white/20 bg-black/20 text-primary-foreground/80">Space</Kbd>
             )}
-          </Button>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
