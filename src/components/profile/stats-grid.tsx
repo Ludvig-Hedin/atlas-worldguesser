@@ -58,7 +58,7 @@ export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed, b
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="col-span-2 rounded-2xl border border-border bg-card p-5">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-sm font-medium">Level {level.level}</span>
           <span className="text-xs text-muted-foreground tabular">

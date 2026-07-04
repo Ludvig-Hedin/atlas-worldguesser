@@ -80,11 +80,11 @@ function MultiplayerControls({ startExpanded = false }: { startExpanded?: boolea
   const { guestId, provisionGuest } = useGuestSession();
   const { isAuthenticated } = useConvexAuth();
   const [code, setCode] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<"room" | "duel" | null>(null);
   const [expanded, setExpanded] = useState(startExpanded);
 
   const createRoom = async () => {
-    setCreating(true);
+    setCreating("room");
     try {
       // Guests need their ephemeral account row before create() can requireUser.
       if (!isAuthenticated) await provisionGuest();
@@ -96,12 +96,12 @@ function MultiplayerControls({ startExpanded = false }: { startExpanded?: boolea
       router.push(`/room/${newCode}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("mp.couldNotCreateRoom"));
-      setCreating(false);
+      setCreating(null);
     }
   };
 
   const createDuel = async () => {
-    setCreating(true);
+    setCreating("duel");
     try {
       if (!isAuthenticated) await provisionGuest();
       const { code: newCode } = await create({
@@ -113,7 +113,7 @@ function MultiplayerControls({ startExpanded = false }: { startExpanded?: boolea
       router.push(`/room/${newCode}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("mp.couldNotCreateRoom"));
-      setCreating(false);
+      setCreating(null);
     }
   };
 
@@ -140,13 +140,13 @@ function MultiplayerControls({ startExpanded = false }: { startExpanded?: boolea
 
   return (
     <div className="flex flex-col gap-3">
-      <Button onClick={createRoom} disabled={creating}>
+      <Button onClick={createRoom} disabled={!!creating}>
         {t("mp.createPrivateRoom")}
-        {creating ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+        {creating === "room" ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
       </Button>
-      <Button variant="secondary" onClick={createDuel} disabled={creating}>
+      <Button variant="secondary" onClick={createDuel} disabled={!!creating}>
         {t("duels.start")}
-        {creating ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+        {creating === "duel" ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
       </Button>
       <div className="flex items-center gap-2 text-xs text-subtle">
         <span className="h-px flex-1 bg-border" />

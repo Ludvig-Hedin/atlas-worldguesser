@@ -69,7 +69,7 @@ export function SettingsMenu({
       <Button
         variant="ghost"
         size={showLabel ? "sm" : "icon-sm"}
-        aria-label={t("settings.open")}
+        aria-label={showLabel ? undefined : t("settings.open")}
         className={cn(showLabel && "gap-1.5", className)}
       >
         <SettingsIcon className="size-4" />

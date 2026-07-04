@@ -68,12 +68,8 @@ function GuestAllAvatars() {
  * `features.auth` is true, mirroring the gate in guest-profile.tsx.
  */
 function AuthGate({ children }: { children: (isAuthenticated: boolean) => ReactNode }) {
-  // TODO(bug-hunt): no isLoading check — while Convex resolves the Clerk JWT,
-  // isAuthenticated reads false, so a signed-in user briefly sees
-  // <GuestAllAvatars /> (their local unlocked buildings) before flipping to
-  // <CloudAllAvatars />. Same latent flash as AuthGate in guest-profile.tsx;
-  // fix both together by gating on isLoading with a skeleton.
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  if (isLoading) return <Skeleton className="h-64 w-full rounded-2xl" />;
   return <>{children(isAuthenticated)}</>;
 }
 
