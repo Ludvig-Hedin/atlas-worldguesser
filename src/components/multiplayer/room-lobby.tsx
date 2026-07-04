@@ -12,6 +12,7 @@ import { TeamScoreboard } from "./team-scoreboard";
 import { ChatPanel } from "./chat-panel";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
+import { Switch } from "@/components/ui/switch";
 import { RulesSelect } from "@/components/game/rules-select";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -45,6 +46,7 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const setReady = useMutation(api.rooms.setReady);
   const setTeamMode = useMutation(api.rooms.setTeamMode);
   const setTeam = useMutation(api.rooms.setTeam);
+  const setDuelsMode = useMutation(api.rooms.setDuelsMode);
   const setElimination = useMutation(api.rooms.setElimination);
   const start = useMutation(api.rooms.start);
   const leave = useMutation(api.rooms.leave);
@@ -207,22 +209,36 @@ export function RoomLobby({ room }: { room: RoomState }) {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-muted-foreground">{t("team.format")}</label>
-                <Segmented
-                  size="sm"
-                  value={teamMode ? "teams" : "ffa"}
-                  onChange={(v: string) =>
-                    setTeamMode({ roomId: room._id, teamMode: v === "teams", guestId: guestId ?? undefined }).catch((e) =>
-                      toast.error(e instanceof Error ? e.message : t("team.couldNotChangeFormat")),
+              {!room.duelsMode && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-muted-foreground">{t("team.format")}</label>
+                  <Segmented
+                    size="sm"
+                    value={teamMode ? "teams" : "ffa"}
+                    onChange={(v: string) =>
+                      setTeamMode({ roomId: room._id, teamMode: v === "teams", guestId: guestId ?? undefined }).catch((e) =>
+                        toast.error(e instanceof Error ? e.message : t("team.couldNotChangeFormat")),
+                      )
+                    }
+                    options={[
+                      { value: "ffa", label: t("team.ffa") },
+                      { value: "teams", label: t("team.teams") },
+                    ]}
+                  />
+                </div>
+              )}
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-overlay px-3 py-2">
+                <span className="text-sm font-medium text-muted-foreground">{t("duels.toggle")}</span>
+                <Switch
+                  checked={room.duelsMode}
+                  onCheckedChange={(checked: boolean) =>
+                    setDuelsMode({ roomId: room._id, duelsMode: checked, guestId: guestId ?? undefined }).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : t("duels.couldNotChangeMode")),
                     )
                   }
-                  options={[
-                    { value: "ffa", label: t("team.ffa") },
-                    { value: "teams", label: t("team.teams") },
-                  ]}
+                  aria-label={t("duels.toggle")}
                 />
-              </div>
+              </label>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-muted-foreground">{t("battle.label")}</label>
                 <Segmented
@@ -312,7 +328,11 @@ export function RoomLobby({ room }: { room: RoomState }) {
                 size="lg"
                 className="flex-1"
                 onClick={doStart}
-                disabled={starting || room.standings.length < 1 || (teamMode && !bothTeamsFilled)}
+                disabled={
+                  starting ||
+                  (room.duelsMode ? room.standings.length !== 2 : room.standings.length < 1) ||
+                  (teamMode && !bothTeamsFilled)
+                }
               >
                 <Play className="size-4" />
                 {t("lobby.startMatch")}
