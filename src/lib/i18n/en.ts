@@ -133,6 +133,9 @@ export const en = {
   "profile.avatarColor": "Color",
   "profile.buildingLocked": "Guess {country} correctly to unlock",
   "profile.avatarGuestHint": "Sign in to claim these as your avatar",
+  "profile.viewAllAvatars": "View all",
+  "profile.allAvatarsTitle": "All avatars",
+  "profile.noAvatarsYet": "No buildings unlocked yet — guess a country correctly to earn one.",
 
   // Multiplayer
   "mp.host": "Host",

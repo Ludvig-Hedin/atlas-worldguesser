@@ -121,6 +121,9 @@ export const uk: LocaleDictionary = {
   "profile.avatarColor": "Колір",
   "profile.buildingLocked": "Вгадайте {country} правильно, щоб розблокувати",
   "profile.avatarGuestHint": "Увійдіть, щоб встановити їх як аватар",
+  "profile.viewAllAvatars": "Переглянути всі",
+  "profile.allAvatarsTitle": "Усі аватари",
+  "profile.noAvatarsYet": "Поки що немає розблокованих будівель — вгадайте країну правильно, щоб розблокувати.",
 
   // Multiplayer
   "mp.host": "Хост",

@@ -121,6 +121,9 @@ export const pl: LocaleDictionary = {
   "profile.avatarColor": "Kolor",
   "profile.buildingLocked": "Zgadnij {country} poprawnie, aby odblokować",
   "profile.avatarGuestHint": "Zaloguj się, aby ustawić je jako awatar",
+  "profile.viewAllAvatars": "Zobacz wszystkie",
+  "profile.allAvatarsTitle": "Wszystkie awatary",
+  "profile.noAvatarsYet": "Brak odblokowanych budynków — zgadnij kraj poprawnie, aby odblokować.",
 
   // Multiplayer
   "mp.host": "Gospodarz",

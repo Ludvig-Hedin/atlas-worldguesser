@@ -121,6 +121,9 @@ export const lt: LocaleDictionary = {
   "profile.avatarColor": "Spalva",
   "profile.buildingLocked": "Atspėkite {country} teisingai, kad atrakintumėte",
   "profile.avatarGuestHint": "Prisijunkite, kad nustatytumėte juos kaip avatarą",
+  "profile.viewAllAvatars": "Žiūrėti visus",
+  "profile.allAvatarsTitle": "Visi avatarai",
+  "profile.noAvatarsYet": "Kol kas nėra atrakintų pastatų — atspėkite šalį teisingai, kad atrakintumėte.",
 
   // Kelių žaidėjų režimas
   "mp.host": "Šeimininkas",

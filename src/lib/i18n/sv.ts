@@ -121,6 +121,9 @@ export const sv: LocaleDictionary = {
   "profile.avatarColor": "Färg",
   "profile.buildingLocked": "Gissa {country} rätt för att låsa upp",
   "profile.avatarGuestHint": "Logga in för att göra dessa till din avatar",
+  "profile.viewAllAvatars": "Visa alla",
+  "profile.allAvatarsTitle": "Alla avatarer",
+  "profile.noAvatarsYet": "Inga byggnader upplåsta än — gissa ett land rätt för att låsa upp en.",
 
   // Multiplayer
   "mp.host": "Värd",

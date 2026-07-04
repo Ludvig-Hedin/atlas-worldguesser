@@ -70,7 +70,7 @@ export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed, b
         </div>
 
         {showRating && tier && (
-          <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5 sm:w-52">
+          <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
             <div className="mb-1 flex items-center gap-2">
               <Medal className={`size-4 ${ranked ? TIER_ACCENT[tier.key] : "text-muted-foreground"}`} />
               <span className="text-sm font-medium">
