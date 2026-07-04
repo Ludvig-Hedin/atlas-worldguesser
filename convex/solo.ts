@@ -11,6 +11,7 @@ import {
 } from "./gameLogic";
 import { foldGame, resolveCountryByMap } from "../src/lib/progression";
 import { requireUser } from "./users";
+import { getRecentLocationKeys, recordSeenLocations } from "./recentLocations";
 import type { RoundResult } from "../src/lib/types";
 
 /**
@@ -91,6 +92,11 @@ export async function persistSoloGame(
     seen.add(r.round);
     if (!validGuess(r.guess)) throw new Error("Invalid game");
   }
+
+  // Record these as "seen" regardless of score — a submitted game means the
+  // player was shown every one of these locations. Covers both this
+  // function's callers: solo.submitGame and dailyChallenge.submit.
+  await recordSeenLocations(ctx, user._id, mapId, locations);
 
   const clamped = clampSettings(settings);
   const owned = await ctx.db
@@ -189,7 +195,8 @@ export const startGame = mutation({
     await rateLimit(ctx, "soloStart", user._id);
     const clamped = clampSettings(settings);
     const seed = Math.floor(Math.random() * 0xffffffff);
-    const locations = pickMatchLocations(mapId, clamped.rounds, seed);
+    const excludeKeys = await getRecentLocationKeys(ctx, user._id, mapId);
+    const locations = pickMatchLocations(mapId, clamped.rounds, seed, excludeKeys);
     const now = Date.now();
     const sessionId = await ctx.db.insert("soloSessions", {
       userId: user._id,
