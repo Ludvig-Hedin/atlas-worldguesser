@@ -66,6 +66,8 @@ export const en = {
   "friends.recentPlayers": "Recent players",
   "friends.removeConfirmTitle": "Remove friend?",
   "friends.removeConfirmDescription": "You'll need to send a new request to add them again.",
+  "friends.online": "Online",
+  "friends.offline": "Offline",
 
   // Maps
   "maps.byAuthor": "by {author}",
@@ -86,6 +88,12 @@ export const en = {
   "maps.mapUnavailable": "Map unavailable",
   "maps.mapUnavailableDescription": "This map is private or doesn't have enough locations.",
   "maps.browseMaps": "Browse maps",
+  "maps.sortTrending": "Trending",
+  "maps.sortNewest": "Newest",
+  "maps.sortMostPlayed": "Most played",
+  "maps.sortAria": "Sort community maps",
+  "maps.likeMap": "Like this map",
+  "maps.unlikeMap": "Unlike this map",
 
   // Leaderboard
   "leaderboard.title": "Leaderboard",
@@ -202,6 +210,15 @@ export const en = {
   "lobby.chat": "Chat",
   "lobby.couldNotStart": "Could not start",
   "lobby.couldNotUpdate": "Could not update settings",
+  "lobby.inviteFriends": "Invite friends",
+  "lobby.inviteFriendsDescription": "Only friends who are online right now can join instantly.",
+  "lobby.noOnlineFriends": "None of your friends are online right now.",
+  "lobby.invite": "Invite",
+  "lobby.invitedToast": "Invited {name}",
+  "lobby.couldNotInvite": "Could not invite",
+
+  // Room invites (ad-hoc, lighter than a persistent party)
+  "roomInvite.toastMessage": "{name} invited you to a game",
 
   // Party
   "party.title": "Party",

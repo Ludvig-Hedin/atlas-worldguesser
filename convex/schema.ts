@@ -182,6 +182,10 @@ export default defineSchema({
     ownerName: v.string(),
     isPublic: v.boolean(),
     locationCount: v.number(),
+    // Denormalized social counters (optional = additive, no migration; reads
+    // as 0 for pre-existing rows). Same convention as appStats/presence.
+    plays: v.optional(v.number()),
+    likes: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
@@ -194,6 +198,17 @@ export default defineSchema({
     lng: v.number(),
     countryCode: v.string(),
   }).index("by_map", ["mapId"]),
+
+  // One row per (map, user) like — prevents double-likes and supports
+  // un-liking. `likes` on `maps` is the denormalized count kept in sync by
+  // convex/maps.ts's toggleLike mutation.
+  mapLikes: defineTable({
+    mapId: v.id("maps"),
+    userId: v.id("users"),
+  })
+    .index("by_map_user", ["mapId", "userId"])
+    .index("by_map", ["mapId"])
+    .index("by_user", ["userId"]),
 
   // Fixed-window rate limiting per (action, subject).
   rateLimits: defineTable({
@@ -218,6 +233,23 @@ export default defineSchema({
     key: v.string(),
     totalUsers: v.number(),
   }).index("by_key", ["key"]),
+
+  // Server-minted solo game sessions. The server owns the round locations
+  // (resolved once at startGame, exactly like rooms.locations) so scoring at
+  // submitGame re-derives each round's answer from `locations[round-1]` instead
+  // of trusting client-claimed coordinates. `consumedAt` enforces one submit per
+  // session (server-side idempotency). Guests / keyless deploys never mint these.
+  soloSessions: defineTable({
+    userId: v.id("users"),
+    mapId: v.string(),
+    settings: settingsValidator,
+    seed: v.number(),
+    locations: v.array(
+      v.object({ lat: v.number(), lng: v.number(), countryCode: v.string() }),
+    ),
+    consumedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   // Daily Challenge results — one row per (day, user). `day` is the UTC day
   // number (floor(ms / 86_400_000)). One attempt per day is enforced by a
@@ -275,4 +307,20 @@ export default defineSchema({
     .index("by_party", ["partyId"])
     .index("by_user", ["userId"])
     .index("by_party_user", ["partyId", "userId"]),
+
+  // Ad-hoc, one-off invites to join a specific room right now — lighter than
+  // the persistent parties system above. A room member invites one friend
+  // directly; rooms.myInvites only surfaces a row while its room is still in
+  // "lobby", so an invite naturally stops being actionable once the match
+  // starts or finishes (no explicit read/dismiss state needed).
+  roomInvites: defineTable({
+    roomId: v.id("rooms"),
+    roomCode: v.string(),
+    fromUserId: v.id("users"),
+    fromUsername: v.string(),
+    toUserId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_to", ["toUserId"])
+    .index("by_room_and_to", ["roomId", "toUserId"]),
 });

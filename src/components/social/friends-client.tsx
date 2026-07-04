@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/use-t";
+import { cn } from "@/lib/utils";
 
 export function FriendsClient() {
   const t = useT();
@@ -162,6 +163,18 @@ function FriendsInner() {
           data.friends.map((f) => (
             <div key={f._id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
               <IdentityAvatar name={f.username} src={f.avatarUrl} buildingId={f.avatarBuildingId} color={f.avatarColor} />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={cn(
+                      "inline-flex size-2 shrink-0 rounded-full",
+                      f.online ? "bg-emerald-400" : "bg-muted-foreground/40",
+                    )}
+                    aria-hidden
+                  />
+                </TooltipTrigger>
+                <TooltipContent>{f.online ? t("friends.online") : t("friends.offline")}</TooltipContent>
+              </Tooltip>
               <Link href={`/profile/${f.username}`} className="flex-1 truncate font-medium hover:underline">
                 {f.username}
               </Link>

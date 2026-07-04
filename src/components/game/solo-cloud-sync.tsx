@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import type { SoloGame } from "@/hooks/use-solo-game";
 
 const MAX_ATTEMPTS = 3;
@@ -14,7 +15,7 @@ const MAX_ATTEMPTS = 3;
  * backoff on failure so a dropped connection at the exact moment a game ends
  * doesn't silently lose the player's result.
  */
-export function SoloCloudSync({ game }: { game: SoloGame }) {
+export function SoloCloudSync({ game, customMapId }: { game: SoloGame; customMapId?: Id<"maps"> }) {
   const { isAuthenticated } = useConvexAuth();
   const record = useMutation(api.users.recordSoloResult);
   const done = useRef(false);
@@ -32,6 +33,7 @@ export function SoloCloudSync({ game }: { game: SoloGame }) {
 
     record({
       mapId: game.mapId,
+      customMapId,
       settings: game.settings,
       results: game.results.map((r) => ({
         round: r.round,
@@ -63,7 +65,7 @@ export function SoloCloudSync({ game }: { game: SoloGame }) {
     return () => {
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [isAuthenticated, record, game, attempt]);
+  }, [isAuthenticated, record, game, attempt, customMapId]);
 
   return null;
 }

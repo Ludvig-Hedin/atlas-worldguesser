@@ -11,7 +11,7 @@ import { features } from "@/lib/env";
 export function SiteHeader() {
   const t = useT();
   return (
-    <header className="z-10 flex items-center justify-between px-5 py-4">
+    <header className="pointer-events-auto z-10 flex items-center justify-between px-5 py-4">
       <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
         <AtlasMark className="size-5 text-primary-muted" />
         Atlas

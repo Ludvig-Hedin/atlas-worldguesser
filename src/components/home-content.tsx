@@ -43,7 +43,7 @@ export function HomeContent() {
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero — full viewport so the globe has room to breathe */}
-      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center pointer-events-none">
+      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center">
         <Badge
           variant="muted"
           className="mb-6 gap-1.5 border-border bg-overlay shadow-1 backdrop-blur-sm opacity-0 animate-[fade-up_0.5s_ease-out_forwards]"
@@ -100,7 +100,7 @@ export function HomeContent() {
       </section>
 
       {/* Below the fold — sits on solid ground so the globe fades out cleanly */}
-      <section className="relative z-10 bg-gradient-to-t from-background to-transparent px-4 py-16">
+      <section className="pointer-events-auto relative z-10 bg-gradient-to-t from-background to-transparent px-4 py-16">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
           {/* Pick a map */}
           <div>

@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { EnsureUser } from "@/components/auth/ensure-user";
 import { PresencePing } from "@/components/presence-ping";
+import { RoomInviteNotifier } from "@/components/multiplayer/room-invite-notifier";
 import { PreferencesProvider } from "@/components/preferences/preferences-provider";
 import { clerkPublishableKey, convexUrl, features } from "@/lib/env";
 
@@ -34,6 +35,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
           <EnsureUser />
           <PresencePing />
+          <RoomInviteNotifier />
           {inner}
         </ConvexProviderWithClerk>
       </ClerkProvider>

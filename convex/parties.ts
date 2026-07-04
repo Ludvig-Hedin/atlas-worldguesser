@@ -4,6 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import { settingsValidator } from "./schema";
 import { currentUser, requireUser } from "./users";
 import { rateLimit } from "./rateLimit";
+import { areFriends } from "./friends";
 import { assertMultiplayerEnabled, createRoomForUser } from "./rooms";
 
 /**
@@ -28,24 +29,6 @@ async function membersOfParty(ctx: QueryCtx | MutationCtx, partyId: Id<"parties"
     .query("partyMembers")
     .withIndex("by_party", (q) => q.eq("partyId", partyId))
     .collect();
-}
-
-/** True only for an accepted (not pending) friendship, either direction. */
-async function areFriends(
-  ctx: QueryCtx | MutationCtx,
-  a: Id<"users">,
-  b: Id<"users">,
-): Promise<boolean> {
-  const ab = await ctx.db
-    .query("friends")
-    .withIndex("by_pair", (q) => q.eq("userId", a).eq("friendId", b))
-    .unique();
-  if (ab) return ab.status === "accepted";
-  const ba = await ctx.db
-    .query("friends")
-    .withIndex("by_pair", (q) => q.eq("userId", b).eq("friendId", a))
-    .unique();
-  return ba?.status === "accepted";
 }
 
 /** After a member leaves, reassign leadership or tear the party down if empty. */

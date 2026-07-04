@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Check, Copy, LogOut, Play } from "lucide-react";
+import { Check, Copy, LogOut, Play, UserPlus } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { Scoreboard } from "./scoreboard";
@@ -15,6 +15,15 @@ import { Segmented } from "@/components/ui/segmented";
 import { RulesSelect } from "@/components/game/rules-select";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { IdentityAvatar } from "@/components/ui/avatar";
 import { MapGlyph } from "@/components/map-glyph";
 import { useT } from "@/hooks/use-t";
 import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
@@ -37,10 +46,22 @@ export function RoomLobby({ room }: { room: RoomState }) {
   const setTeam = useMutation(api.rooms.setTeam);
   const start = useMutation(api.rooms.start);
   const leave = useMutation(api.rooms.leave);
+  const inviteFriend = useMutation(api.rooms.inviteFriend);
+  const friendsData = useQuery(api.friends.list);
   const [starting, setStarting] = useState(false);
 
   const me = room.standings.find((s) => s.userId === room.myUserId);
   const readyCount = room.standings.filter((s) => s.ready).length;
+
+  const memberIds = new Set(room.standings.map((s) => s.userId));
+  const onlineInvitableFriends = (friendsData?.friends ?? []).filter(
+    (f) => f.online && !memberIds.has(f._id),
+  );
+
+  const invite = (friendId: RoomState["standings"][number]["userId"], name: string) =>
+    inviteFriend({ roomCode: room.code, friendId })
+      .then(() => toast.success(t("lobby.invitedToast", { name })))
+      .catch((e) => toast.error(e instanceof Error ? e.message : t("lobby.couldNotInvite")));
 
   const teamMode = room.teamMode;
   const myTeam = me?.team ?? null;
@@ -82,6 +103,44 @@ export function RoomLobby({ room }: { room: RoomState }) {
               <Button size="icon-sm" variant="secondary" onClick={copyInvite} aria-label={t("lobby.copyInviteAria")}>
                 <Copy className="size-3.5" />
               </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="icon-sm" variant="secondary" aria-label={t("lobby.inviteFriends")}>
+                    <UserPlus className="size-3.5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>{t("lobby.inviteFriends")}</DialogTitle>
+                    <DialogDescription>{t("lobby.inviteFriendsDescription")}</DialogDescription>
+                  </DialogHeader>
+                  {onlineInvitableFriends.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">
+                      {t("lobby.noOnlineFriends")}
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {onlineInvitableFriends.map((f) => (
+                        <div key={f._id} className="flex items-center gap-2.5 rounded-xl bg-overlay px-2.5 py-2">
+                          <IdentityAvatar
+                            name={f.username}
+                            src={f.avatarUrl}
+                            buildingId={f.avatarBuildingId}
+                            color={f.avatarColor}
+                            className="size-7"
+                          />
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium" title={f.username}>
+                            {f.username}
+                          </span>
+                          <Button size="sm" variant="secondary" onClick={() => invite(f._id, f.username)}>
+                            <UserPlus className="size-4" /> {t("lobby.invite")}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={() => leave({ roomId: room._id }).catch(() => {})} asChild>

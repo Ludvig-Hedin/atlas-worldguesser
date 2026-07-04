@@ -57,6 +57,8 @@ export const sv: LocaleDictionary = {
   "friends.recentPlayers": "Senaste spelare",
   "friends.removeConfirmTitle": "Ta bort vän?",
   "friends.removeConfirmDescription": "Du måste skicka en ny förfrågan för att lägga till dem igen.",
+  "friends.online": "Online",
+  "friends.offline": "Offline",
 
   // Maps
   "maps.byAuthor": "av {author}",
@@ -77,6 +79,12 @@ export const sv: LocaleDictionary = {
   "maps.mapUnavailable": "Kartan är inte tillgänglig",
   "maps.mapUnavailableDescription": "Kartan är privat eller har inte tillräckligt med platser.",
   "maps.browseMaps": "Bläddra bland kartor",
+  "maps.sortTrending": "Trendande",
+  "maps.sortNewest": "Nyaste",
+  "maps.sortMostPlayed": "Mest spelade",
+  "maps.sortAria": "Sortera communitykartor",
+  "maps.likeMap": "Gilla den här kartan",
+  "maps.unlikeMap": "Sluta gilla den här kartan",
 
   // Leaderboard
   "leaderboard.title": "Topplista",
@@ -193,6 +201,15 @@ export const sv: LocaleDictionary = {
   "lobby.chat": "Chatt",
   "lobby.couldNotStart": "Kunde inte starta",
   "lobby.couldNotUpdate": "Kunde inte uppdatera inställningarna",
+  "lobby.inviteFriends": "Bjud in vänner",
+  "lobby.inviteFriendsDescription": "Bara vänner som är online just nu kan gå med direkt.",
+  "lobby.noOnlineFriends": "Ingen av dina vänner är online just nu.",
+  "lobby.invite": "Bjud in",
+  "lobby.invitedToast": "Bjöd in {name}",
+  "lobby.couldNotInvite": "Kunde inte bjuda in",
+
+  // Room invites (ad-hoc, lighter than a persistent party)
+  "roomInvite.toastMessage": "{name} bjöd in dig till ett spel",
 
   // Party
   "party.title": "Sällskap",

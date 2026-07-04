@@ -98,13 +98,17 @@ by re-running the same prompt template per country code and re-keying.
   host controls & ready status, synchronized live rounds, server-authoritative
   scoring, live scoreboard, chat, match results, rematch.
 - ✅ Social — friends (requests / accept / remove), recent players, per-user profiles.
-- ✅ Unlockable avatars — 105 curated iconic-building avatars (~50% of all 209
+- ✅ Unlockable avatars — 145 curated iconic-building avatars (~69% of all 209
   countries), unlocked by correctly guessing that country in any game mode.
   Free background-color customization. Cloud accounts persist unlocks
   server-side (`convex/users.setAvatar`); guests track locally and merge into
   their account on sign-in. Art generated via Nano Banana, chroma-keyed to
   transparent PNGs (`public/buildings/`, catalog in `src/lib/buildings.ts`).
 - ✅ Custom maps — build a map by dropping pins, share it public/private, play it solo.
+  The community browser (`/maps`) has Trending/Newest/Most Played sort tabs and a
+  like button per map (`convex/maps.ts` `toggleLike`, denormalized `likes`/`plays`
+  counters on the `maps` table). Plays are counted once per finished game on a
+  public/private custom map via an optional `customMapId` on `recordSoloResult`.
 - ✅ Replays — every finished game is replayable round-by-round.
 - ✅ Flags mode (`/flags`, `/countries`) — Seterra-style: see a country's flag (or
   its name), then click that country on a blank world map. Play the World or a

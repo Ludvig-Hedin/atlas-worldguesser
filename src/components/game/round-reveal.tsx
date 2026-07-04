@@ -2,15 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, Flag, Trophy } from "lucide-react";
+import { ArrowRight, Flag, Navigation, Trophy } from "lucide-react";
 import { GuessMap } from "./guess-map";
 import { AnimatedNumber } from "./animated-number";
+import { CluesReferenceSheet } from "./clues-reference-sheet";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Progress } from "@/components/ui/progress";
 import { CountryGlyph } from "@/components/map-glyph";
 import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import { countryName } from "@/lib/countries-meta";
+import { drivingSideFact } from "@/data/country-clues";
 import { formatDistance, formatNumber } from "@/lib/format";
 import { MAX_ROUND_SCORE, type RoundResult } from "@/lib/types";
 import type { MapConfig } from "@/lib/maps-config";
@@ -27,6 +29,8 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
   const madeGuess = result.guess !== null;
   const scoreFraction = result.score / MAX_ROUND_SCORE;
   const hasKeyboard = useHasKeyboard();
+  const [cluesOpen, setCluesOpen] = useState(false);
+  const sideFact = drivingSideFact(result.actual.countryCode);
 
   // Mash-guard: keep the advance button disabled briefly so a quick click
   // doesn't skip the map-fit animation. Re-focus once it becomes actionable.
@@ -85,6 +89,20 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
 
           <Progress value={scoreFraction} />
 
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-elevated/50 px-3 py-2">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Navigation className="size-3.5 shrink-0 text-primary-muted" />
+              {sideFact ?? "What gave it away?"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCluesOpen(true)}
+              className="shrink-0 text-xs font-medium text-primary-muted transition-colors hover:text-primary-muted/80"
+            >
+              Learn more
+            </button>
+          </div>
+
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <Flag className="size-3.5" />
@@ -114,6 +132,8 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
           </Button>
         </div>
       </motion.div>
+
+      <CluesReferenceSheet open={cluesOpen} onOpenChange={setCluesOpen} />
     </motion.div>
   );
 }

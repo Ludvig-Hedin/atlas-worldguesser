@@ -24,6 +24,7 @@ import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import { playCorrect, playFinish, playWrong } from "@/lib/sound";
 import type { ApplyResult } from "@/lib/local-profile";
 import type { GameLocation, GameSettings, RoundResult } from "@/lib/types";
+import type { Id } from "@convex/_generated/dataModel";
 
 interface SoloGameProps {
   mapId: string;
@@ -36,6 +37,10 @@ interface SoloGameProps {
   cloudSync?: boolean;
   /** Fired once when the game finishes (e.g. daily-challenge submit). */
   onComplete?: (results: RoundResult[], game: SoloGameState) => void;
+  /** Real Convex id of the custom map being played, so the finished-game sync
+   * can bump its play counter. `mapId` stays the "custom" sentinel used for
+   * scoring/location-pool lookups above — this is separate and optional. */
+  customMapId?: Id<"maps">;
 }
 
 export function SoloGame({
@@ -46,6 +51,7 @@ export function SoloGame({
   mode = "classic",
   cloudSync = true,
   onComplete,
+  customMapId,
 }: SoloGameProps) {
   const t = useT();
   const engine = useSoloGame({ mapId, settings, customLocations, mode });
@@ -234,7 +240,9 @@ export function SoloGame({
   if (game.phase === "finished" && applied) {
     return (
       <>
-        {features.convex && cloudSync && game.mode !== "survival" && <SoloCloudSync game={game} />}
+        {features.convex && cloudSync && game.mode !== "survival" && (
+          <SoloCloudSync game={game} customMapId={customMapId} />
+        )}
         <MatchResults game={game} applied={applied} onPlayAgain={handlePlayAgain} onNewGame={onExit} />
       </>
     );

@@ -18,6 +18,7 @@ import {
   randomRoomCode,
 } from "./gameLogic";
 import { rateLimit } from "./rateLimit";
+import { areFriends } from "./friends";
 import { foldGame } from "../src/lib/progression";
 import type { RoundResult } from "../src/lib/types";
 
@@ -287,6 +288,72 @@ export const setTeam = mutation({
     const onTeam = members.filter((m) => m.team === team && m.userId !== user._id).length;
     if (onTeam >= MAX_TEAM) throw new Error(`Team ${team} is full`);
     await ctx.db.patch(member._id, { team, lastSeenAt: Date.now() });
+  },
+});
+
+/** Bounded read cap for a user's pending room invites (guards a spammed inbox). */
+const MAX_MY_INVITES = 20;
+
+/**
+ * Ad-hoc invite: any member of a lobby can invite one accepted friend directly
+ * into that specific room — lighter than the persistent parties flow. Gated
+ * on membership, friendship, and the room still being joinable.
+ */
+export const inviteFriend = mutation({
+  args: { roomCode: v.string(), friendId: v.id("users") },
+  handler: async (ctx, { roomCode, friendId }) => {
+    const user = await requireUser(ctx);
+    await rateLimit(ctx, "roomInvite", user._id);
+    const room = await ctx.db
+      .query("rooms")
+      .withIndex("by_code", (q) => q.eq("code", roomCode.toUpperCase()))
+      .unique();
+    if (!room) throw new Error("Room not found");
+    if (room.status !== "lobby") throw new Error("This match has already started");
+    if (!(await memberOf(ctx, room._id, user._id))) throw new Error("You're not in this room");
+    if (!(await areFriends(ctx, user._id, friendId))) throw new Error("You can only invite friends");
+    const friend = await ctx.db.get(friendId);
+    if (!friend) throw new Error("Player not found");
+
+    const existing = await ctx.db
+      .query("roomInvites")
+      .withIndex("by_room_and_to", (q) => q.eq("roomId", room._id).eq("toUserId", friendId))
+      .unique();
+    if (existing) return; // already invited
+
+    await ctx.db.insert("roomInvites", {
+      roomId: room._id,
+      roomCode: room.code,
+      fromUserId: user._id,
+      fromUsername: user.username,
+      toUserId: friendId,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+/** The caller's pending room invites, filtered live to rooms still in "lobby"
+ * so an invite to an already-started or finished match silently stops
+ * offering a Join button instead of sending the invitee into a dead room. */
+export const myInvites = query({
+  args: {},
+  handler: async (ctx) => {
+    const me = await currentUser(ctx);
+    if (!me) return [];
+    const rows = await ctx.db
+      .query("roomInvites")
+      .withIndex("by_to", (q) => q.eq("toUserId", me._id))
+      .order("desc")
+      .take(MAX_MY_INVITES);
+
+    const invites: { _id: Id<"roomInvites">; roomCode: string; fromUsername: string }[] = [];
+    for (const row of rows) {
+      const room = await ctx.db.get(row.roomId);
+      if (room && room.status === "lobby") {
+        invites.push({ _id: row._id, roomCode: row.roomCode, fromUsername: row.fromUsername });
+      }
+    }
+    return invites;
   },
 });
 

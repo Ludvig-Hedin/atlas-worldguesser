@@ -57,6 +57,8 @@ export const uk: LocaleDictionary = {
   "friends.recentPlayers": "Нещодавні гравці",
   "friends.removeConfirmTitle": "Видалити друга?",
   "friends.removeConfirmDescription": "Щоб додати знову, доведеться надіслати новий запит.",
+  "friends.online": "Онлайн",
+  "friends.offline": "Офлайн",
 
   // Maps
   "maps.byAuthor": "від {author}",
@@ -77,6 +79,12 @@ export const uk: LocaleDictionary = {
   "maps.mapUnavailable": "Карта недоступна",
   "maps.mapUnavailableDescription": "Ця карта приватна або не має достатньо локацій.",
   "maps.browseMaps": "Переглянути карти",
+  "maps.sortTrending": "У тренді",
+  "maps.sortNewest": "Нові",
+  "maps.sortMostPlayed": "Найбільше зіграно",
+  "maps.sortAria": "Сортувати карти спільноти",
+  "maps.likeMap": "Вподобати цю карту",
+  "maps.unlikeMap": "Прибрати вподобання цієї карти",
 
   // Leaderboard
   "leaderboard.title": "Рейтинг",
@@ -193,6 +201,15 @@ export const uk: LocaleDictionary = {
   "lobby.chat": "Чат",
   "lobby.couldNotStart": "Не вдалося почати",
   "lobby.couldNotUpdate": "Не вдалося оновити налаштування",
+  "lobby.inviteFriends": "Запросити друзів",
+  "lobby.inviteFriendsDescription": "Приєднатися одразу можуть лише друзі, які зараз онлайн.",
+  "lobby.noOnlineFriends": "Наразі жоден з ваших друзів не в мережі.",
+  "lobby.invite": "Запросити",
+  "lobby.invitedToast": "Запрошено {name}",
+  "lobby.couldNotInvite": "Не вдалося запросити",
+
+  // Room invites (ad-hoc, lighter than a persistent party)
+  "roomInvite.toastMessage": "{name} запросив(ла) вас у гру",
 
   // Party
   "party.title": "Компанія",

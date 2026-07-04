@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-[100dvh] flex-col">
+    <div className="pointer-events-none relative flex min-h-[100dvh] flex-col">
       {/* Hoisted to <head> by React 19 — starts the globe point-cloud fetch in
           parallel with JS hydration instead of after it, so the globe animates
           in sooner on first load. */}

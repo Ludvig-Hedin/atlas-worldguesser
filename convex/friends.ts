@@ -3,6 +3,7 @@ import { mutation, query, type QueryCtx, type MutationCtx } from "./_generated/s
 import type { Doc, Id } from "./_generated/dataModel";
 import { currentUser, requireUser } from "./users";
 import { rateLimit } from "./rateLimit";
+import { ACTIVE_WINDOW_MS } from "./presence";
 
 async function findPair(
   ctx: QueryCtx | MutationCtx,
@@ -18,6 +19,17 @@ async function findPair(
     .query("friends")
     .withIndex("by_pair", (q) => q.eq("userId", b).eq("friendId", a))
     .unique();
+}
+
+/** True only for an accepted (not pending) friendship, either direction. Shared
+ * by parties.ts and rooms.ts so friendship-gating logic lives in one place. */
+export async function areFriends(
+  ctx: QueryCtx | MutationCtx,
+  a: Id<"users">,
+  b: Id<"users">,
+): Promise<boolean> {
+  const pair = await findPair(ctx, a, b);
+  return pair?.status === "accepted";
 }
 
 export const sendRequest = mutation({
@@ -126,6 +138,7 @@ export const list = query({
       ctx.db.query("friends").withIndex("by_friend", (q) => q.eq("friendId", me._id)).collect(),
     ]);
 
+    const now = Date.now();
     const hydrate = async (id: Id<"users">) => {
       const u = await ctx.db.get(id);
       return u
@@ -136,6 +149,7 @@ export const list = query({
             avatarBuildingId: u.avatarBuildingId,
             avatarColor: u.avatarColor,
             xp: u.xp,
+            online: u.lastActiveAt > now - ACTIVE_WINDOW_MS,
           }
         : null;
     };

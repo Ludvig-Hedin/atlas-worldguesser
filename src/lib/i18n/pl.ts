@@ -57,6 +57,8 @@ export const pl: LocaleDictionary = {
   "friends.recentPlayers": "Ostatni gracze",
   "friends.removeConfirmTitle": "Usunąć znajomego?",
   "friends.removeConfirmDescription": "Aby dodać go ponownie, musisz wysłać nowe zaproszenie.",
+  "friends.online": "Online",
+  "friends.offline": "Offline",
 
   // Maps
   "maps.byAuthor": "autor: {author}",
@@ -77,6 +79,12 @@ export const pl: LocaleDictionary = {
   "maps.mapUnavailable": "Mapa niedostępna",
   "maps.mapUnavailableDescription": "Ta mapa jest prywatna lub nie ma wystarczającej liczby lokalizacji.",
   "maps.browseMaps": "Przeglądaj mapy",
+  "maps.sortTrending": "Popularne",
+  "maps.sortNewest": "Najnowsze",
+  "maps.sortMostPlayed": "Najczęściej grane",
+  "maps.sortAria": "Sortuj mapy społeczności",
+  "maps.likeMap": "Polub tę mapę",
+  "maps.unlikeMap": "Cofnij polubienie tej mapy",
 
   // Leaderboard
   "leaderboard.title": "Ranking",
@@ -193,6 +201,15 @@ export const pl: LocaleDictionary = {
   "lobby.chat": "Czat",
   "lobby.couldNotStart": "Nie udało się rozpocząć",
   "lobby.couldNotUpdate": "Nie udało się zaktualizować ustawień",
+  "lobby.inviteFriends": "Zaproś znajomych",
+  "lobby.inviteFriendsDescription": "Tylko znajomi, którzy są teraz online, mogą dołączyć od razu.",
+  "lobby.noOnlineFriends": "Żaden z Twoich znajomych nie jest teraz online.",
+  "lobby.invite": "Zaproś",
+  "lobby.invitedToast": "Zaproszono {name}",
+  "lobby.couldNotInvite": "Nie udało się zaprosić",
+
+  // Room invites (ad-hoc, lighter than a persistent party)
+  "roomInvite.toastMessage": "{name} zaprosił(a) Cię do gry",
 
   // Party
   "party.title": "Drużyna towarzyska",

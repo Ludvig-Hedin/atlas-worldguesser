@@ -2,20 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Flag, Type } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag, Type, Users } from "lucide-react";
 import { AtlasMark } from "@/components/atlas-mark";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
+import { LocalPartySetup } from "./local-party-setup";
+import { LocalPartyGame } from "./local-party-game";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
 import { DEFAULT_SETTINGS, getMapConfig } from "@/lib/maps-config";
 import { loadLastGame, saveLastGame } from "@/lib/last-game";
+import { useT } from "@/hooks/use-t";
 import type { SoloMode } from "@/hooks/use-solo-game";
+import type { LocalPlayer } from "@/hooks/use-local-party-game";
 import type { GameModeId, GameSettings } from "@/lib/types";
 
 interface Config {
   mapId: GameModeId;
   settings: GameSettings;
   mode: SoloMode;
+}
+
+interface PartyConfig {
+  mapId: GameModeId;
+  settings: GameSettings;
+  players: LocalPlayer[];
 }
 
 interface PlayClientProps {
@@ -25,11 +35,17 @@ interface PlayClientProps {
 }
 
 export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps) {
+  const t = useT();
   const [config, setConfig] = useState<Config | null>(
     quickStart ? { mapId: initialMapId, settings: DEFAULT_SETTINGS, mode: "classic" } : null,
   );
   // A key that changes each time a game starts, so SoloGame remounts fresh.
   const [gameKey, setGameKey] = useState(0);
+
+  const [partyConfig, setPartyConfig] = useState<PartyConfig | null>(null);
+  const [showPartySetup, setShowPartySetup] = useState(false);
+  // A key that changes each new party, so LocalPartyGame remounts fresh.
+  const [partyKey, setPartyKey] = useState(0);
 
   const start = useCallback((next: Config) => {
     // Remember this setup so "Continue" on the landing page can jump back in.
@@ -61,6 +77,18 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
     if (last) start({ mapId: last.mapId, settings: last.settings, mode: "classic" });
   }, [resume, start]);
 
+  if (partyConfig) {
+    return (
+      <LocalPartyGame
+        key={partyKey}
+        mapId={partyConfig.mapId}
+        settings={partyConfig.settings}
+        players={partyConfig.players}
+        onExit={() => setPartyConfig(null)}
+      />
+    );
+  }
+
   if (config) {
     return (
       <SoloGame
@@ -70,6 +98,35 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
         mode={config.mode}
         onExit={() => setConfig(null)}
       />
+    );
+  }
+
+  if (showPartySetup) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col">
+        <header className="flex items-center justify-between px-5 py-4">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <AtlasMark className="size-5 text-primary-muted" />
+            Atlas
+          </Link>
+        </header>
+        <main className="flex flex-1 items-center justify-center px-4 py-8">
+          <div className="w-full max-w-lg">
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-semibold tracking-tight">{t("party.setupTitle")}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{t("party.entrySubtitle")}</p>
+            </div>
+            <LocalPartySetup
+              onStart={(next) => {
+                setPartyConfig(next);
+                setPartyKey((k) => k + 1);
+                setShowPartySetup(false);
+              }}
+              onBack={() => setShowPartySetup(false)}
+            />
+          </div>
+        </main>
+      </div>
     );
   }
 
@@ -133,6 +190,20 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowPartySetup(true)}
+            className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+              <Users className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">{t("party.entryTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("party.entrySubtitle")}</p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
           <div className="mt-8 flex justify-center">
             <MultiplayerEntry />
           </div>

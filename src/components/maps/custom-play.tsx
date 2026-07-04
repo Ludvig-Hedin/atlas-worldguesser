@@ -39,6 +39,7 @@ export function CustomPlay({ mapId }: { mapId: string }) {
   return (
     <SoloGame
       mapId="custom"
+      customMapId={data.map._id}
       settings={DEFAULT_SETTINGS}
       customLocations={data.locations}
       onExit={() => router.push("/maps")}

@@ -290,5 +290,5 @@ export function GlobeBackground({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={canvasRef} aria-hidden className={cn("cursor-grab", className)} />;
+  return <canvas ref={canvasRef} aria-hidden className={cn("pointer-events-auto cursor-grab", className)} />;
 }

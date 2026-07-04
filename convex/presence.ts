@@ -1,9 +1,14 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { currentUser } from "./users";
 
-/** How long a heartbeat keeps a session "playing". Must exceed 2× the client ping interval (45s). */
-const ACTIVE_WINDOW_MS = 100_000;
+/**
+ * How long a heartbeat keeps a session "playing" (and, reused by friends.list,
+ * how long a signed-in user counts as "online"). Must exceed 2× the client
+ * ping interval (45s).
+ */
+export const ACTIVE_WINDOW_MS = 100_000;
 /** Bounded read cap for the live count (per Convex guidelines — never scan unbounded). */
 const PLAYING_CAP = 500;
 /** Rows older than this are eligible for pruning. */
@@ -13,18 +18,24 @@ const PRUNE_BATCH = 200;
 
 /**
  * Heartbeat from an open browser tab (guests included). Upserts the session's
- * last-seen timestamp. Called on mount and every ~45s while the tab is visible.
+ * last-seen timestamp, and — for signed-in users — also stamps lastActiveAt
+ * on their user row so friends.list can derive online/offline. Called on
+ * mount and every ~45s while the tab is visible.
  */
 export const ping = mutation({
   args: { sessionId: v.string() },
   handler: async (ctx, { sessionId }) => {
     const id = sessionId.trim().slice(0, 64);
+    const now = Date.now();
+
+    const me = await currentUser(ctx);
+    if (me) await ctx.db.patch(me._id, { lastActiveAt: now });
+
     if (!id) return null;
     const existing = await ctx.db
       .query("presence")
       .withIndex("by_session", (q) => q.eq("sessionId", id))
       .unique();
-    const now = Date.now();
     if (existing) {
       await ctx.db.patch(existing._id, { lastSeenAt: now });
     } else {

@@ -15,6 +15,8 @@ export const LIMITS = {
   dailyRecord: { max: 20, windowMs: DAY },
   flagRecord: { max: 300, windowMs: DAY },
   partyInvite: { max: 60, windowMs: MINUTE },
+  roomInvite: { max: 60, windowMs: MINUTE },
+  mapLike: { max: 60, windowMs: MINUTE },
 } as const;
 
 /**

@@ -384,6 +384,11 @@ export async function applySoloResults(
 export const recordSoloResult = mutation({
   args: {
     mapId: v.string(),
+    // Real Convex id of the custom map being played, when applicable. `mapId`
+    // above stays the literal "custom" sentinel the game engine uses for
+    // scoring/location-pool lookups (see src/components/maps/custom-play.tsx)
+    // — this is a separate, optional channel just for the plays counter.
+    customMapId: v.optional(v.id("maps")),
     settings: settingsValidator,
     results: v.array(roundArg),
   },
@@ -398,6 +403,10 @@ export const recordSoloResult = mutation({
       args.results,
       Date.now(),
     );
+    if (args.customMapId) {
+      const map = await ctx.db.get(args.customMapId);
+      if (map) await ctx.db.patch(args.customMapId, { plays: (map.plays ?? 0) + 1 });
+    }
     return {
       xpGained: out.xpGained,
       newAchievements: out.newAchievements,

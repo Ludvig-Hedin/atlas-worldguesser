@@ -57,6 +57,8 @@ export const lt: LocaleDictionary = {
   "friends.recentPlayers": "Neseniai žaidę",
   "friends.removeConfirmTitle": "Pašalinti draugą?",
   "friends.removeConfirmDescription": "Norėdami pridėti iš naujo, turėsite siųsti naują užklausą.",
+  "friends.online": "Prisijungęs",
+  "friends.offline": "Neprisijungęs",
 
   // Žemėlapiai
   "maps.byAuthor": "sukūrė {author}",
@@ -77,6 +79,12 @@ export const lt: LocaleDictionary = {
   "maps.mapUnavailable": "Žemėlapis nepasiekiamas",
   "maps.mapUnavailableDescription": "Šis žemėlapis yra privatus arba neturi pakankamai vietų.",
   "maps.browseMaps": "Naršyti žemėlapius",
+  "maps.sortTrending": "Populiaru",
+  "maps.sortNewest": "Naujausi",
+  "maps.sortMostPlayed": "Dažniausiai žaisti",
+  "maps.sortAria": "Rikiuoti bendruomenės žemėlapius",
+  "maps.likeMap": "Pamėgti šį žemėlapį",
+  "maps.unlikeMap": "Nebepamėgti šio žemėlapio",
 
   // Lyderių lentelė
   "leaderboard.title": "Lyderių lentelė",
@@ -193,6 +201,15 @@ export const lt: LocaleDictionary = {
   "lobby.chat": "Pokalbis",
   "lobby.couldNotStart": "Nepavyko pradėti",
   "lobby.couldNotUpdate": "Nepavyko atnaujinti nustatymų",
+  "lobby.inviteFriends": "Kviesti draugus",
+  "lobby.inviteFriendsDescription": "Prisijungti iš karto gali tik dabar prisijungę draugai.",
+  "lobby.noOnlineFriends": "Šiuo metu nė vienas jūsų draugas neprisijungęs.",
+  "lobby.invite": "Kviesti",
+  "lobby.invitedToast": "Pakviestas {name}",
+  "lobby.couldNotInvite": "Nepavyko pakviesti",
+
+  // Room invites (ad-hoc, lighter than a persistent party)
+  "roomInvite.toastMessage": "{name} pakvietė jus žaisti",
 
   // Kompanija
   "party.title": "Kompanija",
