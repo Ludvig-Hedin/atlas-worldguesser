@@ -50,24 +50,30 @@ export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}
     { value: "hybrid", label: t("settings.mapType.hybrid") },
   ];
 
+  const trigger = (
+    <DialogTrigger asChild>
+      <Button
+        variant="ghost"
+        size={showLabel ? "sm" : "icon-sm"}
+        aria-label={t("settings.open")}
+        className={showLabel ? "gap-1.5" : undefined}
+      >
+        <SettingsIcon className="size-4" />
+        {showLabel && t("settings.title")}
+      </Button>
+    </DialogTrigger>
+  );
+
   return (
     <Dialog>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size={showLabel ? "sm" : "icon-sm"}
-              aria-label={t("settings.open")}
-              className={showLabel ? "gap-1.5" : undefined}
-            >
-              <SettingsIcon className="size-4" />
-              {showLabel && t("settings.title")}
-            </Button>
-          </DialogTrigger>
-        </TooltipTrigger>
-        <TooltipContent>{t("settings.title")}</TooltipContent>
-      </Tooltip>
+      {showLabel ? (
+        trigger
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+          <TooltipContent>{t("settings.title")}</TooltipContent>
+        </Tooltip>
+      )}
 
       <DialogContent className="max-w-sm">
         <DialogHeader>
