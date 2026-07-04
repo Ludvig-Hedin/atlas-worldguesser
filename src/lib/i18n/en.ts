@@ -153,6 +153,7 @@ export const en = {
   "mp.roomCodeOrLink": "Room code or link",
   "mp.playWithParty": "Play with a party",
   "mp.couldNotCreateRoom": "Could not create room",
+  "duels.opponentLeft": "Opponent left",
 
   // Game HUD
   "hud.menu": "Menu",

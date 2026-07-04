@@ -141,6 +141,7 @@ export const lt: LocaleDictionary = {
   "mp.roomCodeOrLink": "Kambario kodas arba nuoroda",
   "mp.playWithParty": "Žaisti su kompanija",
   "mp.couldNotCreateRoom": "Nepavyko sukurti kambario",
+  "duels.opponentLeft": "Varžovas paliko",
 
   // Žaidimo skydelis (HUD)
   "hud.menu": "Meniu",

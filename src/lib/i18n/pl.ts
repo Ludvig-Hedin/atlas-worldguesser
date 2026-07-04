@@ -141,6 +141,7 @@ export const pl: LocaleDictionary = {
   "mp.roomCodeOrLink": "Kod pokoju lub link",
   "mp.playWithParty": "Zagraj z grupą",
   "mp.couldNotCreateRoom": "Nie udało się utworzyć pokoju",
+  "duels.opponentLeft": "Przeciwnik opuścił grę",
 
   // Game HUD
   "hud.menu": "Menu",

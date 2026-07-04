@@ -141,6 +141,7 @@ export const uk: LocaleDictionary = {
   "mp.roomCodeOrLink": "Код кімнати або посилання",
   "mp.playWithParty": "Грати компанією",
   "mp.couldNotCreateRoom": "Не вдалося створити кімнату",
+  "duels.opponentLeft": "Суперник вийшов",
 
   // Game HUD
   "hud.menu": "Меню",

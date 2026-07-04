@@ -141,6 +141,7 @@ export const sv: LocaleDictionary = {
   "mp.roomCodeOrLink": "Rumskod eller länk",
   "mp.playWithParty": "Spela med ett sällskap",
   "mp.couldNotCreateRoom": "Kunde inte skapa rum",
+  "duels.opponentLeft": "Motståndaren lämnade",
 
   // Game HUD
   "hud.menu": "Meny",
