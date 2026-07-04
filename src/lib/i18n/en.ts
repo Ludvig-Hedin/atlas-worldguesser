@@ -142,6 +142,7 @@ export const en = {
   "mp.leave": "Leave",
   "mp.waitingForHost": "Waiting for the host to start a rematch…",
   "mp.signInForMultiplayer": "Play multiplayer",
+  "mp.playWithFriends": "Play with friends",
   "mp.createPrivateRoom": "Create private room",
   "mp.orJoin": "or join",
   "mp.roomCodeOrLink": "Room code or link",

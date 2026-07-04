@@ -130,6 +130,7 @@ export const sv: LocaleDictionary = {
   "mp.leave": "Lämna",
   "mp.waitingForHost": "Väntar på att värden startar en revansch…",
   "mp.signInForMultiplayer": "Spela multiplayer",
+  "mp.playWithFriends": "Spela med vänner",
   "mp.createPrivateRoom": "Skapa privat rum",
   "mp.orJoin": "eller gå med",
   "mp.roomCodeOrLink": "Rumskod eller länk",
