@@ -166,6 +166,7 @@ export const uk: LocaleDictionary = {
   "match.newBuilding": "Розблоковано нову будівлю: {name}",
   "match.setAsAvatar": "Встановити як аватар",
   "match.signInToClaim": "Увійдіть, щоб отримати",
+  "match.levelUp": "Новий рівень! Тепер рівень {level}",
 
   // Локальний режим "по колу" (один пристрій, без акаунтів)
   "party.entryTitle": "Грайте разом на цьому пристрої",

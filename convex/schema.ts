@@ -187,6 +187,18 @@ export default defineSchema({
     .index("by_friend", ["friendId"])
     .index("by_pair", ["userId", "friendId"]),
 
+  // Web Push subscriptions (one row per browser/device that opted in). A user
+  // can have several (multiple devices/browsers); `endpoint` is unique per
+  // registration and doubles as the natural id for unsubscribe/cleanup.
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    keys: v.object({ p256dh: v.string(), auth: v.string() }),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
+
   // User-created custom maps.
   maps: defineTable({
     slug: v.string(),

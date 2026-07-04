@@ -166,6 +166,7 @@ export const sv: LocaleDictionary = {
   "match.newBuilding": "Ny byggnad upplåst: {name}",
   "match.setAsAvatar": "Använd som avatar",
   "match.signInToClaim": "Logga in för att hämta ut",
+  "match.levelUp": "Ny nivå! Nu på nivå {level}",
 
   // Lokalt "skicka runt"-läge (samma enhet, inga konton)
   "party.entryTitle": "Spela tillsammans på den här enheten",
@@ -303,7 +304,8 @@ export const sv: LocaleDictionary = {
   "home.title2": "Ta reda på var.",
   "home.subhead": "Utforska en slumpmässig gata, läs ledtrådarna och sätt din gissning på kartan. Fem rundor, en värld, ren instinkt.",
   "home.quickPlay": "Snabbspel",
-  "home.chooseMap": "Välj en karta",
+  "home.classicCardTitle": "Klassiskt",
+  "home.classicCardBody": "Street View · valfri karta",
   "home.quickPlayHelper": "Snabbspel placerar dig på Världskartan — 5 rundor, rör dig fritt, ingen timer.",
   "home.demoMode": "Körs i demoläge — lägg till en Google Maps-nyckel för riktig Street View.",
   "home.jumpIntoMap": "Hoppa in i en karta",

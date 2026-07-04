@@ -166,6 +166,7 @@ export const lt: LocaleDictionary = {
   "match.newBuilding": "Atrakintas naujas pastatas: {name}",
   "match.setAsAvatar": "Nustatyti kaip avatarą",
   "match.signInToClaim": "Prisijunkite, kad gautumėte",
+  "match.levelUp": "Naujas lygis! Dabar {level} lygis",
 
   // Vietinis "Perduok toliau" režimas (vienas įrenginys, be paskyrų)
   "party.entryTitle": "Žaiskite kartu šiame įrenginyje",

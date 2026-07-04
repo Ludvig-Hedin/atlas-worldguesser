@@ -25,7 +25,6 @@ function normalizeRoomInput(raw: string): string {
 }
 
 export function MultiplayerEntry() {
-  const t = useT();
   if (!features.multiplayer) return null;
   return (
     <div className="w-full">

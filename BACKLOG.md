@@ -4,6 +4,25 @@ Deferred work surfaced during the UX assessment + bug hunt (2026-07-03). Ordered
 roughly by value. Items here were intentionally NOT done in that pass because they
 need a product decision, a schema/data migration, or a larger build.
 
+## Guest multiplayer follow-ups (added 2026-07-04)
+
+- **Ephemeral guest cleanup (TTL / cascade delete).** Guest accounts
+  (`users` rows with `isGuest: true`) and everything they generate —
+  `roomMembers`, `guesses`, `chatMessages`, `games` — persist forever; v1 only
+  filters them out of the leaderboard/stats at read time. Build a prune cron
+  (`crons.ts`, batched + self-rescheduling like `presence.prune`) that deletes
+  guest users idle past a TTL and cascades to their child rows. Area:
+  `convex/crons.ts`, `convex/users.ts`. Impact: storage growth only, low at
+  current scale.
+- **i18n for the guest CTA.** "Play as guest" is hardcoded English in
+  `src/components/multiplayer/multiplayer-entry.tsx` and `room-client.tsx` (the
+  `GuestGate`). Add an `mp.playAsGuest` key across `src/lib/i18n/*` and swap the
+  literals. Deferred to avoid colliding with a concurrent i18n edit pass.
+- **Guest rate-limit is best-effort.** `ensureGuestUser` is rate-limited per
+  `guestId` (`rateLimit.guestProvision`), but a guest can rotate their
+  localStorage id to bypass it. Accepted for v1 (Convex mutations have no
+  caller-IP access). Revisit with IP/fingerprint limiting only if abused.
+
 ## Needs a product decision
 
 - **Multiplayer: leaving mid-match forfeits your guesses.** `convex/rooms.ts`

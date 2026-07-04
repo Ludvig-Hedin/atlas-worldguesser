@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation } from "convex/react";
@@ -43,6 +45,21 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
   const max = maxMatchScore(isSurvival ? game.results.length : game.settings.rounds);
   const pct = max > 0 ? Math.round((applied.totalScore / max) * 100) : 0;
   const level = levelProgress(applied.profile.stats.xp);
+
+  // One-time level-up celebration. Driven by the locally-computed `applied`
+  // fold (local-profile.applyGame), so it fires instantly and identically for
+  // guests and signed-in users — no server round-trip. The ref guard keeps it
+  // to exactly once per mount (React strict-mode double-invokes effects in dev).
+  // Follow-up (out of scope): a level-based achievement would need `level`
+  // threaded into AchievementContext, which doesn't yet expose xp in a
+  // level-friendly form.
+  const celebrated = useRef(false);
+  useEffect(() => {
+    if (applied.leveledUp && !celebrated.current) {
+      celebrated.current = true;
+      toast.success(t("match.levelUp", { level: level.level }));
+    }
+  }, [applied.leveledUp, level.level, t]);
 
   return (
     <div className="min-h-full w-full overflow-y-auto bg-background">
@@ -145,7 +162,11 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
+        <motion.div
+          className="rounded-2xl border border-border bg-card p-4 shadow-1"
+          animate={applied.leveledUp ? { scale: [1, 1.03, 1] } : undefined}
+          transition={{ duration: 0.6, delay: 0.35, times: [0, 0.45, 1] }}
+        >
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-medium">{t("match.level", { level: level.level })}</span>
             <span className="text-muted-foreground tabular">
@@ -153,7 +174,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
             </span>
           </div>
           <Progress value={level.fraction} />
-        </div>
+        </motion.div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button size="lg" className="flex-1" onClick={onPlayAgain}>

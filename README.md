@@ -42,7 +42,8 @@ integration is optional and independent:
 - **Convex** (`NEXT_PUBLIC_CONVEX_URL`, via `npx convex dev`) — realtime backend
   for multiplayer, profiles, leaderboards, friends, and saved stats.
 - **Clerk** (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, …) — authentication. Solo play
-  never requires an account.
+  never requires an account, and signed-out visitors can also play realtime
+  multiplayer as ephemeral guests (stats don't persist; see the Status list).
 
 ## Deploy (Vercel + Convex)
 
@@ -92,7 +93,8 @@ by re-running the same prompt template per country code and re-keying.
 
 - ✅ Core solo gameplay — modes (World / Europe / USA / Countries), difficulty
   (Moving / No Move / NMPZ), rounds, timer, scoring, reveal, match results,
-  XP/levels, achievements, streaks, guest history.
+  XP/levels (with a one-time level-up celebration toast + card pulse on the
+  results screen), achievements, streaks, guest history.
 - ✅ Auth (Clerk) + cloud profiles, stats sync, global leaderboard.
 - ✅ Realtime multiplayer — private rooms (code + invite link), lobby with
   host controls & ready status, synchronized live rounds, server-authoritative
@@ -103,6 +105,15 @@ by re-running the same prompt template per country code and re-keying.
   the lobby they're currently in — no group required — via a toast with a
   one-click Join action (`convex/rooms.ts` `inviteFriend`/`myInvites`,
   `src/components/multiplayer/room-invite-notifier.tsx`).
+- ✅ Guest multiplayer (no login) — a signed-out visitor can create/join rooms,
+  chat, pick avatars, and play full rounds with complete parity, via an
+  ephemeral guest account keyed by a `localStorage` id (`atlas.guestId`,
+  provisioned by `convex/users.ensureGuestUser`). Clerk identity always wins
+  server-side, so signed-in play is untouched. Guests never persist long-term:
+  they're excluded from the all-time leaderboard (`convex/leaderboard.ts`) and
+  never counted in the total-players stat. Friends/parties/custom-map/daily/flag
+  features stay sign-in-only by construction. (Guest data cleanup — a TTL cron —
+  is a deferred follow-up; see `BACKLOG.md`.)
 - ✅ Social — friends (requests / accept / remove), recent players, per-user
   profiles, and an online/offline indicator on each friend row. Online status
   rides the existing presence heartbeat (~45s from any open tab) rather than a

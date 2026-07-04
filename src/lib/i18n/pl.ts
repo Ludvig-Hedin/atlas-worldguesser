@@ -166,6 +166,7 @@ export const pl: LocaleDictionary = {
   "match.newBuilding": "Odblokowano nowy budynek: {name}",
   "match.setAsAvatar": "Ustaw jako awatar",
   "match.signInToClaim": "Zaloguj się, aby odebrać",
+  "match.levelUp": "Nowy poziom! Teraz poziom {level}",
 
   // Lokalny tryb "Podawajki" (jedno urządzenie, bez kont)
   "party.entryTitle": "Zagraj razem na tym urządzeniu",

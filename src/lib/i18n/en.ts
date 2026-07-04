@@ -175,6 +175,7 @@ export const en = {
   "match.newBuilding": "New building unlocked: {name}",
   "match.setAsAvatar": "Set as avatar",
   "match.signInToClaim": "Sign in to claim",
+  "match.levelUp": "Level up! Now level {level}",
 
   // Local "Pass & Play" party mode (same-device, no accounts)
   "party.entryTitle": "Play together on this device",
@@ -312,7 +313,8 @@ export const en = {
   "home.title2": "Figure out where.",
   "home.subhead": "Explore a random street, read the clues, and pin your guess on the map. Five rounds, one world, pure instinct.",
   "home.quickPlay": "Quick play",
-  "home.chooseMap": "Choose a map",
+  "home.classicCardTitle": "Classic",
+  "home.classicCardBody": "Street View · any map",
   "home.quickPlayHelper": "Quick play drops you on the World map — 5 rounds, move freely, no timer.",
   "home.demoMode": "Running in demo mode — add a Google Maps key for real Street View.",
   "home.jumpIntoMap": "Jump into a map",
