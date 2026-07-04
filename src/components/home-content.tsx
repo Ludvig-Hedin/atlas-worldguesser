@@ -43,26 +43,26 @@ export function HomeContent() {
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero — full viewport so the globe has room to breathe */}
-      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center pointer-events-none animate-[fade-up_0.5s_ease-out]">
+      <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center pointer-events-none">
         <Badge
           variant="muted"
-          className="mb-6 gap-1.5 border-border bg-overlay backdrop-blur-sm"
+          className="mb-6 gap-1.5 border-border bg-overlay shadow-1 backdrop-blur-sm opacity-0 animate-[fade-up_0.5s_ease-out_forwards]"
         >
           <Globe2 className="size-3" />
           {t("home.badge")}
         </Badge>
 
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl">
+        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:60ms]">
           {t("home.title1")}
           <br />
           <span className="text-primary-muted">{t("home.title2")}</span>
         </h1>
 
-        <p className="mt-5 max-w-xl text-pretty text-base text-muted-foreground drop-shadow-[0_1px_12px_rgba(0,0,0,0.7)] sm:text-lg">
+        <p className="mt-5 max-w-xl text-pretty text-base text-muted-foreground drop-shadow-[0_1px_12px_rgba(0,0,0,0.7)] sm:text-lg opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:120ms]">
           {t("home.subhead")}
         </p>
 
-        <div className="pointer-events-auto mt-8 flex flex-col items-center gap-3 sm:flex-row">
+        <div className="pointer-events-auto mt-8 flex flex-col items-center gap-3 sm:flex-row opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:180ms]">
           <ResumeCta />
           <Button size="lg" asChild className="min-w-44 shadow-lg shadow-primary/20">
             <Link href="/play?map=world&quick=1">
@@ -80,21 +80,23 @@ export function HomeContent() {
           </Button>
         </div>
 
-        {features.auth && <LiveStats />}
+        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms]">
+          {features.auth && <LiveStats />}
 
-        <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
-          {t("home.quickPlayHelper")}
-        </p>
+          <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
+            {t("home.quickPlayHelper")}
+          </p>
 
-        {!features.googleMaps && (
-          <p className="mt-4 text-xs text-subtle">{t("home.demoMode")}</p>
-        )}
+          {!features.googleMaps && (
+            <p className="mt-4 text-xs text-subtle">{t("home.demoMode")}</p>
+          )}
 
-        {features.multiplayer && (
-          <div className="pointer-events-auto mt-6 flex w-full max-w-xl justify-center">
-            <MultiplayerEntry />
-          </div>
-        )}
+          {features.multiplayer && (
+            <div className="pointer-events-auto mt-6 flex w-full max-w-xl justify-center">
+              <MultiplayerEntry />
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Below the fold — sits on solid ground so the globe fades out cleanly */}
