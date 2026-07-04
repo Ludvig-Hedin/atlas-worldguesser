@@ -130,6 +130,7 @@ export const pl: LocaleDictionary = {
   "mp.leave": "Opuść",
   "mp.waitingForHost": "Oczekiwanie, aż gospodarz rozpocznie rewanż…",
   "mp.signInForMultiplayer": "Graj wieloosobowo",
+  "mp.playWithFriends": "Graj ze znajomymi",
   "mp.createPrivateRoom": "Utwórz prywatny pokój",
   "mp.orJoin": "lub dołącz",
   "mp.roomCodeOrLink": "Kod pokoju lub link",

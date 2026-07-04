@@ -130,6 +130,7 @@ export const uk: LocaleDictionary = {
   "mp.leave": "Вийти",
   "mp.waitingForHost": "Очікування, поки хост почне реванш…",
   "mp.signInForMultiplayer": "Грати з іншими",
+  "mp.playWithFriends": "Грати з друзями",
   "mp.createPrivateRoom": "Створити приватну кімнату",
   "mp.orJoin": "або приєднайтеся",
   "mp.roomCodeOrLink": "Код кімнати або посилання",

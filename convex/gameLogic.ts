@@ -14,6 +14,11 @@ export const ANTIPODE_METERS = Math.PI * 6_371_008.8;
 export const MAX_ROUNDS = 20;
 export const MAX_TIME_LIMIT_SEC = 600;
 
+/** Survival pre-picks a deep buffer up front; a run rarely reaches this many.
+ * Shared with `src/hooks/use-solo-game.ts` so client and server (challenges.ts)
+ * can never drift on how many locations a Survival run's buffer holds. */
+export const SURVIVAL_BUFFER = 200;
+
 /** Clamp untrusted client settings to safe bounds (prevents huge matches). */
 export function clampSettings<S extends { rounds: number; timeLimitSec: number }>(s: S): S {
   return {

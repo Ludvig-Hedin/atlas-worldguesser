@@ -713,10 +713,6 @@ export const getByCode = query({
 
     // Nothing ever writes `connected: false`, so derive liveness from the
     // heartbeat timestamp instead of trusting the stored flag.
-    // TODO(bug-hunt): totalScore is patched the instant a player guesses, so
-    // during an active round opponents can see your round score (standings
-    // re-sort live) before the reveal. If unintended, report round-start
-    // totals while status === "active" by subtracting this round's guesses.
     const now = Date.now();
     // Live-joined (not denormalized onto roomMembers) so avatar/color changes
     // mid-room show immediately, matching "free to change anytime".
@@ -730,7 +726,15 @@ export const getByCode = query({
             avatarUrl: u?.avatarUrl,
             avatarBuildingId: u?.avatarBuildingId,
             avatarColor: u?.avatarColor,
-            totalScore: m.totalScore,
+            // While a round is active, report the round-START total (not the
+            // live value) so standings never re-sort or reveal a round score
+            // before the reveal phase — this was a live leak (see
+            // CODE_REVIEW_BACKLOG.md history). Once the round ends the
+            // reveal itself shows every score, so the live value is safe.
+            totalScore:
+              room.status === "active"
+                ? m.totalScore - (guessByUser.get(m.userId)?.score ?? 0)
+                : m.totalScore,
             ready: m.ready,
             connected: now - m.lastSeenAt < CONNECTED_WINDOW_MS,
             isHost: m.userId === room.hostId,
@@ -758,6 +762,7 @@ export const getByCode = query({
       amMember: me ? members.some((m) => m.userId === me._id) : false,
       myUserId: me?._id ?? null,
       teamMode: room.teamMode ?? false,
+      duelsMode: room.duelsMode ?? false,
       teamTotals: teamTotalsOf(members),
       standings,
     };

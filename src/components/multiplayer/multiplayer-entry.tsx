@@ -81,6 +81,7 @@ function MultiplayerControls() {
   const { isAuthenticated } = useConvexAuth();
   const [code, setCode] = useState("");
   const [creating, setCreating] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const createRoom = async () => {
     setCreating(true);
@@ -105,6 +106,20 @@ function MultiplayerControls() {
     if (clean.length < 4) return;
     router.push(`/room/${clean}`);
   };
+
+  if (!expanded) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setExpanded(true)}
+        className="gap-1.5 text-muted-foreground hover:text-foreground"
+      >
+        <Users className="size-3.5" />
+        {t("mp.playWithFriends")}
+      </Button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">

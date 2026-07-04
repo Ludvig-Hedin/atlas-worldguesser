@@ -81,10 +81,6 @@ found — the earlier full-repo pass had already hardened the risky paths.
 - `src/components/multiplayer/room-results.tsx` — FFA top-tie (two players at equal
   max score) still renders one as "wins" by array order; team mode shows a draw.
   For parity, render a draw when `standings[0].totalScore === standings[1].totalScore`.
-- `convex/rooms.ts` (`getByCode`) — mid-round score leak: live `standings[].totalScore`
-  / `teamTotals` are exposed while `status === "active"`, so opponents see a round
-  score before the reveal. (Already an in-code `TODO(bug-hunt)`.) Fix: report
-  round-start totals while active.
 - `convex/gameLogic.ts` / `convex/rooms.ts` — `getMapConfig(mapId)` falls back to
   `MAPS.world` for any unknown id; if a room ever accepts a custom-map slug it would
   silently serve world locations + world scoring. Validate `mapId` against the
@@ -182,8 +178,6 @@ found — the earlier full-repo pass had already hardened the risky paths.
 ### Needs human review (5 issues — TODOs in code)
 
 - `convex/users.ts` (`recordSoloResult`) — solo games are client-authoritative: a modified client can still fabricate `actual` locations to farm XP. A real fix (server-issued location seeds like multiplayer) is architectural.
-- `convex/rooms.ts` (`getByCode`) — mid-round score leak: `totalScore` updates the instant a player guesses, so opponents see your round score before the reveal
-  - Suggested fix: report round-start totals during `status === "active"`
 - `convex/users.ts` (`setUsername`) — renaming leaves denormalized `maps.ownerName` and `roomMembers.username` stale
 - `src/components/game/solo-game.tsx` — MapSheet unmounts during reveal, so drag-resized size/fullscreen reset every round (may be intentional)
 - `src/components/game/google-street-view.tsx` — each remount leaks a WebGL context (no destroy API); long sessions can hit the browser's ~16-context cap

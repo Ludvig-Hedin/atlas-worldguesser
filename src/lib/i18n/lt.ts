@@ -130,6 +130,7 @@ export const lt: LocaleDictionary = {
   "mp.leave": "Išeiti",
   "mp.waitingForHost": "Laukiama, kol šeimininkas pradės revanšą…",
   "mp.signInForMultiplayer": "Žaisti su kitais",
+  "mp.playWithFriends": "Žaisti su draugais",
   "mp.createPrivateRoom": "Sukurti privatų kambarį",
   "mp.orJoin": "arba prisijunkite",
   "mp.roomCodeOrLink": "Kambario kodas arba nuoroda",

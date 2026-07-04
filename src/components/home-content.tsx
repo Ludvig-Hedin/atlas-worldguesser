@@ -78,7 +78,13 @@ export function HomeContent() {
           </Button>
         </div>
 
-        <div className="pointer-events-auto mt-6 grid w-full max-w-xl grid-cols-3 gap-3 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:220ms]">
+        {features.auth && (
+          <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:210ms]">
+            <LiveStats />
+          </div>
+        )}
+
+        <div className="pointer-events-auto mt-6 grid w-full max-w-xl grid-cols-3 gap-3 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms]">
           {MODE_TILES.map((m) => (
             <Link
               key={m.href}
@@ -92,9 +98,7 @@ export function HomeContent() {
           ))}
         </div>
 
-        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:260ms]">
-          {features.auth && <LiveStats />}
-
+        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:270ms]">
           <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
             {t("home.quickPlayHelper")}
           </p>
@@ -104,7 +108,7 @@ export function HomeContent() {
           )}
 
           {features.multiplayer && (
-            <div className="pointer-events-auto mt-6 flex w-full max-w-xl justify-center">
+            <div className="pointer-events-auto mt-5 flex w-full justify-center">
               <MultiplayerEntry />
             </div>
           )}
