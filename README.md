@@ -118,6 +118,15 @@ by re-running the same prompt template per country code and re-keying.
   every platform and work offline.
 - ✅ Sound effects — synthesized (Web Audio, no assets, offline) right/wrong/finish
   cues across every mode plus menu clicks; toggleable in Settings.
+- ✅ In-product clue reference ("What gives it away?") — every round reveal shows
+  the actual country's driving side (`src/data/country-clues.ts`,
+  `DRIVING_SIDE_BY_COUNTRY`, covering all 168 recognized country codes) plus a
+  "Learn more" button opening a static reference sheet
+  (`src/components/game/clues-reference-sheet.tsx`) covering bollards, utility
+  poles, license plates, Street View camera generations, and driving side —
+  the community-wiki "meta" knowledge taught in-product instead of only on
+  third-party sites. Text-only for v1; reference photos/diagrams per category
+  are a nice-to-have follow-up once assets are sourced.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.
