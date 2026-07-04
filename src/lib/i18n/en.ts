@@ -189,6 +189,7 @@ export const en = {
   "match.newGame": "New game",
   "match.home": "Home",
   "match.newBuilding": "New building unlocked: {name}",
+  "match.newBuildingLabel": "Building unlocked",
   "match.setAsAvatar": "Set as avatar",
   "match.signInToClaim": "Sign in to claim",
   "match.levelUp": "Level up! Now level {level}",

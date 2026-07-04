@@ -177,6 +177,7 @@ export const sv: LocaleDictionary = {
   "match.newGame": "Nytt spel",
   "match.home": "Hem",
   "match.newBuilding": "Ny byggnad upplåst: {name}",
+  "match.newBuildingLabel": "Byggnad upplåst",
   "match.setAsAvatar": "Använd som avatar",
   "match.signInToClaim": "Logga in för att hämta ut",
   "match.levelUp": "Ny nivå! Nu på nivå {level}",

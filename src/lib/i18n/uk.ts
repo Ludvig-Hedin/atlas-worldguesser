@@ -177,6 +177,7 @@ export const uk: LocaleDictionary = {
   "match.newGame": "Нова гра",
   "match.home": "Головна",
   "match.newBuilding": "Розблоковано нову будівлю: {name}",
+  "match.newBuildingLabel": "Будівлю розблоковано",
   "match.setAsAvatar": "Встановити як аватар",
   "match.signInToClaim": "Увійдіть, щоб отримати",
   "match.levelUp": "Новий рівень! Тепер рівень {level}",

@@ -84,6 +84,51 @@ const panoCache = new Map<string, PanoResolution | null>();
 const inFlight = new Map<string, Promise<PanoResolution | null>>();
 const PANO_CACHE_MAX = 500;
 
+// Persist the resolved-pano cache across reloads/sessions (localStorage) so
+// revisiting a location — same city drawn again, same daily challenge replayed
+// — never re-bills the Street View Metadata API for a coordinate already
+// looked up on this device.
+const STORAGE_KEY = "atlas:panoCache:v1";
+type StoredPano = { panoId: string; lat: number; lng: number; heading: number } | null;
+let hydrated = false;
+
+function hydrateFromStorage(): void {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const entries = JSON.parse(raw) as [string, StoredPano][];
+    for (const [key, stored] of entries) {
+      if (panoCache.size >= PANO_CACHE_MAX) break;
+      if (!stored) {
+        panoCache.set(key, null);
+        continue;
+      }
+      panoCache.set(key, {
+        panoId: stored.panoId,
+        heading: stored.heading,
+        location: new google.maps.LatLng(stored.lat, stored.lng),
+      });
+    }
+  } catch {
+    // Corrupt/unavailable storage — fall back to an empty in-memory cache.
+  }
+}
+
+function persistToStorage(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const entries: [string, StoredPano][] = Array.from(panoCache.entries()).map(([key, value]) => [
+      key,
+      value ? { panoId: value.panoId, lat: value.location.lat(), lng: value.location.lng(), heading: value.heading } : null,
+    ]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // Storage full/unavailable/private-mode — cache still works in-memory for this tab.
+  }
+}
+
 function panoKey(lat: number, lng: number, radius: number): string {
   return `${lat.toFixed(5)},${lng.toFixed(5)},${radius}`;
 }
@@ -137,6 +182,7 @@ export function findPanorama(
   lng: number,
   radius = 50_000,
 ): Promise<PanoResolution | null> {
+  hydrateFromStorage();
   const key = panoKey(lat, lng, radius);
   if (panoCache.has(key)) return Promise.resolve(panoCache.get(key)!);
   const existing = inFlight.get(key);
@@ -152,6 +198,7 @@ export function findPanorama(
           if (oldest !== undefined) panoCache.delete(oldest);
         }
         panoCache.set(key, pano);
+        persistToStorage();
       }
       return pano;
     })

@@ -177,6 +177,7 @@ export const lt: LocaleDictionary = {
   "match.newGame": "Naujas žaidimas",
   "match.home": "Pradžia",
   "match.newBuilding": "Atrakintas naujas pastatas: {name}",
+  "match.newBuildingLabel": "Pastatas atrakintas",
   "match.setAsAvatar": "Nustatyti kaip avatarą",
   "match.signInToClaim": "Prisijunkite, kad gautumėte",
   "match.levelUp": "Naujas lygis! Dabar {level} lygis",

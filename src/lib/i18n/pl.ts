@@ -177,6 +177,7 @@ export const pl: LocaleDictionary = {
   "match.newGame": "Nowa gra",
   "match.home": "Strona główna",
   "match.newBuilding": "Odblokowano nowy budynek: {name}",
+  "match.newBuildingLabel": "Budynek odblokowany",
   "match.setAsAvatar": "Ustaw jako awatar",
   "match.signInToClaim": "Zaloguj się, aby odebrać",
   "match.levelUp": "Nowy poziom! Teraz poziom {level}",

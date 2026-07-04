@@ -146,7 +146,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-2"
+            className={`grid gap-3 ${applied.newBuildings.length >= 2 ? "grid-cols-2" : "grid-cols-1"}`}
           >
             {applied.newBuildings.map((id) => {
               const b = BUILDINGS[id];
@@ -154,12 +154,17 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
               return (
                 <div
                   key={id}
-                  className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 shadow-1"
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center shadow-1"
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-overlay">
-                    <img src={b.image} alt="" className="size-full object-contain p-0.5" />
+                  <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-overlay">
+                    <img src={b.image} alt="" className="size-full object-contain p-2" />
                   </span>
-                  <span className="text-xs font-medium">{t("match.newBuilding", { name: b.name })}</span>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("match.newBuildingLabel")}
+                    </p>
+                    <p className="text-sm font-semibold">{b.name}</p>
+                  </div>
                   {features.auth && <BuildingClaimAction buildingId={id} />}
                 </div>
               );
@@ -233,7 +238,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
             <Settings2 className="size-4" />
             {t("match.newGame")}
           </Button>
-          <Button size="lg" variant="ghost" asChild>
+          <Button size="lg" variant="ghost" className="flex-1" asChild>
             <Link href="/">
               <Home className="size-4" />
               {t("match.home")}
@@ -263,9 +268,14 @@ function ChallengeShareAction({
   score: number;
 }) {
   const t = useT();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const create = useMutation(api.challenges.create);
   const [copied, setCopied] = useState(false);
+
+  // Convex auth resolves the Clerk JWT asynchronously; isAuthenticated is
+  // false during that window even for a signed-in user. Render nothing
+  // until it settles instead of flashing the sign-in CTA.
+  if (isLoading) return null;
 
   if (!isAuthenticated) {
     return (
@@ -313,28 +323,32 @@ function ChallengeShareAction({
  */
 function BuildingClaimAction({ buildingId }: { buildingId: string }) {
   const t = useT();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const setAvatar = useMutation(api.users.setAvatar);
+
+  // Same isLoading gate as ChallengeShareAction above — avoids showing
+  // "sign in to claim" to an already-authenticated user while the Clerk
+  // JWT is still resolving.
+  if (isLoading) return null;
 
   if (isAuthenticated) {
     return (
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="sm"
+        className="w-full"
         onClick={() => void setAvatar({ buildingId })}
-        className="text-xs font-medium text-primary-muted underline-offset-2 hover:underline"
       >
         {t("match.setAsAvatar")}
-      </button>
+      </Button>
     );
   }
   return (
     <SignInButton mode="modal">
-      <button
-        type="button"
-        className="text-xs font-medium text-primary-muted underline-offset-2 hover:underline"
-      >
+      <Button type="button" variant="secondary" size="sm" className="w-full">
         {t("match.signInToClaim")}
-      </button>
+      </Button>
     </SignInButton>
   );
 }

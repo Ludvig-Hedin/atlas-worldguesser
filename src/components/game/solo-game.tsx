@@ -142,7 +142,9 @@ export function SoloGame({
     (reason?: "load" | "coverage") => {
       // The Maps API itself failed to load (blocked / offline): re-rolling can't
       // help, and no further onUnavailable would ever fire — go straight to demo.
-      if (reason === "load" || rerollRef.current >= 6) {
+      // Cap kept low: each reroll is a billed Street View lookup+render, and
+      // a badly-covered pool entry shouldn't be allowed to burn a budget.
+      if (reason === "load" || rerollRef.current >= 1) {
         setForceDemo(true);
         setRerolling(false);
         if (rerollTimer.current) {
