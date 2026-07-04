@@ -12,6 +12,8 @@ import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ReplayView } from "@/components/replay/replay-view";
 import { bestCountryStreakOf } from "@/lib/progression";
 import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
@@ -152,6 +154,7 @@ function LocalProfileView() {
   const { profile, ready, setUsername } = useLocalProfile();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [openReplayId, setOpenReplayId] = useState<string | null>(null);
   const t = useT();
 
   if (!ready) {
@@ -170,7 +173,13 @@ function LocalProfileView() {
     maxScore: g.rounds * 5000,
     won: g.won,
     at: g.playedAt,
+    // Only the most recent MAX_LOCAL_REPLAYS games have full round-by-round
+    // data (see local-profile.ts) — older summaries stay non-clickable,
+    // exactly like today's guest behavior.
+    onOpenReplay: profile.localReplays[g.id] ? () => setOpenReplayId(g.id) : undefined,
   }));
+  const openReplay = openReplayId ? profile.localReplays[openReplayId] : undefined;
+  const openReplayMapId = openReplayId ? profile.recent.find((g) => g.id === openReplayId)?.mapId : undefined;
 
   const saveName = () => {
     const name = draft.trim();
@@ -259,6 +268,12 @@ function LocalProfileView() {
         <h2 className="text-sm font-medium text-muted-foreground">{t("profile.recentGames")}</h2>
         <RecentGames games={recent} />
       </section>
+
+      <Dialog open={!!openReplayId} onOpenChange={(open) => !open && setOpenReplayId(null)}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          {openReplay && openReplayMapId && <ReplayView mapId={openReplayMapId} results={openReplay} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

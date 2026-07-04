@@ -18,6 +18,8 @@ export interface RecentItem {
   won: boolean;
   at: number;
   replayId?: string;
+  /** Local (guest, localStorage-only) replay — mutually exclusive with `replayId`. */
+  onOpenReplay?: () => void;
 }
 
 export function RecentGames({ games }: { games: RecentItem[] }) {
@@ -50,15 +52,30 @@ export function RecentGames({ games }: { games: RecentItem[] }) {
               <p className="text-sm font-semibold tabular">{formatNumber(g.totalScore)}</p>
               <p className="text-xs text-muted-foreground">{pct}%</p>
             </div>
-            {g.replayId && <ChevronRight className="size-4 text-subtle" />}
+            {(g.replayId || g.onOpenReplay) && <ChevronRight className="size-4 text-subtle" />}
           </div>
         );
-        return g.replayId ? (
-          <Link key={g.key} href={`/replay/${g.replayId}`} className="transition-colors hover:bg-elevated">
-            {inner}
-          </Link>
-        ) : (
-          <div key={g.key} className={cn(g.replayId && "cursor-pointer")}>
+        if (g.replayId) {
+          return (
+            <Link key={g.key} href={`/replay/${g.replayId}`} className="transition-colors hover:bg-elevated">
+              {inner}
+            </Link>
+          );
+        }
+        if (g.onOpenReplay) {
+          return (
+            <button
+              key={g.key}
+              type="button"
+              onClick={g.onOpenReplay}
+              className="w-full text-left transition-colors hover:bg-elevated"
+            >
+              {inner}
+            </button>
+          );
+        }
+        return (
+          <div key={g.key} className={cn(!g.replayId && !g.onOpenReplay && "cursor-default")}>
             {inner}
           </div>
         );

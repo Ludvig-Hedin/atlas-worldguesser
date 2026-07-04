@@ -17,6 +17,9 @@ export interface RecentGame {
   playedAt: number;
 }
 
+/** Cap on `localReplays` — smaller than `recent`'s 12, to keep localStorage size sane. */
+const MAX_LOCAL_REPLAYS = 5;
+
 export interface LocalProfile {
   username: string;
   stats: PlayerStats;
@@ -25,6 +28,13 @@ export interface LocalProfile {
   /** Country codes with a building avatar unlocked (guest-local, merged into the cloud account on sign-in). */
   unlockedBuildings: string[];
   recent: RecentGame[];
+  /**
+   * Full round-by-round replay for the most recent games, keyed by
+   * `RecentGame.id`. Capped smaller than `recent` — a guest's replay data
+   * lives only in their own browser, so there's no server storage limit to
+   * lean on. Newest-first, same ordering as `recent`.
+   */
+  localReplays: Record<string, RoundResult[]>;
   /** Flags-mode progress: best score per region + games played. */
   flag: { bests: Record<string, number>; gamesPlayed: number };
 }
@@ -37,6 +47,7 @@ export function emptyProfile(): LocalProfile {
     achievements: [],
     unlockedBuildings: [],
     recent: [],
+    localReplays: {},
     flag: { bests: {}, gamesPlayed: 0 },
   };
 }
@@ -69,6 +80,7 @@ export function loadProfile(): LocalProfile {
       achievements: parsed.achievements ?? [],
       unlockedBuildings: parsed.unlockedBuildings ?? [],
       recent: parsed.recent ?? [],
+      localReplays: parsed.localReplays ?? {},
       flag: {
         bests: parsed.flag?.bests ?? {},
         gamesPlayed: parsed.flag?.gamesPlayed ?? 0,
@@ -195,6 +207,15 @@ export function applyGame(
     ...profile.recent,
   ].slice(0, 12);
 
+  // Newest-first insertion order (this game's id first), then keep only the
+  // MAX_LOCAL_REPLAYS most recent keys — full round-by-round detail for older
+  // games is dropped, but their summary still lives on in `recent`.
+  const allReplays: Record<string, RoundResult[]> = { [game.id]: game.results, ...profile.localReplays };
+  const localReplays: Record<string, RoundResult[]> = {};
+  for (const id of Object.keys(allReplays).slice(0, MAX_LOCAL_REPLAYS)) {
+    localReplays[id] = allReplays[id];
+  }
+
   return {
     profile: {
       ...profile,
@@ -203,6 +224,7 @@ export function applyGame(
       achievements: [...profile.achievements, ...out.newAchievements],
       unlockedBuildings: [...profile.unlockedBuildings, ...out.newBuildings],
       recent,
+      localReplays,
     },
     xpGained: out.xpGained,
     newAchievements: out.newAchievements,

@@ -41,15 +41,6 @@ need a product decision, a schema/data migration, or a larger build.
 
 ## Larger builds (structural)
 
-- **Replay for guests + shareable replay links.** Guest (localStorage) games have
-  no `replayId`, so guests can't review past games and replays aren't shareable.
-  Needs local replay storage and/or a public replay route. Area: `src/lib/local-profile.ts`,
-  `src/components/replay/*`, `convex/`.
-
-- **Time-scoped leaderboards (this week / this month).** Current XP is cumulative
-  only; a weekly board needs per-window XP tracking (e.g. a periodic aggregate or a
-  games-in-window scan). Area: `convex/leaderboard.ts`, `convex/schema.ts`.
-
 - **Map creator: pre-save preview.** Undo/delete/paste-coords/share were added;
   a "preview this map" step before saving is still missing. Area:
   `src/components/maps/map-creator.tsx`.

@@ -211,7 +211,25 @@ by re-running the same prompt template per country code and re-keying.
   like button per map (`convex/maps.ts` `toggleLike`, denormalized `likes`/`plays`
   counters on the `maps` table). Plays are counted once per finished game on a
   public/private custom map via an optional `customMapId` on `recordSoloResult`.
-- ✅ Replays — every finished game is replayable round-by-round.
+- ✅ Replays — every finished game is replayable round-by-round. Signed-in
+  players get a public, shareable `/replay/[gameId]` link (`convex/games.ts`
+  `getReplay`). Guests get the same round-by-round viewer for their own last 5
+  games (`LocalProfile.localReplays`, capped separately from the 12-item
+  `recent` summary list to keep `localStorage` size sane) — opened as a dialog
+  from the profile page's recent-games list rather than a new route, since a
+  guest's replay data never leaves their own browser and so can't be shared.
+  The viewer itself (`src/components/replay/replay-view.tsx`) is a single
+  presentational component shared by both the Convex-backed route and the
+  local dialog.
+- ✅ Time-scoped leaderboards (This Week / This Month) — cumulative XP alone
+  locks new players out forever, so the leaderboard also ranks by XP gained
+  since a periodic snapshot (`xpSnapshots`, one row per user per period,
+  overwritten — not accumulated — at each boundary) instead of lifetime total.
+  Snapshots are re-stamped by a weekly (rolling 7-day) and a calendar-monthly
+  cron (`convex/crons.ts`, `leaderboard.snapshotPeriod`); `leaderboard.topPeriod`
+  reads them and ranks in memory (same bounded-scan tradeoff as the existing
+  all-time board). The first window after this shipped has no prior baseline,
+  so early "gain" numbers start from zero — expected, not backfilled.
 - ✅ Flags mode (`/flags`, `/countries`) — Seterra-style: see a country's flag (or
   its name), then click that country on a blank world map. Play the World or a
   single continent, retry-until-correct with escalating amber→orange→red feedback,
