@@ -11,6 +11,9 @@ import {
 /** Region a Flags game can be scoped to. */
 export type FlagRegionId = "world" | "europe" | "asia" | "africa" | "americas" | "oceania";
 
+/** Stimulus shown for each round: the flag image, or the country's name. */
+export type FlagGameMode = "flag" | "name";
+
 export interface FlagRegion {
   id: FlagRegionId;
   /** ISO alpha-2 filter over the country polygons; null = worldwide. */

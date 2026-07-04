@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Flag } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag, Type } from "lucide-react";
 import { AtlasMark } from "@/components/atlas-mark";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
@@ -114,6 +114,21 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
               <p className="font-semibold">Flags</p>
               <p className="text-xs text-muted-foreground">
                 See a flag, click the country. World or by continent.
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+          <Link
+            href="/countries"
+            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+              <Type className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Countries</p>
+              <p className="text-xs text-muted-foreground">
+                See a country&apos;s name, click it. World or by continent.
               </p>
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />

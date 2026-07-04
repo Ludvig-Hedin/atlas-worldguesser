@@ -15,9 +15,12 @@ import { FLAG_MAX_WRONG, flagRunScore, flagXpForRun } from "../src/lib/flags/sco
 const REGIONS = new Set(["world", "europe", "asia", "africa", "americas", "oceania"]);
 const MAX_FLAGS = 10;
 
+// Kept in sync with FlagGameMode in src/lib/flags/regions.ts.
+const modeValidator = v.union(v.literal("flag"), v.literal("name"));
+
 export const submit = mutation({
-  args: { region: v.string(), perFlagWrong: v.array(v.number()) },
-  handler: async (ctx, { region, perFlagWrong }) => {
+  args: { region: v.string(), mode: modeValidator, perFlagWrong: v.array(v.number()) },
+  handler: async (ctx, { region, mode, perFlagWrong }) => {
     const user = await requireUser(ctx);
     if (!REGIONS.has(region)) throw new Error("Invalid game");
     if (perFlagWrong.length < 1 || perFlagWrong.length > MAX_FLAGS) throw new Error("Invalid game");
@@ -42,14 +45,15 @@ export const submit = mutation({
       },
     });
 
-    // Upsert the region's best-per-user row.
+    // Upsert the region+mode's best-per-user row.
     const existing = await ctx.db
       .query("flagResults")
-      .withIndex("by_region_user", (q) => q.eq("region", region).eq("userId", user._id))
+      .withIndex("by_region_mode_user", (q) => q.eq("region", region).eq("mode", mode).eq("userId", user._id))
       .unique();
     if (!existing) {
       await ctx.db.insert("flagResults", {
         region,
+        mode,
         userId: user._id,
         username: user.username,
         avatarUrl: user.avatarUrl,
@@ -75,12 +79,12 @@ export const submit = mutation({
 
 /** Ranked best-score board for a region + the caller's own row. */
 export const leaderboard = query({
-  args: { region: v.string(), limit: v.optional(v.number()) },
-  handler: async (ctx, { region, limit }) => {
+  args: { region: v.string(), mode: modeValidator, limit: v.optional(v.number()) },
+  handler: async (ctx, { region, mode, limit }) => {
     const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
     const rows = await ctx.db
       .query("flagResults")
-      .withIndex("by_region_score", (q) => q.eq("region", region))
+      .withIndex("by_region_mode_score", (q) => q.eq("region", region).eq("mode", mode))
       .order("desc")
       .take(n);
 
@@ -93,7 +97,7 @@ export const leaderboard = query({
       } else {
         const own = await ctx.db
           .query("flagResults")
-          .withIndex("by_region_user", (q) => q.eq("region", region).eq("userId", me._id))
+          .withIndex("by_region_mode_user", (q) => q.eq("region", region).eq("mode", mode).eq("userId", me._id))
           .unique();
         // Below the top N: report the score without an exact rank (avoids a scan).
         if (own) mine = { rank: 0, bestScore: own.bestScore };

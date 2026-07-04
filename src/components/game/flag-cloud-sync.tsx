@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { toast } from "sonner";
 import { api } from "@convex/_generated/api";
-import type { FlagRegionId } from "@/lib/flags/regions";
+import type { FlagGameMode, FlagRegionId } from "@/lib/flags/regions";
 
 const MAX_ATTEMPTS = 3;
 
@@ -16,9 +16,11 @@ const MAX_ATTEMPTS = 3;
  */
 export function FlagCloudSync({
   region,
+  mode,
   perFlagWrong,
 }: {
   region: FlagRegionId;
+  mode: FlagGameMode;
   perFlagWrong: number[];
 }) {
   const { isAuthenticated } = useConvexAuth();
@@ -34,7 +36,7 @@ export function FlagCloudSync({
     done.current = true;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    submit({ region, perFlagWrong }).catch(() => {
+    submit({ region, mode, perFlagWrong }).catch(() => {
       if (attempt < MAX_ATTEMPTS - 1) {
         done.current = false;
         retryTimer = setTimeout(() => setAttempt((a) => a + 1), 2000 * (attempt + 1));
@@ -46,7 +48,7 @@ export function FlagCloudSync({
     return () => {
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [isAuthenticated, submit, region, perFlagWrong, attempt]);
+  }, [isAuthenticated, submit, region, mode, perFlagWrong, attempt]);
 
   return null;
 }

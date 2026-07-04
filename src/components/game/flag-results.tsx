@@ -16,19 +16,20 @@ import { features } from "@/lib/env";
 import { formatNumber } from "@/lib/format";
 import { countryName } from "@/lib/countries-meta";
 import { FLAG_MAX_SCORE, flagXpForRun } from "@/lib/flags/scoring";
-import { getFlagRegion, type FlagRegionId } from "@/lib/flags/regions";
+import { getFlagRegion, type FlagGameMode, type FlagRegionId } from "@/lib/flags/regions";
 import { levelProgress } from "@/lib/xp";
 import type { FlagApplyResult } from "@/lib/local-profile";
 import type { FlagRoundResult } from "@/hooks/use-flag-game";
 
 interface FlagResultsProps {
   regionId: FlagRegionId;
+  mode: FlagGameMode;
   results: FlagRoundResult[];
   onPlayAgain: () => void;
   onNewGame: () => void;
 }
 
-export function FlagResults({ regionId, results, onPlayAgain, onNewGame }: FlagResultsProps) {
+export function FlagResults({ regionId, mode, results, onPlayAgain, onNewGame }: FlagResultsProps) {
   const t = useT();
   const { recordFlag, profile } = useLocalProfile();
   const region = getFlagRegion(regionId);
@@ -45,15 +46,15 @@ export function FlagResults({ regionId, results, onPlayAgain, onNewGame }: FlagR
   useEffect(() => {
     if (recordedRef.current) return;
     recordedRef.current = true;
-    setApplied(recordFlag({ region: regionId, score: totalScore, xpGained }));
-  }, [recordFlag, regionId, totalScore, xpGained]);
+    setApplied(recordFlag({ region: regionId, mode, score: totalScore, xpGained }));
+  }, [recordFlag, regionId, mode, totalScore, xpGained]);
 
   const xp = applied?.profile.stats.xp ?? profile.stats.xp;
   const lvl = levelProgress(xp);
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center px-4 py-8">
-      {features.auth && <FlagCloudSync region={regionId} perFlagWrong={perFlagWrong} />}
+      {features.auth && <FlagCloudSync region={regionId} mode={mode} perFlagWrong={perFlagWrong} />}
 
       <div className="flex w-full max-w-lg flex-col gap-5">
         <div className="text-center">
@@ -118,7 +119,7 @@ export function FlagResults({ regionId, results, onPlayAgain, onNewGame }: FlagR
           </Link>
         </Button>
 
-        {features.auth && <FlagLeaderboard region={regionId} />}
+        {features.auth && <FlagLeaderboard region={regionId} mode={mode} />}
       </div>
     </div>
   );

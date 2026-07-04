@@ -107,20 +107,23 @@ export interface FlagApplyResult {
 /**
  * Fold a finished Flags run into a guest profile. XP goes into the same pool as
  * distance games (so levels are unified); flag bests/plays are tracked
- * separately. Does not touch distance-game stats (gamesPlayed/wins).
+ * separately, namespaced by mode so a Flags best and a Countries best for the
+ * same region don't overwrite each other. Does not touch distance-game stats
+ * (gamesPlayed/wins).
  */
 export function applyFlagResult(
   profile: LocalProfile,
-  input: { region: string; score: number; xpGained: number },
+  input: { region: string; mode: "flag" | "name"; score: number; xpGained: number },
 ): FlagApplyResult {
-  const prevBest = profile.flag.bests[input.region] ?? 0;
+  const key = `${input.mode}:${input.region}`;
+  const prevBest = profile.flag.bests[key] ?? 0;
   const best = Math.max(prevBest, input.score);
   return {
     profile: {
       ...profile,
       stats: { ...profile.stats, xp: profile.stats.xp + input.xpGained },
       flag: {
-        bests: { ...profile.flag.bests, [input.region]: best },
+        bests: { ...profile.flag.bests, [key]: best },
         gamesPlayed: profile.flag.gamesPlayed + 1,
       },
     },

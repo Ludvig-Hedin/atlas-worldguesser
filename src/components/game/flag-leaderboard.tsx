@@ -9,12 +9,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/use-t";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { FlagRegionId } from "@/lib/flags/regions";
+import type { FlagGameMode, FlagRegionId } from "@/lib/flags/regions";
 
-/** Region best-score board. Rendered only where Convex is configured. */
-export function FlagLeaderboard({ region }: { region: FlagRegionId }) {
+/** Region+mode best-score board. Rendered only where Convex is configured. */
+export function FlagLeaderboard({ region, mode }: { region: FlagRegionId; mode: FlagGameMode }) {
   const t = useT();
-  const board = useQuery(api.flags.leaderboard, { region });
+  const board = useQuery(api.flags.leaderboard, { region, mode });
 
   return (
     <div className="flex flex-col gap-2">

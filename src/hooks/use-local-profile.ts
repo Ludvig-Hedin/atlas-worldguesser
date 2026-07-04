@@ -17,7 +17,7 @@ export interface UseLocalProfile {
   profile: LocalProfile;
   ready: boolean;
   record: (game: GameSummary) => ApplyResult;
-  recordFlag: (input: { region: string; score: number; xpGained: number }) => FlagApplyResult;
+  recordFlag: (input: { region: string; mode: "flag" | "name"; score: number; xpGained: number }) => FlagApplyResult;
   setUsername: (username: string) => void;
   reset: () => void;
 }
@@ -40,7 +40,12 @@ export function useLocalProfile(): UseLocalProfile {
     return result;
   }, []);
 
-  const recordFlag = useCallback((input: { region: string; score: number; xpGained: number }): FlagApplyResult => {
+  const recordFlag = useCallback((input: {
+    region: string;
+    mode: "flag" | "name";
+    score: number;
+    xpGained: number;
+  }): FlagApplyResult => {
     const result = applyFlagResult(loadProfile(), input);
     saveProfile(result.profile);
     setProfile(result.profile);

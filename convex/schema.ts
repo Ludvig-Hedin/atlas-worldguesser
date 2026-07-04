@@ -236,11 +236,14 @@ export default defineSchema({
     .index("by_day_user", ["day", "userId"])
     .index("by_day_score", ["day", "score"]),
 
-  // Flags mode — all-time best score per (region, user). One row per player per
-  // region, upserted only when a run beats the stored best. by_region_score
-  // drives each region's leaderboard.
+  // Flags mode — all-time best score per (region, mode, user). One row per
+  // player per region+mode, upserted only when a run beats the stored best.
+  // by_region_mode_score drives each region+mode's leaderboard.
   flagResults: defineTable({
     region: v.string(),
+    // Stimulus shown: the flag image or the country's name. Optional =
+    // additive, no migration — undefined reads as "flag" (the original mode).
+    mode: v.optional(v.union(v.literal("flag"), v.literal("name"))),
     userId: v.id("users"),
     username: v.string(),
     avatarUrl: v.optional(v.string()),
@@ -249,9 +252,9 @@ export default defineSchema({
     correctCount: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_region", ["region"])
-    .index("by_region_user", ["region", "userId"])
-    .index("by_region_score", ["region", "bestScore"]),
+    .index("by_region_mode", ["region", "mode"])
+    .index("by_region_mode_user", ["region", "mode", "userId"])
+    .index("by_region_mode_score", ["region", "mode", "bestScore"]),
 
   // Persistent friend groups that stay together across matches. The leader
   // starts a room (activeRoomCode) which the whole party one-click-joins.
