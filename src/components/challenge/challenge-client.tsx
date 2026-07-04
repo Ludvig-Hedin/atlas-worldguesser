@@ -27,7 +27,7 @@ export function ChallengeClient({ challengeId }: { challengeId: string }) {
   const t = useT();
   const data = useQuery(api.challenges.get, { challengeId });
   const submitAttempt = useMutation(api.challenges.submitAttempt);
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const [playing, setPlaying] = useState(false);
   // Computed client-side immediately on finish so guests (who can't save via
   // submitAttempt) still see the comparison right away.
@@ -40,6 +40,11 @@ export function ChallengeClient({ challengeId }: { challengeId: string }) {
       streak: results.filter((r) => r.countryCorrect).length,
       score: results.reduce((sum, r) => sum + r.score, 0),
     });
+    // TODO(bug-hunt): same stale-isAuthenticated race as DailyClient's
+    // handleComplete (see that file) — a signed-in user who finishes fast on
+    // a slow connection can have this one-shot callback silently skip
+    // submitAttempt with no retry/toast. Fix: submit from a useEffect keyed
+    // on [isAuthenticated, isLoading] instead of this direct check.
     if (!isAuthenticated || !data || submittedRef.current) return;
     submittedRef.current = true;
     void submitAttempt({
@@ -150,7 +155,7 @@ export function ChallengeClient({ challengeId }: { challengeId: string }) {
                     <Swords className="size-4" />
                     {t("challenge.playButton")}
                   </Button>
-                  {!isAuthenticated && (
+                  {!authLoading && !isAuthenticated && (
                     <p className="text-xs text-muted-foreground">{t("challenge.signInNudge")}</p>
                   )}
                 </div>

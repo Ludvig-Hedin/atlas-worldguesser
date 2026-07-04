@@ -117,6 +117,11 @@ function MapCard({
 
 export function MapsClient() {
   const t = useT();
+  // TODO(bug-hunt): no isLoading check — canLike={isAuthenticated} below reads
+  // stale-false while Convex is still resolving the Clerk JWT, so a signed-in
+  // user landing on this page briefly sees every Like button disabled with no
+  // explanation. Low severity (self-corrects in ~1s) but same root cause as
+  // the match-results.tsx sign-in-flicker fix.
   const { isAuthenticated } = useConvexAuth();
   const [sort, setSort] = useState<Sort>("likes");
   const publicMaps = useQuery(api.maps.listPublic, { sort });

@@ -30,13 +30,22 @@ export function DailyClient() {
   const today = useQuery(api.dailyChallenge.today);
   const board = useQuery(api.dailyChallenge.leaderboard, {});
   const submit = useMutation(api.dailyChallenge.submit);
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const [playing, setPlaying] = useState(false);
   // Submit at most once per session; "Play again" on the finish screen must not
   // re-submit (server would reject it and it would burn a rate-limit token).
   const submittedRef = useRef(false);
 
   const handleComplete = (results: RoundResult[]) => {
+    // TODO(bug-hunt): `isAuthenticated` can still read stale-false here if a
+    // signed-in user loads the page and finishes fast enough that Convex's
+    // Clerk-JWT auth hasn't resolved yet (see useConvexAuth's isLoading).
+    // Unlike SoloCloudSync/EnsureUser/FlagCloudSync, this is a one-shot
+    // callback (not an effect keyed on isAuthenticated), so a stale read here
+    // permanently skips the submission — no retry, no error toast, silent
+    // data loss for that day's attempt. Fix: capture `results` in state and
+    // submit from a `useEffect` keyed on `[isAuthenticated, isLoading]`,
+    // mirroring the retry-safe pattern in those three siblings.
     if (!isAuthenticated || !today || submittedRef.current) return;
     submittedRef.current = true;
     void submit({
@@ -115,7 +124,7 @@ export function DailyClient() {
                 <Play className="size-4" />
                 {t("daily.playButton")}
               </Button>
-              {!isAuthenticated && (
+              {!authLoading && !isAuthenticated && (
                 <p className="text-xs text-muted-foreground">{t("daily.signInNudge")}</p>
               )}
             </div>

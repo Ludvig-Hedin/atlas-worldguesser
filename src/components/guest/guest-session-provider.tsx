@@ -84,6 +84,12 @@ export function GuestSessionProvider({ children }: { children: ReactNode }) {
   const provisionGuest = useCallback(async (): Promise<void> => {
     // Signed-in users are provisioned by EnsureUser; the guest id is never used
     // for them (Clerk wins server-side), so there is nothing to do.
+    // TODO(bug-hunt): `isAuthenticated` has no isLoading guard, same family as
+    // the match-results.tsx sign-in-flicker fix. A signed-in user landing
+    // directly on /room/CODE (e.g. an invite link) before Convex resolves the
+    // Clerk JWT can trip this check and provision a redundant ephemeral guest
+    // row for an already-authed account. Harmless server-side (Clerk identity
+    // wins there) but wastes a mutation call + DB row on every such race.
     if (isAuthenticated || !features.convex) return;
     if (!guestId || guestReady) return;
     if (!provisionRef.current) {

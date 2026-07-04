@@ -139,6 +139,11 @@ function CloudProfile() {
  * true, so the hook call itself stays unconditional-but-safe.
  */
 function AuthGate({ children }: { children: (isAuthenticated: boolean) => ReactNode }) {
+  // TODO(bug-hunt): no isLoading check — while Convex is still resolving the
+  // Clerk JWT, isAuthenticated reads false, so GuestProfile briefly renders
+  // <LocalProfileView /> (wrong stats/data) for an actually-signed-in user
+  // before flipping to <CloudProfile />. Fix: render a loading skeleton while
+  // isLoading instead of choosing a real view.
   const { isAuthenticated } = useConvexAuth();
   return <>{children(isAuthenticated)}</>;
 }

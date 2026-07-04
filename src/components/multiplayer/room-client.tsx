@@ -38,6 +38,10 @@ function RoomInner({ code }: { code: string }) {
 
   // A guest can only join once their ephemeral account row exists; signed-in
   // users are always ready. Kick off provisioning for guests on mount.
+  // TODO(bug-hunt): `isAuthenticated` has no isLoading guard here (this is the
+  // highest-traffic call site for the race documented in provisionGuest's own
+  // TODO in guest-session-provider.tsx — invite links land users directly on
+  // this mount).
   const ready = isAuthenticated || guestReady;
   useEffect(() => {
     if (!isAuthenticated) void provisionGuest().catch(() => {});
