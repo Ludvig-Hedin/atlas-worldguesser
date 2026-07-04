@@ -156,6 +156,9 @@ export const create = mutation({
     if (elimination && teamMode) {
       throw new Error("Battle Royale can't be combined with team mode");
     }
+    if (elimination && duelsMode) {
+      throw new Error("Battle Royale can't be combined with Duels");
+    }
     const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "roomCreate", user._id);
     return await createRoomForUser(ctx, user, mapId, settings, teamMode, elimination, duelsMode);
@@ -348,6 +351,9 @@ export const setDuelsMode = mutation({
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can change modes");
     if (room.status !== "lobby") throw new Error("Match already started");
+    if (duelsMode && room.elimination) {
+      throw new Error("Duels can't be combined with Battle Royale");
+    }
     if (duelsMode) {
       const members = await membersOf(ctx, roomId);
       if (members.length > 2) {
