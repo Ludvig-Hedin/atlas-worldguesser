@@ -239,6 +239,13 @@ by re-running the same prompt template per country code and re-keying.
   migration script needed; those old fields stay on the schema as
   deprecated-optional since Convex won't let a field be dropped while existing
   rows still hold data in it.
+- ✅ Duels (1v1) — a preset built as a thin layer on the existing room engine:
+  `rooms.duelsMode` mirrors `teamMode` (mutually exclusive, `convex/rooms.ts`
+  `create`/`join`/`start`/`setDuelsMode`), capacity caps at 2, and the lobby
+  scoreboard is replaced by a live health bar
+  (`src/components/multiplayer/duel-health-bar.tsx`) showing each side's
+  percentage share of the combined score — no new scoring formula. Reuses the
+  existing create → share code/link → join flow verbatim; no matchmaking queue.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.
