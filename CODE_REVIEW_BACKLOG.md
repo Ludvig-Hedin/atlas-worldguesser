@@ -1,5 +1,58 @@
 # Code Review Backlog
 
+## Bug Hunt — 2026-07-05 (targeted: swallowed-error → misleading-fallback-UI pattern)
+
+Triggered by a user report: on localhost, the console showed `Google Maps
+JavaScript API error: RefererNotAllowedMapError` (the dev API key's HTTP referrer
+allowlist doesn't include `http://localhost:3000/*`), yet the game silently showed
+the low-poly "No Street View here — showing a demo view" placeholder as if that
+location genuinely had no Street View coverage — misreporting a config/auth failure
+as a normal, expected empty state.
+
+### Root cause + fix (already applied this session, not a "hunt" find)
+
+Google's Maps JS API doesn't reject the script load on an auth failure (bad key,
+disallowed referer, API not activated, billing disabled) — the script still finishes
+loading and calls the ready callback normally. The only signal is `console.error` and
+the optional `window.gm_authFailure` global. Downstream, the Street View panorama
+lookup (`StreetViewService.getPanorama`) then also fails, and the existing code
+treated *any* failed lookup identically as "no coverage at this location".
+
+- `src/lib/google-maps.ts` — installs a `window.gm_authFailure` hook and exposes
+  `hasGoogleMapsAuthFailed()`.
+- `src/components/game/google-street-view.tsx` — panorama-lookup failures now report
+  reason `"auth"` instead of `"coverage"` when `hasGoogleMapsAuthFailed()` is true.
+- `src/components/game/street-view-canvas.tsx` / `solo-game.tsx` — thread the reason
+  through (`forceDemoReason`) instead of collapsing to a boolean; `"auth"` is treated
+  like `"load"` for reroll purposes (rerolling to a new location can't fix a bad key).
+- `src/components/game/demo-panorama.tsx` — caption is now reason-aware: only a real
+  `"coverage"` failure gets "No Street View here"; `"load"`/`"auth"` get an honest
+  "Street View unavailable — showing a demo view".
+- New regression tests in `src/lib/google-maps-retry.test.ts` covering
+  `hasGoogleMapsAuthFailed()`.
+- **Action needed from you (not a code fix):** add `http://localhost:3000/*` (and any
+  other local dev ports you use) to the Google Cloud Console HTTP referrer allowlist
+  for the Maps browser key used in `.env.local`, or remove the referrer restriction
+  for local development.
+
+### Swept for the same pattern elsewhere (0 new issues found)
+
+Checked all 31 non-test `catch`/`.catch()` blocks in `src/lib`, `src/components/game`,
+and `src/components/multiplayer` for the same anti-pattern (an external API/auth
+error silently converted into a misleading "normal"/"empty" UI state instead of being
+surfaced or distinguished). None found — the rest of the codebase consistently either
+(a) surfaces the real error via `toast.error(e instanceof Error ? e.message : ...)`,
+or (b) is a genuine best-effort fire-and-forget action (clipboard write, leave
+room/party, heartbeat, decline invite) where swallowing failure doesn't misrepresent
+game state. The Street View fallback was the one place a failure path rendered a
+"this is fine, business as usual" graphic instead of an error signal.
+
+### Validation
+
+- `tsc --noEmit` ✓ (0 errors)
+- `eslint` ✓ (0 errors; 17 pre-existing warnings, unchanged)
+- `vitest run` ✓ (222/222, incl. 2 new regression tests)
+
 ## Bug Hunt — 2026-07-04 (targeted: useConvexAuth-without-isLoading + full-repo checklist sweep)
 
 Triggered by a user bug report: the solo match-results "New building unlocked" pill

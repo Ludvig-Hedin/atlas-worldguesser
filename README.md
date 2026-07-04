@@ -40,12 +40,19 @@ integration is optional and independent:
 - **Google Maps** (`NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY`) — real Street View.
   Without it, demo panoramas are used. Cost control: restrict the key by HTTP
   referrer and set a daily quota cap in Cloud Console (Google can't enforce
-  either from app code — see `.env.example`). `NEXT_PUBLIC_DISABLE_GOOGLE_MAPS=true`
-  is a hard kill switch if spend needs to stop immediately. The client caches
-  resolved panoramas in `localStorage` (`src/lib/google-maps.ts`) so repeat
-  visits to the same coordinate don't re-bill, and the no-coverage reroll is
-  capped at 1 retry (`src/components/game/solo-game.tsx`) before falling back
-  to the free demo panorama.
+  either from app code — see `.env.example`). If you restrict by referrer, make
+  sure `http://localhost:3000/*` (or whatever port you use locally) is on the
+  allowlist too, or local dev will hit `RefererNotAllowedMapError` in the
+  console. `NEXT_PUBLIC_DISABLE_GOOGLE_MAPS=true` is a hard kill switch if spend
+  needs to stop immediately. The client caches resolved panoramas in
+  `localStorage` (`src/lib/google-maps.ts`) so repeat visits to the same
+  coordinate don't re-bill, and the no-coverage reroll is capped at 1 retry
+  (`src/components/game/solo-game.tsx`) before falling back to the free demo
+  panorama. A key/auth failure (bad key, disallowed referrer, API not
+  activated) is detected separately from genuine no-coverage — via
+  `window.gm_authFailure` in `src/lib/google-maps.ts` — so the demo-panorama
+  fallback shows an honest "Street View unavailable" caption instead of
+  claiming there's no coverage at that specific location.
 - **Convex** (`NEXT_PUBLIC_CONVEX_URL`, via `npx convex dev`) — realtime backend
   for multiplayer, profiles, leaderboards, friends, and saved stats.
 - **Clerk** (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, …) — authentication. Solo play
