@@ -1,4 +1,4 @@
-import { EMPTY_STREAKS, foldGame, isSoloWin, type StreakState } from "./progression";
+import { EMPTY_STREAKS, foldGame, isSoloWin, resolveCountryByMap, type StreakState } from "./progression";
 import { EMPTY_STATS, type PlayerStats, type RoundResult } from "./types";
 
 export { isSoloWin };
@@ -46,12 +46,25 @@ export function loadProfile(): LocalProfile {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyProfile();
-    const parsed = JSON.parse(raw) as Partial<LocalProfile>;
+    const parsed = JSON.parse(raw) as Partial<LocalProfile> & {
+      streaks?: Partial<StreakState> & { country?: number; bestCountry?: number };
+    };
+    const rawStreaks = parsed.streaks;
+    // Rebuild explicitly (not a blind spread) so a pre-migration profile's
+    // legacy `country`/`bestCountry` gets folded into countryByMap.world and
+    // never leaks into the normalized in-memory/re-saved shape.
+    const streaks: StreakState = {
+      daily: rawStreaks?.daily ?? EMPTY_STREAKS.daily,
+      lastPlayedDay: rawStreaks?.lastPlayedDay ?? EMPTY_STREAKS.lastPlayedDay,
+      win: rawStreaks?.win ?? EMPTY_STREAKS.win,
+      bestWin: rawStreaks?.bestWin ?? EMPTY_STREAKS.bestWin,
+      countryByMap: rawStreaks ? resolveCountryByMap(rawStreaks) : {},
+    };
     return {
       ...emptyProfile(),
       ...parsed,
       stats: { ...EMPTY_STATS, ...parsed.stats },
-      streaks: { ...EMPTY_STREAKS, ...parsed.streaks },
+      streaks,
       achievements: parsed.achievements ?? [],
       unlockedBuildings: parsed.unlockedBuildings ?? [],
       recent: parsed.recent ?? [],
@@ -162,6 +175,7 @@ export function applyGame(
     unlockedBuildings: profile.unlockedBuildings,
     results: game.results,
     now,
+    mapId: game.mapId,
   });
 
   const recent: RecentGame[] = [
