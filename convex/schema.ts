@@ -115,6 +115,20 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_achievement", ["userId", "achievementId"]),
 
+  // Per (user, map) ring buffer of recently-shown location keys
+  // ("<lat>:<lng>", see gameLogic.locationKey), most-recent last, capped at
+  // gameLogic.RECENT_LOCATIONS_CAP. Biases gameLogic.pickMatchLocations away
+  // from repeats across separate solo games / rooms the same user starts the
+  // same session or day (see convex/recentLocations.ts). Guest accounts get
+  // real `users` rows too (see isGuest above), so this covers them for free
+  // via the same userId key — no guest-specific handling needed.
+  recentLocations: defineTable({
+    userId: v.id("users"),
+    mapId: v.string(),
+    keys: v.array(v.string()),
+    updatedAt: v.number(),
+  }).index("by_user_map", ["userId", "mapId"]),
+
   // Finished games (solo synced + completed multiplayer) for history/profiles.
   games: defineTable({
     userId: v.id("users"),
