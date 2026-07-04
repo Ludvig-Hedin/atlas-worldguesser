@@ -57,46 +57,42 @@ export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed, b
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="flex-1 rounded-2xl border border-border bg-card p-5">
-          <div className="mb-2 flex items-baseline justify-between">
-            <span className="text-sm font-medium">Level {level.level}</span>
-            <span className="text-xs text-muted-foreground tabular">
-              {formatNumber(xp)} XP · {formatNumber(level.xpToNext)} to next
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="mb-2 flex items-baseline justify-between">
+          <span className="text-sm font-medium">Level {level.level}</span>
+          <span className="text-xs text-muted-foreground tabular">
+            {formatNumber(xp)} XP · {formatNumber(level.xpToNext)} to next
+          </span>
+        </div>
+        <Progress value={level.fraction} />
+      </div>
+
+      {showRating && tier && (
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
+          <div className="mb-1 flex items-center gap-2">
+            <Medal className={`size-4 ${ranked ? TIER_ACCENT[tier.key] : "text-muted-foreground"}`} />
+            <span className="text-sm font-medium">
+              {ranked ? tier.label : t("rating.unranked")}
             </span>
           </div>
-          <Progress value={level.fraction} />
+          <p className="text-xl font-semibold tabular">{ranked ? formatNumber(rating) : "—"}</p>
+          <p className="text-xs text-muted-foreground">
+            {ranked ? t("rating.title") : t("rating.placement")}
+          </p>
         </div>
+      )}
 
-        {showRating && tier && (
-          <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
-            <div className="mb-1 flex items-center gap-2">
-              <Medal className={`size-4 ${ranked ? TIER_ACCENT[tier.key] : "text-muted-foreground"}`} />
-              <span className="text-sm font-medium">
-                {ranked ? tier.label : t("rating.unranked")}
-              </span>
-            </div>
-            <p className="text-xl font-semibold tabular">{ranked ? formatNumber(rating) : "—"}</p>
-            <p className="text-xs text-muted-foreground">
-              {ranked ? t("rating.title") : t("rating.placement")}
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {cards.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-border bg-card p-4">
-            <c.icon className="size-4 text-muted-foreground" />
-            <p className="mt-2 text-xl font-semibold tabular">{c.value}</p>
-            <p className="text-xs text-muted-foreground">
-              {c.label}
-              {c.sub ? ` · ${c.sub}` : ""}
-            </p>
-          </div>
-        ))}
-      </div>
+      {cards.map((c) => (
+        <div key={c.label} className="rounded-2xl border border-border bg-card p-4">
+          <c.icon className="size-4 text-muted-foreground" />
+          <p className="mt-2 text-xl font-semibold tabular">{c.value}</p>
+          <p className="text-xs text-muted-foreground">
+            {c.label}
+            {c.sub ? ` · ${c.sub}` : ""}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
