@@ -13,13 +13,18 @@ import type { PlayerStats, RoundResult } from "./types";
  * paths so stats, streaks, and achievement unlocks are computed identically.
  */
 
+export interface CountryMapStreak {
+  current: number;
+  best: number;
+}
+
 export interface StreakState {
   daily: number;
   lastPlayedDay: number;
   win: number;
   bestWin: number;
-  country: number;
-  bestCountry: number;
+  /** Country-correct streak, segmented per map id (e.g. "world", "usa"). */
+  countryByMap: Record<string, CountryMapStreak>;
 }
 
 export const EMPTY_STREAKS: StreakState = {
@@ -27,9 +32,33 @@ export const EMPTY_STREAKS: StreakState = {
   lastPlayedDay: 0,
   win: 0,
   bestWin: 0,
-  country: 0,
-  bestCountry: 0,
+  countryByMap: {},
 };
+
+/**
+ * Pre-per-map streaks stored one flat `country`/`bestCountry` pair — implicitly
+ * the "world" map, since Survival always played World before this shipped. Fold
+ * it into `countryByMap.world` exactly once: if `countryByMap` is already
+ * present the account has migrated, and any lingering legacy numbers in
+ * storage are ignored from then on.
+ */
+export function resolveCountryByMap(streaks: {
+  countryByMap?: Record<string, CountryMapStreak>;
+  country?: number;
+  bestCountry?: number;
+}): Record<string, CountryMapStreak> {
+  if (streaks.countryByMap) return streaks.countryByMap;
+  if (!streaks.country && !streaks.bestCountry) return {};
+  return { world: { current: streaks.country ?? 0, best: streaks.bestCountry ?? 0 } };
+}
+
+/** Best streak across every map — used for the profile page's aggregate summary. */
+export function bestCountryStreakOf(
+  countryByMap: Record<string, CountryMapStreak>,
+): number | undefined {
+  const bests = Object.values(countryByMap).map((m) => m.best);
+  return bests.length ? Math.max(...bests) : undefined;
+}
 
 /** A solo game counts as a "win" when the player averages a strong 3000+/round. */
 export function isSoloWin(totalScore: number, rounds: number): boolean {
@@ -44,6 +73,8 @@ export interface ProgressionInput {
   unlockedBuildings: string[];
   results: RoundResult[];
   now: number;
+  /** Which map's streak counter this game bumps (e.g. "world", "usa"). */
+  mapId: string;
   /** Override the "won" determination (e.g. multiplayer placement). */
   wonOverride?: boolean;
 }
@@ -66,7 +97,7 @@ const dayNumber = (ts: number) => Math.floor(ts / 86_400_000);
 
 /** Fold a finished game's results into stats + streaks, returning deltas. */
 export function foldGame(input: ProgressionInput): ProgressionOutput {
-  const { stats: prev, streaks: s, ownedAchievements, results, now } = input;
+  const { stats: prev, streaks: s, ownedAchievements, results, now, mapId } = input;
   const rounds = results.length;
   const totalScore = results.reduce((a, r) => a + r.score, 0);
   const distanceSum = results.reduce((a, r) => a + r.distanceMeters, 0);
@@ -98,26 +129,30 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
   const win = won ? s.win + 1 : 0;
 
   // Track the peak inside the game too — a streak that breaks before the last
-  // round would otherwise never be recorded in bestCountry.
-  let country = s.country;
-  let bestCountry = s.bestCountry;
+  // round would otherwise never be recorded as this map's best.
+  const prevMapStreak = s.countryByMap[mapId] ?? { current: 0, best: 0 };
+  let country = prevMapStreak.current;
+  let best = prevMapStreak.best;
   for (const r of results) {
     country = r.countryCorrect ? country + 1 : 0;
-    bestCountry = Math.max(bestCountry, country);
+    best = Math.max(best, country);
   }
+  const countryByMap: Record<string, CountryMapStreak> = {
+    ...s.countryByMap,
+    [mapId]: { current: country, best },
+  };
 
   const streaks: StreakState = {
     daily,
     lastPlayedDay: today,
     win,
     bestWin: Math.max(s.bestWin, win),
-    country,
-    bestCountry,
+    countryByMap,
   };
 
   const ctx: AchievementContext = {
     stats,
-    streaks: { daily: streaks.daily, win: streaks.win, country: streaks.country },
+    streaks: { daily: streaks.daily, win: streaks.win, country },
     lastGame: { results, totalScore, perfectRounds, won },
   };
   const newAchievements = newlyUnlocked(ctx, ownedAchievements);
