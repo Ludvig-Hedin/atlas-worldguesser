@@ -45,8 +45,28 @@ export const CARTO_LIGHT_STYLE: StyleSpecification = {
   ],
 };
 
-/** Back-compat alias — several call sites import CARTO_DARK_STYLE. */
-export const CARTO_DARK_STYLE = CARTO_LIGHT_STYLE;
+/** Free, key-less dark basemap (CARTO Dark Matter over OSM). Used for the
+ * "normal" map style when the dark-map preference is on. */
+export const CARTO_DARK_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    carto: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: CARTO_ATTRIB,
+    },
+  },
+  layers: [
+    { id: "bg", type: "background", paint: { "background-color": "#0b0f14" } },
+    { id: "carto", type: "raster", source: "carto", paint: { "raster-opacity": 1 } },
+  ],
+};
 
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
@@ -118,8 +138,13 @@ export const MAP_STYLES: Record<MapType, StyleSpecification> = {
   hybrid: HYBRID_STYLE,
 };
 
-/** Resolve a map-type preference to its style, defaulting to the normal basemap. */
-export function mapStyleFor(type: MapType): StyleSpecification {
+/**
+ * Resolve a map-type preference to its style, defaulting to the normal basemap.
+ * `dark` swaps the "normal" style to dark tiles (satellite/terrain/hybrid have
+ * no free key-less dark variant, so they're unaffected).
+ */
+export function mapStyleFor(type: MapType, dark = false): StyleSpecification {
+  if (type === "normal" && dark) return CARTO_DARK_STYLE;
   return MAP_STYLES[type] ?? CARTO_LIGHT_STYLE;
 }
 

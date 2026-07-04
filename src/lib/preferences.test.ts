@@ -23,12 +23,19 @@ describe("loadPreferences", () => {
   });
 
   it("round-trips saved preferences", () => {
-    savePreferences({ theme: "light", locale: "sv", mapType: "satellite", sound: false });
+    savePreferences({
+      theme: "light",
+      locale: "sv",
+      mapType: "satellite",
+      sound: false,
+      darkMap: false,
+    });
     expect(loadPreferences()).toEqual({
       theme: "light",
       locale: "sv",
       mapType: "satellite",
       sound: false,
+      darkMap: false,
     });
   });
 
@@ -50,7 +57,13 @@ describe("loadPreferences", () => {
       locale: "en",
       mapType: "terrain",
       sound: true,
+      darkMap: true,
     });
+  });
+
+  it("falls back to the default for a non-boolean darkMap", () => {
+    window.localStorage.setItem(KEY, JSON.stringify({ darkMap: "yes" }));
+    expect(loadPreferences()).toEqual(DEFAULT_PREFERENCES);
   });
 });
 

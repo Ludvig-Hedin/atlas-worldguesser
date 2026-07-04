@@ -14,6 +14,8 @@ export interface Preferences {
   mapType: MapType;
   /** Play sound effects (right/wrong, menu clicks). */
   sound: boolean;
+  /** Use dark map tiles for the normal basemap when the resolved theme is dark. */
+  darkMap: boolean;
 }
 
 export const THEMES: readonly Theme[] = ["system", "light", "dark"] as const;
@@ -30,6 +32,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   locale: "en",
   mapType: "normal",
   sound: true,
+  darkMap: true,
 };
 
 const KEY = "atlas:prefs:v1";
@@ -56,6 +59,7 @@ export function loadPreferences(): Preferences {
       locale: isLocale(parsed.locale) ? parsed.locale : DEFAULT_PREFERENCES.locale,
       mapType: isMapType(parsed.mapType) ? parsed.mapType : DEFAULT_PREFERENCES.mapType,
       sound: typeof parsed.sound === "boolean" ? parsed.sound : DEFAULT_PREFERENCES.sound,
+      darkMap: typeof parsed.darkMap === "boolean" ? parsed.darkMap : DEFAULT_PREFERENCES.darkMap,
     };
   } catch {
     return { ...DEFAULT_PREFERENCES };

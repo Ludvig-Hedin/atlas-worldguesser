@@ -25,6 +25,7 @@ interface PreferencesContextValue extends Preferences {
   setLocale: (locale: Locale) => void;
   setMapType: (mapType: MapType) => void;
   setSound: (sound: boolean) => void;
+  setDarkMap: (darkMap: boolean) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -119,6 +120,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setLocale: (locale) => setSnapshot({ ...getSnapshot(), locale }),
       setMapType: (mapType) => setSnapshot({ ...getSnapshot(), mapType }),
       setSound: (sound) => setSnapshot({ ...getSnapshot(), sound }),
+      setDarkMap: (darkMap) => setSnapshot({ ...getSnapshot(), darkMap }),
     }),
     [prefs],
   );
@@ -139,6 +141,7 @@ export function usePreferences(): PreferencesContextValue {
       setLocale: () => {},
       setMapType: () => {},
       setSound: () => {},
+      setDarkMap: () => {},
     };
   }
   return ctx;

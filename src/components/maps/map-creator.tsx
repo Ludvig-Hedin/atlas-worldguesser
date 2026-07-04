@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { mapStyleFor } from "@/lib/map-style";
+import { resolveTheme } from "@/lib/preferences";
 import { countryAtAsync } from "@/lib/geo";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
@@ -58,7 +59,8 @@ function pinEl(n: number): HTMLDivElement {
 function Creator() {
   const router = useRouter();
   const create = useMutation(api.maps.create);
-  const { mapType } = usePreferences();
+  const { mapType, theme, darkMap } = usePreferences();
+  const dark = darkMap && resolveTheme(theme) === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
@@ -84,7 +86,7 @@ function Creator() {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: mapStyleFor(mapType),
+      style: mapStyleFor(mapType, dark),
       center: [10, 25],
       zoom: 1.4,
       attributionControl: false,
@@ -137,8 +139,8 @@ function Creator() {
       styleInitRef.current = true;
       return;
     }
-    map.setStyle(mapStyleFor(mapType));
-  }, [mapType]);
+    map.setStyle(mapStyleFor(mapType, dark));
+  }, [mapType, dark]);
 
   /** Append a batch of locations, creating a numbered marker for each. Skips ids already on the map. */
   const addPoints = (locs: { lat: number; lng: number; countryCode: string }[]) => {

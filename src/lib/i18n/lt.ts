@@ -29,6 +29,8 @@ export const lt: LocaleDictionary = {
   "settings.theme.dark": "Tamsi",
   "settings.language": "Kalba",
   "settings.mapType": "Žemėlapio tipas",
+  "settings.darkMap": "Tamsus žemėlapis",
+  "settings.darkMapHint": "Naudoti tamsius plytelės įprastam žemėlapiui tamsiu režimu",
   "settings.mapType.normal": "Įprastas",
   "settings.mapType.satellite": "Palydovinis",
   "settings.mapType.terrain": "Reljefas",

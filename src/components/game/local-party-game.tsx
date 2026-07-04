@@ -20,6 +20,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useT } from "@/hooks/use-t";
 import { mapStyleFor } from "@/lib/map-style";
+import { resolveTheme } from "@/lib/preferences";
 import { getMapConfig, movementLabelKey } from "@/lib/maps-config";
 import { formatClock, formatDistance, formatNumber } from "@/lib/format";
 import type { GameLocation, GameSettings } from "@/lib/types";
@@ -273,14 +274,15 @@ function RoundRevealMap({
   results: LocalTurnResult[];
   view: [number, number, number];
 }) {
-  const { mapType } = usePreferences();
+  const { mapType, theme, darkMap } = usePreferences();
+  const dark = darkMap && resolveTheme(theme) === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: mapStyleFor(mapType),
+      style: mapStyleFor(mapType, dark),
       center: [view[0], view[1]],
       zoom: view[2],
       attributionControl: false,
@@ -339,7 +341,7 @@ function RoundRevealMap({
       map.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actual, players, results, view, mapType]);
+  }, [actual, players, results, view, mapType, dark]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }

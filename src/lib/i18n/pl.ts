@@ -29,6 +29,8 @@ export const pl: LocaleDictionary = {
   "settings.theme.dark": "Ciemny",
   "settings.language": "Język",
   "settings.mapType": "Typ mapy",
+  "settings.darkMap": "Ciemna mapa",
+  "settings.darkMapHint": "Użyj ciemnych kafelków dla mapy normalnej w trybie ciemnym",
   "settings.mapType.normal": "Normalna",
   "settings.mapType.satellite": "Satelitarna",
   "settings.mapType.terrain": "Teren",

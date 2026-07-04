@@ -89,7 +89,8 @@ until the keys are present.
   synchronized round timing.
 - **Panorama** is unified behind `StreetViewCanvas`, which uses Google Street
   View when available and falls back to a procedural demo panorama otherwise.
-- **Guess map** is MapLibre GL over a free, key-less CARTO dark basemap.
+- **Guess map** is MapLibre GL over a free, key-less CARTO basemap (Voyager
+  light tiles, Dark Matter tiles for the "Dark map" preference).
 
 ### Data
 
@@ -316,6 +317,12 @@ by re-running the same prompt template per country code and re-keying.
   (`src/components/multiplayer/duel-health-bar.tsx`) showing each side's
   percentage share of the combined score — no new scoring formula. Reuses the
   existing create → share code/link → join flow verbatim; no matchmaking queue.
+- ✅ Dark map — a "Dark map" toggle in Settings (`darkMap` preference, on by
+  default) swaps the "Normal" basemap to free, key-less CARTO Dark Matter
+  tiles (`CARTO_DARK_STYLE` in `src/lib/map-style.ts`) whenever the resolved
+  app theme is dark. Satellite/Terrain/Hybrid are imagery-based and already
+  dark enough, so the toggle only affects the Normal style; turning it off
+  keeps the light Voyager tiles even in dark mode.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.

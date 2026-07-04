@@ -29,6 +29,8 @@ export const sv: LocaleDictionary = {
   "settings.theme.dark": "Mörkt",
   "settings.language": "Språk",
   "settings.mapType": "Karttyp",
+  "settings.darkMap": "Mörk karta",
+  "settings.darkMapHint": "Använd mörka kartplattor för normalkartan i mörkt läge",
   "settings.mapType.normal": "Normal",
   "settings.mapType.satellite": "Satellit",
   "settings.mapType.terrain": "Terräng",

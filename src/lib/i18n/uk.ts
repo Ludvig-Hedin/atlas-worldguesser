@@ -29,6 +29,8 @@ export const uk: LocaleDictionary = {
   "settings.theme.dark": "Темна",
   "settings.language": "Мова",
   "settings.mapType": "Тип карти",
+  "settings.darkMap": "Темна карта",
+  "settings.darkMapHint": "Темні плитки для звичайної карти в темному режимі",
   "settings.mapType.normal": "Звичайна",
   "settings.mapType.satellite": "Супутник",
   "settings.mapType.terrain": "Рельєф",

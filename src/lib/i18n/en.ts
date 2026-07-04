@@ -36,6 +36,8 @@ export const en = {
   "settings.theme.dark": "Dark",
   "settings.language": "Language",
   "settings.mapType": "Map type",
+  "settings.darkMap": "Dark map",
+  "settings.darkMapHint": "Use dark tiles for the normal map in dark mode",
   "settings.sound": "Sound",
   "settings.soundHint": "Play sound effects",
   "settings.notifications": "Notifications",

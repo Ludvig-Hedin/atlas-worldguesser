@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAP_STYLES, mapStyleFor, CARTO_LIGHT_STYLE } from "./map-style";
+import { MAP_STYLES, mapStyleFor, CARTO_LIGHT_STYLE, CARTO_DARK_STYLE } from "./map-style";
 import type { MapType } from "./preferences";
 
 const ALL: MapType[] = ["normal", "satellite", "terrain", "hybrid"];
@@ -27,5 +27,22 @@ describe("mapStyleFor", () => {
   it("falls back to the normal basemap for an unknown type", () => {
     // @ts-expect-error — exercising the runtime guard with a bad value.
     expect(mapStyleFor("hologram")).toBe(CARTO_LIGHT_STYLE);
+  });
+
+  it("swaps to dark tiles for normal when dark is true", () => {
+    expect(mapStyleFor("normal", true)).toBe(CARTO_DARK_STYLE);
+    expect(mapStyleFor("normal", false)).toBe(CARTO_LIGHT_STYLE);
+  });
+
+  it("leaves non-normal styles unaffected by the dark flag", () => {
+    for (const type of ALL.filter((t) => t !== "normal")) {
+      expect(mapStyleFor(type, true)).toBe(MAP_STYLES[type]);
+    }
+  });
+
+  it("CARTO_DARK_STYLE is a distinct, valid v8 style", () => {
+    expect(CARTO_DARK_STYLE).not.toBe(CARTO_LIGHT_STYLE);
+    expect(CARTO_DARK_STYLE.version).toBe(8);
+    expect(Object.keys(CARTO_DARK_STYLE.sources).length).toBeGreaterThan(0);
   });
 });

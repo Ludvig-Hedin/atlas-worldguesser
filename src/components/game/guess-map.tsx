@@ -6,6 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { LatLng } from "@/lib/types";
 import { mapStyleFor } from "@/lib/map-style";
 import { circlePolygon } from "@/lib/geo";
+import { resolveTheme } from "@/lib/preferences";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +99,8 @@ export function GuessMap({
   className,
   bottomInset = 0,
 }: GuessMapProps) {
-  const { mapType } = usePreferences();
+  const { mapType, theme, darkMap } = usePreferences();
+  const dark = darkMap && resolveTheme(theme) === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const guessMarker = useRef<maplibregl.Marker | null>(null);
@@ -183,7 +185,7 @@ export function GuessMap({
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: mapStyleFor(mapType),
+      style: mapStyleFor(mapType, dark),
       center: [initialView[0], initialView[1]],
       zoom: initialView[2],
       attributionControl: false,
@@ -222,13 +224,13 @@ export function GuessMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
-    map.setStyle(mapStyleFor(mapType));
+    map.setStyle(mapStyleFor(mapType, dark));
     map.once("styledata", () => {
       addOverlays(map);
       applyHintRef.current();
       applyRevealRef.current();
     });
-  }, [mapType]);
+  }, [mapType, dark]);
 
   // Reflect the guess marker.
   useEffect(() => {

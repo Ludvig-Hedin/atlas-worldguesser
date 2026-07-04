@@ -32,7 +32,18 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 /** Header entry point for device-local preferences: theme, language, map type. */
 export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}) {
-  const { theme, setTheme, locale, setLocale, mapType, setMapType, sound, setSound } = usePreferences();
+  const {
+    theme,
+    setTheme,
+    locale,
+    setLocale,
+    mapType,
+    setMapType,
+    sound,
+    setSound,
+    darkMap,
+    setDarkMap,
+  } = usePreferences();
   const { isAuthenticated } = useConvexAuth();
   const push = usePushNotifications();
   const t = useT();
@@ -126,6 +137,13 @@ export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}
               onChange={setMapType}
               options={mapOptions}
             />
+          </Field>
+
+          <Field label={t("settings.darkMap")}>
+            <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-overlay px-3 py-2">
+              <span className="text-sm text-muted-foreground">{t("settings.darkMapHint")}</span>
+              <Switch checked={darkMap} onCheckedChange={setDarkMap} aria-label={t("settings.darkMap")} />
+            </label>
           </Field>
 
           <Field label={t("settings.sound")}>
