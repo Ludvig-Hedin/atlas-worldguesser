@@ -91,6 +91,8 @@ export const sv: LocaleDictionary = {
   "leaderboard.rankedByXp": "Rankad efter XP",
   "leaderboard.global": "Global",
   "leaderboard.friends": "Vänner",
+  "leaderboard.thisWeek": "Denna vecka",
+  "leaderboard.thisMonth": "Denna månad",
   "leaderboard.scopeAria": "Topplistans omfattning",
   "leaderboard.you": "Du",
   "leaderboard.levelGames": "Nivå {level} · {games} spel",

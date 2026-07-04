@@ -91,6 +91,22 @@ export default defineSchema({
     .index("by_xp", ["xp"])
     .index("by_rating", ["rating"]),
 
+  // Time-scoped ("This Week"/"This Month") leaderboards. Cumulative XP alone
+  // locks new players out forever — this tracks each user's XP at the start
+  // of the CURRENT period only (overwritten at the next period boundary, not
+  // accumulated into history) so "gain since period start" = users.xp - this.
+  xpSnapshots: defineTable({
+    userId: v.id("users"),
+    period: v.union(v.literal("week"), v.literal("month")),
+    periodStart: v.number(),
+    xpAtStart: v.number(),
+  })
+    // Looked up by the snapshot cron: does this user already have a row for
+    // this period to overwrite, or does one need inserting?
+    .index("by_user_period", ["userId", "period"])
+    // Looked up by `topPeriod`: every snapshot row for a given period.
+    .index("by_period", ["period"]),
+
   achievements: defineTable({
     userId: v.id("users"),
     achievementId: v.string(),

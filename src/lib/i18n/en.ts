@@ -103,6 +103,8 @@ export const en = {
   "leaderboard.rankedByXp": "Ranked by XP",
   "leaderboard.global": "Global",
   "leaderboard.friends": "Friends",
+  "leaderboard.thisWeek": "This Week",
+  "leaderboard.thisMonth": "This Month",
   "leaderboard.scopeAria": "Leaderboard scope",
   "leaderboard.you": "You",
   "leaderboard.levelGames": "Level {level} · {games} games",

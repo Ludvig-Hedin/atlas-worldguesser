@@ -13,7 +13,7 @@ import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/use-t";
 
-type Scope = "global" | "friends";
+type Scope = "global" | "friends" | "week" | "month";
 
 interface RowData {
   rank: number;
@@ -24,6 +24,8 @@ interface RowData {
   xp: number;
   level: number;
   gamesPlayed: number;
+  /** XP gained since the period's snapshot — only set for "week"/"month" scopes. */
+  gain?: number;
 }
 
 function LeaderRow({ r, isMe }: { r: RowData; isMe: boolean }) {
@@ -55,7 +57,9 @@ function LeaderRow({ r, isMe }: { r: RowData; isMe: boolean }) {
           {t("leaderboard.levelGames", { level: r.level, games: formatNumber(r.gamesPlayed) })}
         </p>
       </div>
-      <Badge variant="muted" className="tabular">{formatNumber(r.xp)} XP</Badge>
+      <Badge variant="muted" className="tabular">
+        {r.gain !== undefined ? `+${formatNumber(r.gain)} XP` : `${formatNumber(r.xp)} XP`}
+      </Badge>
     </Link>
   );
 }
@@ -65,13 +69,20 @@ export function LeaderboardClient() {
   const [scope, setScope] = useState<Scope>("global");
   const globalRows = useQuery(api.leaderboard.top, { limit: 50 });
   const friendRows = useQuery(api.leaderboard.friends, scope === "friends" ? {} : "skip");
+  const weekRows = useQuery(api.leaderboard.topPeriod, scope === "week" ? { period: "week", limit: 50 } : "skip");
+  const monthRows = useQuery(
+    api.leaderboard.topPeriod,
+    scope === "month" ? { period: "month", limit: 50 } : "skip",
+  );
   const myRank = useQuery(api.leaderboard.myRank);
 
-  const rows = scope === "global" ? globalRows : friendRows;
+  const rows =
+    scope === "global" ? globalRows : scope === "friends" ? friendRows : scope === "week" ? weekRows : monthRows;
   const loading = rows === undefined;
   const signedIn = myRank !== null && myRank !== undefined;
 
   // Pin the signed-in player's global row when they're outside the visible top list.
+  // (Week/Month don't have a self-rank query yet — those scopes just show the top list.)
   const showPin =
     scope === "global" &&
     !!myRank &&
@@ -88,6 +99,8 @@ export function LeaderboardClient() {
       <Segmented
         options={[
           { value: "global", label: t("leaderboard.global") },
+          { value: "week", label: t("leaderboard.thisWeek") },
+          { value: "month", label: t("leaderboard.thisMonth") },
           { value: "friends", label: t("leaderboard.friends") },
         ]}
         value={scope}

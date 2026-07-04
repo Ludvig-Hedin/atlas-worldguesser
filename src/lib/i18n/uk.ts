@@ -91,6 +91,8 @@ export const uk: LocaleDictionary = {
   "leaderboard.rankedByXp": "Ранжування за XP",
   "leaderboard.global": "Глобальний",
   "leaderboard.friends": "Друзі",
+  "leaderboard.thisWeek": "Цей тиждень",
+  "leaderboard.thisMonth": "Цей місяць",
   "leaderboard.scopeAria": "Область рейтингу",
   "leaderboard.you": "Ви",
   "leaderboard.levelGames": "Рівень {level} · {games} ігор",

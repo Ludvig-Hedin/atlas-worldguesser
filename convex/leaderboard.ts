@@ -1,9 +1,12 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { query, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { levelForXp } from "../src/lib/xp";
 import { DEFAULT_RATING, tierForRating } from "../src/lib/rating";
 import { currentUser } from "./users";
+
+const periodValidator = v.union(v.literal("week"), v.literal("month"));
 
 function row(u: Doc<"users">, rank: number) {
   return {
@@ -138,5 +141,97 @@ export const friends = query({
     );
     users.sort((a, b) => b.xp - a.xp);
     return users.map((u, i) => row(u, i + 1));
+  },
+});
+
+/**
+ * (Re)stamp every user's XP-at-period-start. Scheduled weekly/monthly by
+ * crons.ts. Self-reschedules across batches so one call never reads/writes
+ * more than a page of users (Convex mutation transaction limits). Overwrites
+ * the existing row for this period rather than inserting a new one each
+ * time — this table stays O(active users), not O(users × periods elapsed).
+ */
+const SNAPSHOT_BATCH = 200;
+
+export const snapshotPeriod = internalMutation({
+  args: { period: periodValidator, cursor: v.optional(v.string()) },
+  handler: async (ctx, { period, cursor }) => {
+    const now = Date.now();
+    const page = await ctx.db.query("users").paginate({ numItems: SNAPSHOT_BATCH, cursor: cursor ?? null });
+    for (const user of page.page) {
+      const existing = await ctx.db
+        .query("xpSnapshots")
+        .withIndex("by_user_period", (q) => q.eq("userId", user._id).eq("period", period))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { periodStart: now, xpAtStart: user.xp });
+      } else {
+        await ctx.db.insert("xpSnapshots", { userId: user._id, period, periodStart: now, xpAtStart: user.xp });
+      }
+    }
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.leaderboard.snapshotPeriod, {
+        period,
+        cursor: page.continueCursor,
+      });
+    }
+  },
+});
+
+function periodRow(user: Doc<"users">, gain: number, rank: number) {
+  return {
+    rank,
+    _id: user._id,
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    avatarBuildingId: user.avatarBuildingId,
+    avatarColor: user.avatarColor,
+    xp: user.xp,
+    gain,
+    level: levelForXp(user.xp),
+    gamesPlayed: user.stats.gamesPlayed,
+  };
+}
+
+/**
+ * "This Week" / "This Month" leaderboard, ranked by XP gained SINCE the
+ * period's last snapshot (not lifetime XP) — so a brand-new player can
+ * outrank a veteran within the window instead of being locked out forever by
+ * the all-time board. The very first period after this feature ships has no
+ * prior baseline: everyone's snapshot starts at their current XP, so that
+ * first window's "gain" is 0 for anyone who hasn't played since — expected,
+ * not backfilled.
+ *
+ * Bounded scan (same accepted tradeoff as `top`'s TODO): reads up to
+ * SCAN_LIMIT snapshot rows and ranks in memory. Fine at this project's scale;
+ * revisit with a maintained aggregate if the user base outgrows it.
+ */
+const SCAN_LIMIT = 500;
+
+export const topPeriod = query({
+  args: { period: periodValidator, limit: v.optional(v.number()) },
+  handler: async (ctx, { period, limit }) => {
+    const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
+    const snapshots = await ctx.db
+      .query("xpSnapshots")
+      .withIndex("by_period", (q) => q.eq("period", period))
+      .take(SCAN_LIMIT);
+
+    const gains: { user: Doc<"users">; gain: number }[] = [];
+    for (const snap of snapshots) {
+      const user = await ctx.db.get(snap.userId);
+      if (!user || user.isGuest) continue;
+      gains.push({ user, gain: Math.max(0, user.xp - snap.xpAtStart) });
+    }
+    gains.sort((a, b) => b.gain - a.gain);
+    const topGains = gains.slice(0, n);
+
+    const rows: ReturnType<typeof periodRow>[] = [];
+    for (let i = 0; i < topGains.length; i++) {
+      const rank =
+        i > 0 && topGains[i].gain === topGains[i - 1].gain ? rows[i - 1].rank : i + 1;
+      rows.push(periodRow(topGains[i].user, topGains[i].gain, rank));
+    }
+    return rows;
   },
 });

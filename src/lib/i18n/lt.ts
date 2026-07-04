@@ -91,6 +91,8 @@ export const lt: LocaleDictionary = {
   "leaderboard.rankedByXp": "Reitinguota pagal XP",
   "leaderboard.global": "Visuotinė",
   "leaderboard.friends": "Draugai",
+  "leaderboard.thisWeek": "Šią savaitę",
+  "leaderboard.thisMonth": "Šį mėnesį",
   "leaderboard.scopeAria": "Lyderių lentelės apimtis",
   "leaderboard.you": "Jūs",
   "leaderboard.levelGames": "{level} lygis · {games} žaidimų",

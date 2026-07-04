@@ -91,6 +91,8 @@ export const pl: LocaleDictionary = {
   "leaderboard.rankedByXp": "Wg punktów XP",
   "leaderboard.global": "Globalny",
   "leaderboard.friends": "Znajomi",
+  "leaderboard.thisWeek": "Ten tydzień",
+  "leaderboard.thisMonth": "Ten miesiąc",
   "leaderboard.scopeAria": "Zakres rankingu",
   "leaderboard.you": "Ty",
   "leaderboard.levelGames": "Poziom {level} · {games} gier",
