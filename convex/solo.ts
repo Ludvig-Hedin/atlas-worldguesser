@@ -9,7 +9,7 @@ import {
   pickMatchLocations,
   type MatchLocation,
 } from "./gameLogic";
-import { foldGame } from "../src/lib/progression";
+import { foldGame, resolveCountryByMap } from "../src/lib/progression";
 import { requireUser } from "./users";
 import type { RoundResult } from "../src/lib/types";
 
@@ -126,11 +126,12 @@ async function persistSoloGame(
 
   const out = foldGame({
     stats: { ...user.stats, xp: user.xp },
-    streaks: user.streaks,
+    streaks: { ...user.streaks, countryByMap: resolveCountryByMap(user.streaks) },
     ownedAchievements: ownedIds,
     unlockedBuildings: user.unlockedBuildings ?? [],
     results,
     now,
+    mapId,
   });
 
   const { xp, ...statsNoXp } = out.stats;
