@@ -14,6 +14,8 @@ interface StatsGridProps {
   rating?: number;
   /** Rated games played — 0 means "in placement / unranked". */
   ratingGamesPlayed?: number;
+  /** Best country-correct streak across every map. */
+  bestCountryStreak?: number;
 }
 
 /** Subtle per-tier accent for the medal icon. Restrained, mostly monochrome. */
@@ -25,7 +27,7 @@ const TIER_ACCENT: Record<RatingTier["key"], string> = {
   diamond: "text-cyan-400",
 };
 
-export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed }: StatsGridProps) {
+export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed, bestCountryStreak }: StatsGridProps) {
   const t = useT();
   const level = levelProgress(xp);
   const avgDistance = stats.roundsPlayed > 0 ? stats.totalDistanceMeters / stats.roundsPlayed : 0;
@@ -49,6 +51,9 @@ export function StatsGrid({ stats, xp, dailyStreak, rating, ratingGamesPlayed }:
       value: formatPercent(stats.countryCorrect, stats.countryTotal),
     },
     { icon: Flame, label: "Daily streak", value: dailyStreak != null ? `${dailyStreak}d` : "—" },
+    ...(bestCountryStreak != null
+      ? [{ icon: Award, label: "Best country streak", value: formatNumber(bestCountryStreak) }]
+      : []),
   ];
 
   return (
