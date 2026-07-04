@@ -365,7 +365,7 @@ function Creator() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Map name"
               maxLength={40}
-              className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
+              className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <textarea
               value={description}
@@ -373,7 +373,7 @@ function Creator() {
               placeholder="Description (optional)"
               maxLength={200}
               rows={2}
-              className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <label className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Public — anyone can play</span>
@@ -405,7 +405,7 @@ function Creator() {
                     onChange={(e) => setPasteText(e.target.value)}
                     placeholder={"One per line:\n48.8584, 2.2945\n40.7128 -74.0060"}
                     rows={4}
-                    className="w-full resize-none rounded-md border border-border bg-input px-2.5 py-2 font-mono text-xs outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
+                    className="w-full resize-none rounded-md border border-border bg-input px-2.5 py-2 font-mono text-xs transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] text-subtle">lat, lng · comma, space or tab</span>

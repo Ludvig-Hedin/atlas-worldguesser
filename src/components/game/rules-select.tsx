@@ -39,7 +39,7 @@ export function RulesSelect({ value, onChange, readOnly = false }: RulesSelectPr
             disabled={readOnly}
             onClick={readOnly ? undefined : () => onChange(m.id)}
             className={cn(
-              "group relative flex flex-col gap-2.5 rounded-xl border p-3.5 text-left shadow-1 transition-all duration-200 ease-fluid",
+              "group relative flex flex-col gap-2.5 rounded-xl border p-3.5 text-left shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid",
               !readOnly && "active:scale-[0.99]",
               active
                 ? "border-primary/50 bg-primary/10 shadow-2"

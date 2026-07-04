@@ -55,7 +55,7 @@ export function HomeContent() {
                 <Link
                   key={m.id}
                   href={`/play?map=${m.id}&quick=1`}
-                  className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97] backdrop-blur-sm"
+                  className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-5 shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97] backdrop-blur-sm"
                 >
                   <MapGlyph
                     mapId={m.id}

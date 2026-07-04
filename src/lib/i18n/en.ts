@@ -1,5 +1,5 @@
 /**
- * English UI strings — the source of truth for every other locale.
+ * English UI strings, the source of truth for every other locale.
  *
  * Keys are flat, dotted namespaces. `satisfies Record<string, string>` keeps the
  * literal key union (so `TKey = keyof typeof en` stays precise) while checking
@@ -67,7 +67,7 @@ export const en = {
   "friends.accept": "Accept",
   "friends.decline": "Decline",
   "friends.yourFriends": "Your friends",
-  "friends.noFriends": "No friends yet — add someone above.",
+  "friends.noFriends": "No friends yet. Add someone above.",
   "friends.remove": "Remove",
   "friends.pendingSent": "Pending sent",
   "friends.pending": "Pending…",
@@ -90,7 +90,7 @@ export const en = {
   "maps.create": "Create",
   "maps.yourMaps": "Your maps",
   "maps.communityMaps": "Community maps",
-  "maps.noCommunityMaps": "No community maps yet — be the first to create one.",
+  "maps.noCommunityMaps": "No community maps yet, so be the first to create one.",
   "maps.deleteDialogTitle": "Delete map?",
   "maps.deleteDialogDescription": "This permanently deletes this map and its locations. This can't be undone.",
   "maps.deleteConfirm": "Delete",
@@ -135,7 +135,7 @@ export const en = {
   "profile.avatarGuestHint": "Sign in to claim these as your avatar",
   "profile.viewAllAvatars": "View all",
   "profile.allAvatarsTitle": "All avatars",
-  "profile.noAvatarsYet": "No buildings unlocked yet — guess a country correctly to earn one.",
+  "profile.noAvatarsYet": "No buildings unlocked yet. Guess a country correctly to earn one.",
 
   // Multiplayer
   "mp.host": "Host",
@@ -184,7 +184,7 @@ export const en = {
   "setup.roundTimer": "Round timer",
   "setup.startGame": "Start game",
   "setup.survivalStreak": "Survival streak",
-  "setup.survivalExplainer": "Survival: name the correct country to keep going — one miss ends the run.",
+  "setup.survivalExplainer": "Survival: name the correct country to keep going. One miss ends the run.",
   "setup.timeNone": "None",
   "setup.time30": "30s",
   "setup.time60": "1m",
@@ -203,7 +203,7 @@ export const en = {
   "match.setAsAvatar": "Set as avatar",
   "match.signInToClaim": "Sign in to claim",
   "match.levelUp": "Level up! Now level {level}",
-  "match.streakFrozen": "Streak saved — used a freeze, {count} left",
+  "match.streakFrozen": "Streak saved. Freeze used, {count} left",
   "match.countryStreak": "{map} streak",
   "match.countryStreakCurrent": "Current",
   "match.countryStreakBest": "Best",
@@ -214,7 +214,7 @@ export const en = {
 
   // Local "Pass & Play" party mode (same-device, no accounts)
   "party.entryTitle": "Play together on this device",
-  "party.entrySubtitle": "Pass-and-play — no accounts, no other devices needed.",
+  "party.entrySubtitle": "Pass-and-play: no accounts, no other devices needed.",
   "party.setupTitle": "Game night setup",
   "party.playersHeading": "Players",
   "party.playerPlaceholder": "Player {n}",
@@ -224,7 +224,7 @@ export const en = {
   "party.startGame": "Start party",
   "party.back": "Back",
   "party.passDeviceTo": "Pass the device to",
-  "party.imReady": "I'm ready — go!",
+  "party.imReady": "I'm ready, let's go!",
   "party.turnOf": "{name}'s turn",
   "party.roundOf": "Round {current}/{total}",
   "party.roundResults": "Round {round} results",
@@ -261,7 +261,7 @@ export const en = {
   "battle.on": "Battle Royale",
   "battle.couldNotChangeFormat": "Could not change format",
   "battle.eliminatedTag": "Eliminated",
-  "battle.eliminatedAtRound": "Out — round {round}",
+  "battle.eliminatedAtRound": "Out at round {round}",
 
   // Multiplayer lobby
   "lobby.roomCode": "Room code",
@@ -273,7 +273,7 @@ export const en = {
   "lobby.roundsSuffix": "Rounds: {n}",
   "lobby.timerSuffix": "Timer: {label}",
   "lobby.imReady": "I'm ready",
-  "lobby.readyTooltip": "Let the host know you're set — they can start anytime.",
+  "lobby.readyTooltip": "Let the host know you're set so they can start anytime.",
   "lobby.startMatch": "Start match",
   "lobby.waitingForHostToStart": "Waiting for the host to start… Mark yourself ready so they know you're set.",
   "lobby.players": "Players",
@@ -313,7 +313,7 @@ export const en = {
   "party.startRoomTogether": "Start room together",
   "party.joinRoom": "Join room",
   "party.waitingForLeader": "Waiting for the leader to start a room…",
-  "party.roomLive": "Room {code} is live — your party can join now.",
+  "party.roomLive": "Room {code} is live. Your party can join now.",
   "party.invitedToast": "Invited {name}",
   "party.couldNotInvite": "Could not invite",
   "party.couldNotJoinParty": "Could not join",
@@ -321,17 +321,17 @@ export const en = {
   "party.couldNotStartRoom": "Could not start room",
 
   // Chat
-  "chat.noMessages": "No messages yet — say hello.",
+  "chat.noMessages": "No messages yet. Say hello!",
   "chat.placeholder": "Message…",
   "chat.sendAria": "Send",
-  "chat.notSent": "Message not sent — try again in a moment",
+  "chat.notSent": "Message not sent. Try again in a moment",
 
   // Daily Challenge
   "daily.solo": "Solo",
   "daily.badge": "Daily Challenge",
   "daily.heading": "Same five places. Everyone. Once a day.",
   "daily.subheading": "One shot at today's five locations. Come back tomorrow for a new set.",
-  "daily.playedBanner": "You've played today's challenge. See how you rank below — a new challenge drops tomorrow.",
+  "daily.playedBanner": "You've played today's challenge. See how you rank below, and a new challenge drops tomorrow.",
   "daily.playButton": "Play today's challenge",
   "daily.signInNudge": "Sign in to save your score and join the leaderboard.",
   "daily.leaderboardTitle": "Today's leaderboard",
@@ -339,14 +339,14 @@ export const en = {
   "daily.youScoreRank": "You: {score} · #{rank}",
   "daily.noScoresYet": "No scores yet today. Be the first to set the pace.",
   "daily.countriesOf5": "{count}/5 countries",
-  "daily.submitSuccess": "Daily submitted — {score} pts · {correct}/5 countries",
+  "daily.submitSuccess": "Daily submitted: {score} pts · {correct}/5 countries",
   "daily.submitErrorFallback": "Couldn't submit your daily score.",
 
   // Async streak-challenge link
   "challenge.solo": "Solo",
   "challenge.badge": "Streak Challenge",
   "challenge.unknownPlayer": "Unknown player",
-  "challenge.subtitle": "{count} in a row. Same locations, same order — think you can beat it?",
+  "challenge.subtitle": "{count} in a row. Same locations, same order. Think you can beat it?",
   "challenge.attemptsSoFar": "Attempts so far: {count}",
   "challenge.playButton": "Beat the streak",
   "challenge.signInNudge": "Sign in to save your attempt and compare scores.",
@@ -354,7 +354,7 @@ export const en = {
   "challenge.you": "You",
   "challenge.youWon": "You beat the streak!",
   "challenge.youLost": "{name}'s streak still stands",
-  "challenge.attemptSaved": "Attempt saved — {streak} in a row · {score} pts",
+  "challenge.attemptSaved": "Attempt saved: {streak} in a row · {score} pts",
   "challenge.attemptErrorFallback": "Couldn't save your attempt.",
 
   // Generic / shared
@@ -373,8 +373,8 @@ export const en = {
   "home.quickPlay": "Quick play",
   "home.classicCardTitle": "Classic",
   "home.classicCardBody": "Street View · any map",
-  "home.quickPlayHelper": "Quick play drops you on the World map — 5 rounds, move freely, no timer.",
-  "home.demoMode": "Running in demo mode — add a Google Maps key for real Street View.",
+  "home.quickPlayHelper": "Quick play drops you on the World map: 5 rounds, move freely, no timer.",
+  "home.demoMode": "Running in demo mode. Add a Google Maps key for real Street View.",
   "home.jumpIntoMap": "Jump into a map",
   "home.highlightStreetsTitle": "Real streets",
   "home.highlightStreetsBody": "Dropped into a random panorama anywhere on Earth.",
@@ -389,16 +389,16 @@ export const en = {
   "home.stepCluesTitle": "Read the clues",
   "home.stepCluesBody": "Study the road signs, architecture, plants, and language to work out the location.",
   "home.stepGuessTitle": "Guess on the map",
-  "home.stepGuessBody": "Drop a pin where you think you are — the closer your guess, the more points you score.",
+  "home.stepGuessBody": "Drop a pin where you think you are. The closer your guess, the more points you score.",
   "home.whatIsHeading": "A free map guessing game",
-  "home.whatIsBody": "Atlas is a free geography guessing game you play right in your browser — no download, no sign-up to start. It’s a fast, modern GeoGuessr alternative: you’re dropped somewhere on Earth in Street View and have to guess the location. Play the whole world, or focus on Europe, the USA, or a famous place in every country.",
+  "home.whatIsBody": "Atlas is a free geography guessing game you play right in your browser. No download, no sign-up to start. It’s a fast, modern GeoGuessr alternative: you’re dropped somewhere on Earth in Street View and have to guess the location. Play the whole world, or focus on Europe, the USA, or a famous place in every country.",
   "home.faqHeading": "Frequently asked questions",
   "home.faqFreeQ": "Is Atlas free to play?",
   "home.faqFreeA": "Yes. Atlas is a completely free geography guessing game you play in your browser. Sign in only if you want to save stats, earn XP, and play multiplayer with friends.",
   "home.faqGeoguessrQ": "Is Atlas like GeoGuessr?",
   "home.faqGeoguessrA": "If you enjoy GeoGuessr, you'll feel right at home. Atlas is a free GeoGuessr alternative with world and regional maps, timed or untimed rounds, and an NMPZ mode.",
   "home.faqAccountQ": "Do I need an account?",
-  "home.faqAccountA": "No — solo play works with zero setup. An account unlocks streaks, achievements, friends, and custom maps.",
+  "home.faqAccountA": "No. Solo play works with zero setup. An account unlocks streaks, achievements, friends, and custom maps.",
   "home.faqGuessQ": "What can I guess?",
   "home.faqGuessA": "Real streets and landmarks worldwide. Pick a map to focus the game on a region like Europe or the USA, or take on the whole world.",
   "home.continue": "Continue · {label}",
@@ -446,7 +446,7 @@ export const en = {
   "movementCap.zoom": "Zoom in",
 
   // Solo game
-  "game.timeUp": "Time's up — locking in your guess.",
+  "game.timeUp": "Time's up. Locking in your guess.",
   "game.droppingSomewhere": "Dropping you somewhere…",
   "game.findingSpot": "Finding a spot with Street View…",
 

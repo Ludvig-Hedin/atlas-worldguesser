@@ -277,7 +277,7 @@ function PlayClientCore({
           <PlaySetup onStart={start} initialMapId={initialMapId} />
           <Link
             href="/daily"
-            className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
           >
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
               <CalendarDays className="size-5" />
@@ -292,7 +292,7 @@ function PlayClientCore({
           </Link>
           <Link
             href="/flags"
-            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
           >
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
               <Flag className="size-5" />
@@ -307,7 +307,7 @@ function PlayClientCore({
           </Link>
           <Link
             href="/countries"
-            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
           >
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
               <Type className="size-5" />
@@ -323,7 +323,7 @@ function PlayClientCore({
           <button
             type="button"
             onClick={() => setShowPartySetup(true)}
-            className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+            className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-1 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
           >
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
               <Users className="size-5" />
