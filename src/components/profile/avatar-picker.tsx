@@ -31,7 +31,7 @@ export function AvatarPicker({ avatarBuildingId, avatarColor, unlockedBuildings,
   const setAvatar = useMutation(api.users.setAvatar);
   const unlockedSet = new Set(unlockedBuildings);
   const color = avatarColor ?? DEFAULT_AVATAR_COLOR;
-  const visibleBuildings = limit ? BUILDING_LIST.slice(0, limit) : BUILDING_LIST;
+  const visibleBuildings = limit !== undefined ? BUILDING_LIST.slice(0, limit) : BUILDING_LIST;
   const hasMore = limit !== undefined && BUILDING_LIST.length > limit;
 
   return (
