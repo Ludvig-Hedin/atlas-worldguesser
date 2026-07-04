@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Flag, Navigation, Trophy } from "lucide-react";
 import { GuessMap } from "./guess-map";
@@ -32,6 +32,19 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
   const [cluesOpen, setCluesOpen] = useState(false);
   const sideFact = drivingSideFact(result.actual.countryCode);
 
+  // Measure the result card so the map can keep both pins clear of it —
+  // its height varies by locale, content wrap, and viewport width.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardInset, setCardInset] = useState(0);
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    setCardInset(el.getBoundingClientRect().height);
+    const ro = new ResizeObserver(() => setCardInset(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Mash-guard: keep the advance button disabled briefly so a quick click
   // doesn't skip the map-fit animation. Re-focus once it becomes actionable.
   const nextRef = useRef<HTMLButtonElement>(null);
@@ -57,10 +70,12 @@ export function RoundReveal({ result, map, isLastRound, onNext }: RoundRevealPro
           reveal
           interactive={false}
           initialView={map.view}
+          bottomInset={cardInset}
         />
       </div>
 
       <motion.div
+        ref={cardRef}
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 34, delay: 0.1 }}

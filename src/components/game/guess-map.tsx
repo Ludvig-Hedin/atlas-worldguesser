@@ -83,6 +83,8 @@ interface GuessMapProps {
   interactive?: boolean;
   hintCircle?: HintCircle | null;
   className?: string;
+  /** Extra bottom padding (px) to keep pins clear of an overlaid result card. */
+  bottomInset?: number;
 }
 
 export function GuessMap({
@@ -94,6 +96,7 @@ export function GuessMap({
   interactive = true,
   hintCircle,
   className,
+  bottomInset = 0,
 }: GuessMapProps) {
   const { mapType } = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -147,16 +150,25 @@ export function GuessMap({
         });
         const bounds = new maplibregl.LngLatBounds([guess.lng, guess.lat], [guess.lng, guess.lat]);
         bounds.extend([actual.lng, actual.lat]);
-        map.fitBounds(bounds, { padding: 80, maxZoom: 7, duration: 800 });
+        map.fitBounds(bounds, {
+          padding: { top: 80, bottom: 80 + bottomInset, left: 80, right: 80 },
+          maxZoom: 7,
+          duration: 800,
+        });
       } else {
-        map.flyTo({ center: [actual.lng, actual.lat], zoom: 4, duration: 700 });
+        map.flyTo({
+          center: [actual.lng, actual.lat],
+          zoom: 4,
+          duration: 700,
+          padding: { top: 80, bottom: 80 + bottomInset, left: 80, right: 80 },
+        });
       }
     } else {
       actualMarker.current?.remove();
       actualMarker.current = null;
       source?.setData(EMPTY_FC);
     }
-  }, [reveal, actual, guess]);
+  }, [reveal, actual, guess, bottomInset]);
 
   // Stable refs so the basemap-switch effect can repaint without re-subscribing.
   const applyHintRef = useRef(applyHint);

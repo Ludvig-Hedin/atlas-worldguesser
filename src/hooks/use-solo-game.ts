@@ -87,13 +87,13 @@ function createGame({
   // maps breaks the region contract) AND never when locations were injected: the
   // server has already finalized those (it does its own egg roll), so re-rolling
   // here would both desync cloud scoring and double-apply on the daily set. Each
-  // egg gets an independent 3% roll off the same draw.
+  // egg gets an independent 10% roll off the same draw.
   const locations =
     mapId === "world" && !hasCustom
       ? picked.map((loc) => {
           const r = rng();
-          if (r < 0.03) return AKERS;
-          if (r < 0.06) return GRUNDBRO;
+          if (r < 0.1) return AKERS;
+          if (r < 0.2) return GRUNDBRO;
           return loc;
         })
       : picked;
