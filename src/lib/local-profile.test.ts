@@ -1,10 +1,9 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import {
   applyGame,
   emptyProfile,
   guestImportPayload,
   loadProfile,
-  saveProfile,
   type LocalProfile,
 } from "./local-profile";
 import { EMPTY_STREAKS } from "./progression";
