@@ -140,14 +140,14 @@ export function pickMatchLocations(
   // Hometown easter eggs — small chance any round drops in Åkers Styckebruk or
   // Grundbro, SE. World map only: a Sweden drop inside Europe/USA maps breaks
   // their region contract (matches the solo engine's behavior). Each egg gets
-  // an independent 3% roll off the same draw.
+  // an independent 10% roll off the same draw.
   const AKERS = { lat: 59.217, lng: 17.006, cc: "SE" };
   const GRUNDBRO = { lat: 59.3089, lng: 17.0899, cc: "SE" };
   return chosen.map((s) => {
     if (mapId !== "world") return { lat: s.lat, lng: s.lng, countryCode: s.cc };
     const r = rng();
-    if (r < 0.03) return { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc };
-    if (r < 0.06) return { lat: GRUNDBRO.lat, lng: GRUNDBRO.lng, countryCode: GRUNDBRO.cc };
+    if (r < 0.1) return { lat: AKERS.lat, lng: AKERS.lng, countryCode: AKERS.cc };
+    if (r < 0.2) return { lat: GRUNDBRO.lat, lng: GRUNDBRO.lng, countryCode: GRUNDBRO.cc };
     return { lat: s.lat, lng: s.lng, countryCode: s.cc };
   });
 }
