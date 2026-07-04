@@ -46,6 +46,16 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
   const max = maxMatchScore(isSurvival ? game.results.length : game.settings.rounds);
   const pct = max > 0 ? Math.round((applied.totalScore / max) * 100) : 0;
   const level = levelProgress(applied.profile.stats.xp);
+  // TODO(bug-hunt): `mapStreak` is keyed by `game.mapId` (correct — Daily
+  // Challenge uses the literal id "daily", kept distinct so use-solo-game's
+  // easter-egg roll can't fire) but the card below labels it with
+  // `mapNameKey(map.id)`, where `map = getMapConfig(game.mapId)` falls back
+  // to MAPS.world for the unknown id "daily". Result: after a Daily
+  // Challenge, this card reads "World streak" while showing the separate
+  // `countryByMap["daily"]` numbers — not the player's real World streak.
+  // Fix: decide whether Daily should fold into countryByMap["world"] (pass
+  // mapId: "world" from the Daily submit path) or keep its own bucket with
+  // its own label instead of borrowing world's fallback name.
   const mapStreak = applied.profile.streaks.countryByMap[game.mapId] ?? { current: 0, best: 0 };
 
   // One-time level-up celebration. Driven by the locally-computed `applied`

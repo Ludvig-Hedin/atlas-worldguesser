@@ -208,6 +208,15 @@ function periodRow(user: Doc<"users">, gain: number, rank: number) {
  */
 const SCAN_LIMIT = 500;
 
+// TODO(bug-hunt): only users with an xpSnapshots row for `period` are
+// considered — that row is only created by the weekly/monthly cron
+// (snapshotPeriod). Anyone who signs up after the last cron run has no
+// snapshot and is silently excluded from this board for the rest of the
+// period (up to 7 days for "week"), even with huge XP gains — the opposite
+// of the "new player can outrank a veteran" goal above. Needs a decision:
+// seed a 0-XP snapshot at account creation (ensureUser/ensureGuestUser), or
+// have this query treat a missing snapshot as baseline 0 by scanning `users`
+// instead of `xpSnapshots`.
 export const topPeriod = query({
   args: { period: periodValidator, limit: v.optional(v.number()) },
   handler: async (ctx, { period, limit }) => {

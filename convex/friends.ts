@@ -6,6 +6,14 @@ import { currentUser, requireUser } from "./users";
 import { rateLimit } from "./rateLimit";
 import { ACTIVE_WINDOW_MS } from "./presence";
 
+// TODO(bug-hunt): the two index reads below (by_pair (A,B) then (B,A)) don't
+// overlap in Convex's OCC read-tracking. If A and B send each other a friend
+// request at nearly the same time, both `sendRequest` calls can see "no
+// existing pair" here and both succeed, producing two independent pending
+// rows for the same pair instead of one being reconciled/auto-accepted —
+// `friends.list` then shows the same person in both "incoming" and
+// "outgoing" for both users. Needs a design decision (e.g. auto-accept on a
+// reverse-pending hit, or canonicalize to a single row per unordered pair).
 async function findPair(
   ctx: QueryCtx | MutationCtx,
   a: Id<"users">,

@@ -50,6 +50,14 @@ function RoomInner({ code }: { code: string }) {
   useEffect(() => {
     if (!ready) return;
     if (room && !room.amMember && room.status === "lobby" && !joinedRef.current) {
+      // TODO(bug-hunt): `joinedRef.current` is claimed before `join()` even
+      // resolves, and its rejection is fully swallowed. A transient failure
+      // (network blip, brief server error) permanently strands the user here:
+      // the effect never retries (the ref stays true), so the component keeps
+      // rendering RoomLobby for a non-member forever with every action
+      // silently no-op'ing. Needs a bounded retry (reset the ref on failure,
+      // capped) or a visible "couldn't join — retry" affordance instead of
+      // silent failure.
       joinedRef.current = true;
       join({ code, guestId: guestId ?? undefined }).catch(() => {});
     }

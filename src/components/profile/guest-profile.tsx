@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { Check, Pencil } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { useLocalProfile } from "@/hooks/use-local-profile";
@@ -55,10 +56,18 @@ function CloudProfile() {
     replayId: g._id,
   }));
 
-  const saveName = () => {
+  const saveName = async () => {
     const name = draft.trim();
-    if (name) void setUsername({ username: name });
-    setEditing(false);
+    if (!name) {
+      setEditing(false);
+      return;
+    }
+    try {
+      await setUsername({ username: name });
+      setEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("profile.couldNotSaveName"));
+    }
   };
 
   return (

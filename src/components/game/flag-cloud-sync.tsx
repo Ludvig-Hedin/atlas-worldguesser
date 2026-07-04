@@ -28,6 +28,11 @@ export function FlagCloudSync({
   const done = useRef(false);
   const [attempt, setAttempt] = useState(0);
 
+  // TODO(bug-hunt): same "pending retry stranded on unmount" tradeoff already
+  // tracked for solo-cloud-sync.tsx in CODE_REVIEW_BACKLOG.md — navigating
+  // away while a 2s/4s backoff retry is pending drops this Flags result
+  // silently (cleanup clears the timer, nothing resumes it). Same accepted
+  // architectural gap, now duplicated here.
   useEffect(() => {
     if (!isAuthenticated || done.current) return;
     // Claim synchronously so a re-entrant effect run (StrictMode remount, or

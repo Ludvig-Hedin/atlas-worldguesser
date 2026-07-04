@@ -90,6 +90,14 @@ function FriendsInner() {
     }
   };
 
+  const respondToRequest = async (requestId: Id<"friends">, accept: boolean) => {
+    try {
+      await respond({ requestId, accept });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("friends.couldNotRespond"));
+    }
+  };
+
   // Hide anyone already linked — friends AND pending requests — from "Recent
   // players", otherwise the Add button there just errors with "already pending".
   const knownNames = new Set([
@@ -129,7 +137,7 @@ function FriendsInner() {
               <span className="flex-1 truncate font-medium">{r.user.username}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon-sm" onClick={() => respond({ requestId: r.requestId, accept: true })} aria-label={t("friends.accept")}>
+                  <Button size="icon-sm" onClick={() => void respondToRequest(r.requestId, true)} aria-label={t("friends.accept")}>
                     <Check className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -140,7 +148,7 @@ function FriendsInner() {
                   <Button
                     size="icon-sm"
                     variant="secondary"
-                    onClick={() => respond({ requestId: r.requestId, accept: false })}
+                    onClick={() => void respondToRequest(r.requestId, false)}
                     aria-label={t("friends.decline")}
                   >
                     <X className="size-4" />

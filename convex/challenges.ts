@@ -175,6 +175,13 @@ export const submitAttempt = mutation({
       { maxRounds: locations.length },
     );
 
+    // TODO(bug-hunt): round validation above only checks 1<=round<=locations.length
+    // and no duplicates — it never requires the submitted rounds to be a
+    // contiguous prefix starting at 1. A client can omit the round(s) it got
+    // wrong and submit only the correct ones (e.g. 1,2,3,7,9 instead of 1-4),
+    // inflating this "streak" past the true consecutive-from-start Survival
+    // streak. Fix: require an unbroken prefix and stop counting at the first
+    // countryCorrect === false, rather than filtering all of them.
     const streak = rawResults.filter((r) => r.countryCorrect).length;
     await ctx.db.insert("challengeAttempts", {
       challengeId: args.challengeId,
