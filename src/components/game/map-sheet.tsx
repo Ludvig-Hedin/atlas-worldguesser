@@ -151,6 +151,12 @@ export function MapSheet({
           )}
         </div>
 
+        {/* TODO(bug-hunt): this footer is now absolute over the map and is NOT
+            pointer-events-none, so the bottom ~56px band of the mini-map can no
+            longer receive guess clicks (regression vs. the old below-map row).
+            Fix: add `pointer-events-none` here + `pointer-events-auto` on the two
+            button wrappers so only the controls capture clicks. Left as design
+            judgment (intended overlay vs. lost click area). */}
         <div className="flex h-14 shrink-0 items-center gap-2 p-2 absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/30 to-black/0 w-full">
           <div className="bg-black/10 backdrop-blur-lg rounded-full">
           {onHint && (
