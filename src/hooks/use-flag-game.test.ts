@@ -48,6 +48,30 @@ describe("useFlagGame — history persists across rounds", () => {
     });
   });
 
+  it("doesn't let a later round's decoy click downgrade an earlier round's finalized status", () => {
+    const { result } = renderHook(() =>
+      useFlagGame({ regionId: "world", pool: ["FR", "JP", "AU", "BR"], length: 3 }),
+    );
+
+    const [firstTarget, secondTarget] = result.current.state.flags;
+
+    // Round 1: solve firstTarget cleanly — it's finalized as "correct".
+    act(() => result.current.guess(firstTarget));
+    act(() => result.current.next());
+    expect(result.current.pastStatus[firstTarget]).toBe("correct");
+
+    // Round 2: mis-click firstTarget as a decoy before solving secondTarget.
+    // It's a valid click (any country is clickable), just not this round's answer.
+    act(() => result.current.guess(firstTarget));
+    act(() => result.current.guess(secondTarget));
+    act(() => result.current.next());
+
+    // firstTarget's history must stay "correct" — a decoy click elsewhere
+    // shouldn't erase an earlier round's finalized outcome.
+    expect(result.current.pastStatus[firstTarget]).toBe("correct");
+    expect(result.current.pastStatus[secondTarget]).toBe("correct");
+  });
+
   it("clears history on restart", () => {
     const { result } = renderHook(() => useFlagGame({ regionId: "world", pool, length: 1 }));
     const iso = result.current.state.flags[0];

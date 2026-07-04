@@ -118,8 +118,16 @@ export function useFlagGame(args: FlagGameArgs): FlagGame {
     setState((s) => {
       if (s.phase !== "revealed") return s;
       // Fold this round's final coloring into the permanent history before
-      // clearing it, so the map keeps a (muted) trail of past answers.
-      const history = { ...s.history, ...buildStatus(s) };
+      // clearing it, so the map keeps a (muted) trail of past answers. A
+      // country already finalized as correct/revealed in an earlier round
+      // must stay that way — a later round's decoy click on the same
+      // country shouldn't downgrade its historical trail.
+      const history = { ...s.history };
+      for (const [iso, statusValue] of Object.entries(buildStatus(s))) {
+        if (history[iso] !== "correct" && history[iso] !== "revealed") {
+          history[iso] = statusValue;
+        }
+      }
       if (s.index + 1 >= s.flags.length) return { ...s, phase: "finished", history };
       return { ...s, index: s.index + 1, phase: "guessing", wrongThisFlag: 0, wrongCodes: [], history };
     });
