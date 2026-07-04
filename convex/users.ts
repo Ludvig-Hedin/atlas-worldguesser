@@ -126,7 +126,13 @@ function publicProfile(user: Doc<"users">) {
     ratingGamesPlayed: user.ratingGamesPlayed ?? 0,
     tier: tierForRating(user.rating ?? DEFAULT_RATING).key,
     stats: user.stats,
-    streaks: user.streaks,
+    streaks: {
+      daily: user.streaks.daily,
+      lastPlayedDay: user.streaks.lastPlayedDay,
+      win: user.streaks.win,
+      bestWin: user.streaks.bestWin,
+      countryByMap: resolveCountryByMap(user.streaks),
+    },
     createdAt: user.createdAt,
   };
 }
@@ -417,11 +423,12 @@ export async function applySoloResults(
 
   const out = foldGame({
     stats: { ...user.stats, xp: user.xp },
-    streaks: user.streaks,
+    streaks: { ...user.streaks, countryByMap: resolveCountryByMap(user.streaks) },
     ownedAchievements: ownedIds,
     unlockedBuildings: user.unlockedBuildings ?? [],
     results,
     now,
+    mapId,
   });
 
   const { xp, ...statsNoXp } = out.stats;
@@ -577,13 +584,26 @@ export const importGuestProfile = mutation({
       countryCorrect: clampInt(args.stats.countryCorrect, 10_000_000),
       countryTotal: clampInt(args.stats.countryTotal, 10_000_000),
     };
+    // Cap both the number of distinct maps and each map's counters — a
+    // malicious/buggy client shouldn't be able to smuggle an unbounded record
+    // into a single document write.
+    const MAX_COUNTRY_MAP_ENTRIES = 64;
+    const countryByMap: Record<string, { current: number; best: number }> = {};
+    for (const [mapId, entry] of Object.entries(args.streaks.countryByMap ?? {}).slice(
+      0,
+      MAX_COUNTRY_MAP_ENTRIES,
+    )) {
+      countryByMap[mapId.slice(0, 32)] = {
+        current: clampInt(entry.current, 10_000_000),
+        best: clampInt(entry.best, 10_000_000),
+      };
+    }
     const streaks = {
       daily: clampInt(args.streaks.daily, 100_000),
       lastPlayedDay: clampInt(args.streaks.lastPlayedDay, Number.MAX_SAFE_INTEGER),
       win: clampInt(args.streaks.win, 100_000),
       bestWin: clampInt(args.streaks.bestWin, 100_000),
-      country: clampInt(args.streaks.country, 10_000_000),
-      bestCountry: clampInt(args.streaks.bestCountry, 10_000_000),
+      countryByMap,
     };
     const now = Date.now();
     await ctx.db.patch(user._id, {
