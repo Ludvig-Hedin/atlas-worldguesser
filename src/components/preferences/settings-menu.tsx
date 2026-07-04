@@ -31,7 +31,10 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** Header entry point for device-local preferences: theme, language, map type. */
-export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}) {
+export function SettingsMenu({
+  showLabel = false,
+  className,
+}: { showLabel?: boolean; className?: string } = {}) {
   const {
     theme,
     setTheme,
@@ -67,7 +70,7 @@ export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}
         variant="ghost"
         size={showLabel ? "sm" : "icon-sm"}
         aria-label={t("settings.open")}
-        className={showLabel ? "gap-1.5" : undefined}
+        className={cn(showLabel && "gap-1.5", className)}
       >
         <SettingsIcon className="size-4" />
         {showLabel && t("settings.title")}

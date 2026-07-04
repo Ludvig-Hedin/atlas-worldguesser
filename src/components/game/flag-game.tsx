@@ -6,6 +6,7 @@ import { ChevronLeft, CheckCircle2, XCircle } from "lucide-react";
 import { FlagMap } from "./flag-map";
 import { FlagResults } from "./flag-results";
 import { AnimatedNumber } from "./animated-number";
+import { SettingsMenu } from "@/components/preferences/settings-menu";
 import { useFlagGame } from "@/hooks/use-flag-game";
 import { getFlagRegion, type FlagGameMode, type FlagRegionId } from "@/lib/flags/regions";
 import { countryName } from "@/lib/countries-meta";
@@ -152,6 +153,9 @@ export function FlagGame({ regionId, mode, length, pool, onExit }: FlagGameProps
           <span className="rounded-full bg-hud px-3 py-2 text-sm font-semibold shadow-1 backdrop-blur-md tabular">
             <AnimatedNumber value={game.totalScore} format={formatNumber} />
           </span>
+          <div className="pointer-events-auto">
+            <SettingsMenu className="size-9 bg-hud text-foreground/90 shadow-1 backdrop-blur-md hover:bg-hud-hover" />
+          </div>
         </div>
       </div>
 

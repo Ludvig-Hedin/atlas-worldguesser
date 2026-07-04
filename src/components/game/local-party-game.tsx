@@ -17,6 +17,7 @@ import {
   type LocalTurnResult,
 } from "@/hooks/use-local-party-game";
 import { useCountdown } from "@/hooks/use-countdown";
+import { SettingsMenu } from "@/components/preferences/settings-menu";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useT } from "@/hooks/use-t";
 import { mapStyleFor } from "@/lib/map-style";
@@ -154,6 +155,7 @@ export function LocalPartyGame({ mapId, settings, players, onExit }: LocalPartyG
             <span className="text-foreground/35">·</span>
             {t("party.roundOf", { current: game.round, total: settings.rounds })}
           </div>
+          <SettingsMenu className="size-9 bg-hud text-foreground/90 shadow-1 backdrop-blur-md hover:bg-hud-hover" />
         </div>
       </div>
 

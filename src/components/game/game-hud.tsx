@@ -5,6 +5,7 @@ import { ChevronLeft, Clock } from "lucide-react";
 import { AnimatedNumber } from "./animated-number";
 import { KeyboardLegend } from "./keyboard-legend";
 import { MapGlyph } from "@/components/map-glyph";
+import { SettingsMenu } from "@/components/preferences/settings-menu";
 import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import { useT } from "@/hooks/use-t";
 import { formatClock, formatNumber } from "@/lib/format";
@@ -83,6 +84,7 @@ export function GameHUD({
             className="text-base font-semibold leading-none tabular text-white"
           />
         </div>
+        <SettingsMenu className="size-9 bg-hud text-foreground/90 shadow-1 backdrop-blur-md hover:bg-hud-hover" />
       </div>
     </div>
   );
