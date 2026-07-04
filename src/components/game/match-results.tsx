@@ -46,6 +46,7 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
   const max = maxMatchScore(isSurvival ? game.results.length : game.settings.rounds);
   const pct = max > 0 ? Math.round((applied.totalScore / max) * 100) : 0;
   const level = levelProgress(applied.profile.stats.xp);
+  const mapStreak = applied.profile.streaks.countryByMap[game.mapId] ?? { current: 0, best: 0 };
 
   // One-time level-up celebration. Driven by the locally-computed `applied`
   // fold (local-profile.applyGame), so it fires instantly and identically for
@@ -177,6 +178,22 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
               </span>
             </div>
           ))}
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
+          <p className="mb-3 text-sm font-medium">
+            {t("match.countryStreak", { map: t(mapNameKey(map.id)) })}
+          </p>
+          <div className="flex gap-6">
+            <div>
+              <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.current)}</p>
+              <p className="text-xs text-muted-foreground">{t("match.countryStreakCurrent")}</p>
+            </div>
+            <div>
+              <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.best)}</p>
+              <p className="text-xs text-muted-foreground">{t("match.countryStreakBest")}</p>
+            </div>
+          </div>
         </div>
 
         <motion.div
