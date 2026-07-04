@@ -6,6 +6,7 @@ import { scaleMetersForMap } from "@/lib/maps-config";
 import { haversineMeters, roundScore } from "@/lib/scoring";
 import type { GameLocation, GameSettings, LatLng, RoundResult } from "@/lib/types";
 import { pickLocations, sampleLocations } from "@/lib/locations";
+import { getRecentLocationKeys, recordSeenLocations } from "@/lib/recent-locations";
 import { hashString, seededRandom } from "@/lib/utils";
 import { SURVIVAL_BUFFER } from "@convex/gameLogic";
 
@@ -32,6 +33,10 @@ export interface SoloGame {
   round: number;
   phase: Phase;
   roundStartAt: number;
+  /** True when `locations` came from the official pool (`pickLocations`), not
+   * server-fixed or custom-map locations — gates client-side recent-location
+   * tracking (see recordSeenLocations in next()). */
+  usesOfficialPool: boolean;
 }
 
 interface CreateOpts {
@@ -77,7 +82,7 @@ function createGame({
     ? fixedOrder
       ? custom.slice(0, count)
       : sampleLocations(custom, count, rng)
-    : pickLocations(mapId, count, rng);
+    : pickLocations(mapId, count, rng, getRecentLocationKeys(mapId));
   // Hometown easter eggs — world map only (a Sweden drop inside USA/Europe/custom
   // maps breaks the region contract) AND never when locations were injected: the
   // server has already finalized those (it does its own egg roll), so re-rolling
@@ -103,6 +108,7 @@ function createGame({
     round: 1,
     phase: "guessing",
     roundStartAt: Date.now(),
+    usesOfficialPool: !hasCustom,
   };
 }
 
@@ -192,11 +198,19 @@ export function useSoloGame(initial: CreateOpts): UseSoloGame {
         const last = prev.results[prev.results.length - 1];
         const survived = !!last && last.countryCorrect;
         if (!survived || prev.round >= prev.locations.length) {
+          if (prev.usesOfficialPool) {
+            recordSeenLocations(prev.mapId, prev.locations.slice(0, prev.round));
+          }
           return { ...prev, phase: "finished" };
         }
         return { ...prev, round: prev.round + 1, phase: "guessing", roundStartAt: Date.now() };
       }
-      if (prev.round >= prev.settings.rounds) return { ...prev, phase: "finished" };
+      if (prev.round >= prev.settings.rounds) {
+        if (prev.usesOfficialPool) {
+          recordSeenLocations(prev.mapId, prev.locations.slice(0, prev.round));
+        }
+        return { ...prev, phase: "finished" };
+      }
       return { ...prev, round: prev.round + 1, phase: "guessing", roundStartAt: Date.now() };
     });
     setGuess(null);
