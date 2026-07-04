@@ -96,7 +96,7 @@ export function LocalPartySetup({ onStart, onBack }: LocalPartySetupProps) {
                 onChange={(e) => setName(i, e.target.value)}
                 placeholder={t("party.playerPlaceholder", { n: i + 1 })}
                 maxLength={24}
-                className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-sm outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
               />
               {names.length > MIN_PLAYERS && (
                 <button

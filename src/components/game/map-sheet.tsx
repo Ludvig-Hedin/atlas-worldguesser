@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Lightbulb, MapPin, Maximize2, Minimize2 } from "lucide-react";
+import { Lightbulb, Map as MapIcon, MapPin, Maximize2, Minimize2, Minus } from "lucide-react";
 import { GuessMap, type HintCircle } from "./guess-map";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -36,6 +36,7 @@ export function MapSheet({
 }: MapSheetProps) {
   const hasKeyboard = useHasKeyboard();
   const [fullscreen, setFullscreen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [size, setSize] = useState(() => {
     const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
     const vh = typeof window !== "undefined" ? window.innerHeight : 768;
@@ -66,6 +67,26 @@ export function MapSheet({
     drag.current = null;
   }, []);
 
+  if (collapsed) {
+    return (
+      <div className="fixed bottom-4 right-4 z-30">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              className="flex size-11 items-center justify-center rounded-full bg-hud text-foreground shadow-2 ring-1 ring-inset ring-border backdrop-blur-md transition hover:bg-hud-hover hover:ring-border-strong"
+              aria-label="Show map"
+            >
+              <MapIcon className="size-4.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Show map</TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
+
   return (
     <div
       className={fullscreen ? "fixed inset-x-3 bottom-3 top-16 z-40" : "fixed bottom-4 right-4 z-30"}
@@ -75,19 +96,36 @@ export function MapSheet({
         <div className="relative w-full" style={fullscreen ? { flex: 1 } : { height: size.h }}>
           <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive hintCircle={hintCircle} />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => setFullscreen((f) => !f)}
-                className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-lg bg-black/50 text-white/85 shadow-1 backdrop-blur-md transition-colors hover:bg-black/68"
-                aria-label={fullscreen ? "Shrink map" : "Expand map"}
-              >
-                {fullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">{fullscreen ? "Shrink map" : "Expand map"}</TooltipContent>
-          </Tooltip>
+          <div className="absolute right-2 top-2 z-10 flex gap-1.5">
+            {!fullscreen && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(true)}
+                    className="flex size-8 items-center justify-center rounded-lg bg-black/50 text-white/85 shadow-1 backdrop-blur-md transition-colors hover:bg-black/68"
+                    aria-label="Collapse map"
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Collapse map</TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setFullscreen((f) => !f)}
+                  className="flex size-8 items-center justify-center rounded-lg bg-black/50 text-white/85 shadow-1 backdrop-blur-md transition-colors hover:bg-black/68"
+                  aria-label={fullscreen ? "Shrink map" : "Expand map"}
+                >
+                  {fullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left">{fullscreen ? "Shrink map" : "Expand map"}</TooltipContent>
+            </Tooltip>
+          </div>
 
           {!fullscreen && (
             <div

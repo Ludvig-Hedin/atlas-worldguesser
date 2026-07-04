@@ -115,7 +115,7 @@ function FriendsInner() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder={t("friends.usernamePlaceholder")}
-          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-sm outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
         />
         <Button type="submit" disabled={!username.trim()}>
           <UserPlus className="size-4" />

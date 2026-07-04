@@ -75,7 +75,7 @@ export function ChatPanel({ roomId, myUserId, className }: ChatPanelProps) {
             onChange={(e) => setText(e.target.value)}
             placeholder={t("chat.placeholder")}
             maxLength={300}
-            className="h-9 w-full rounded-lg border border-border bg-input px-3 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 w-full rounded-lg border border-border bg-input px-3 text-sm outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
           />
         </div>
         <Button type="submit" size="icon-sm" variant="secondary" disabled={!text.trim()} aria-label={t("chat.sendAria")}>

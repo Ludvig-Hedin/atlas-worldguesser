@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Authenticated, Unauthenticated, useConvexAuth, useMutation } from "convex/react";
 import { SignInButton } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, Loader2, Users } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { useGuestSession } from "@/components/guest/guest-session-provider";
@@ -142,11 +142,11 @@ function MultiplayerControls() {
     <div className="flex flex-col gap-3">
       <Button onClick={createRoom} disabled={creating}>
         {t("mp.createPrivateRoom")}
-        <ArrowRight className="size-4" />
+        {creating ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
       </Button>
       <Button variant="secondary" onClick={createDuel} disabled={creating}>
         {t("duels.start")}
-        <ArrowRight className="size-4" />
+        {creating ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
       </Button>
       <div className="flex items-center gap-2 text-xs text-subtle">
         <span className="h-px flex-1 bg-border" />
@@ -158,7 +158,7 @@ function MultiplayerControls() {
           value={code}
           onChange={(e) => setCode(normalizeRoomInput(e.target.value))}
           placeholder={t("mp.roomCodeOrLink")}
-          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-center font-mono text-sm tracking-widest outline-none placeholder:tracking-normal placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-10 flex-1 rounded-lg border border-border bg-input px-3 text-center font-mono text-sm tracking-widest outline-none transition-colors placeholder:tracking-normal placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
         />
         <Button type="submit" variant="secondary" disabled={code.length < 4}>
           {t("common.join")}

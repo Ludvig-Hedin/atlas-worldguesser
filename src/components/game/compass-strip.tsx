@@ -20,7 +20,7 @@ export function CompassStrip({ heading }: { heading: number }) {
   const translate = CENTER - (h + 360) * PX_PER_DEG;
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-20 z-20 flex -translate-x-1/2 flex-col items-center sm:top-2">
+    <div className="pointer-events-none absolute left-1/2 top-12 z-20 flex -translate-x-1/2 flex-col items-center sm:top-2">
       <span className="rounded-md bg-black/50 px-1.5 text-[11px] font-semibold tabular text-white backdrop-blur-md [text-shadow:0_1px_2px_rgb(0_0_0_/_0.6)]">
         {Math.round(h)}°
       </span>

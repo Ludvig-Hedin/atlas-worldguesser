@@ -28,7 +28,13 @@ export function HeroOverlay() {
   const t = useT();
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-8 px-6 py-10 sm:block sm:px-0 sm:py-0">
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center gap-8 px-6 py-10 sm:block sm:px-0 sm:py-0">
+      {/* Subtle backdrop behind the left menu, for legibility over the globe */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[28rem] max-w-[60vw] bg-[linear-gradient(to_right,color-mix(in_srgb,var(--background)_45%,transparent),transparent_85%)] sm:block"
+      />
+
       {/* Top-left: logo + menu */}
       <div className="pointer-events-auto opacity-0 animate-[fade-up_0.5s_ease-out_forwards] sm:absolute sm:left-6 sm:top-6">
         <HeroMenu />
@@ -45,8 +51,8 @@ export function HeroOverlay() {
       </div>
 
       {/* Bottom-left: settings + GitHub */}
-      <div className="pointer-events-auto flex items-center gap-1 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
-        <SettingsMenu />
+      <div className="pointer-events-auto flex items-center gap-1.5 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
+        <SettingsMenu showLabel />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon-sm" asChild aria-label={t("nav.github")}>

@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ClipboardPaste,
   Copy,
+  Loader2,
   MapPin,
   Play,
   Save,
@@ -364,7 +365,7 @@ function Creator() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Map name"
               maxLength={40}
-              className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 rounded-lg border border-border bg-input px-3 text-sm font-medium outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
             />
             <textarea
               value={description}
@@ -372,7 +373,7 @@ function Creator() {
               placeholder="Description (optional)"
               maxLength={200}
               rows={2}
-              className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
             />
             <label className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Public — anyone can play</span>
@@ -404,7 +405,7 @@ function Creator() {
                     onChange={(e) => setPasteText(e.target.value)}
                     placeholder={"One per line:\n48.8584, 2.2945\n40.7128 -74.0060"}
                     rows={4}
-                    className="w-full resize-none rounded-md border border-border bg-input px-2.5 py-2 font-mono text-xs outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full resize-none rounded-md border border-border bg-input px-2.5 py-2 font-mono text-xs outline-none transition-colors placeholder:text-subtle hover:border-border-strong focus-visible:border-ring"
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] text-subtle">lat, lng · comma, space or tab</span>
@@ -476,8 +477,8 @@ function Creator() {
                 onClick={save}
                 disabled={saving || points.length < 5 || name.trim().length < 3}
               >
-                <Save className="size-4" />
-                Save map
+                {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                {saving ? "Saving…" : "Save map"}
               </Button>
             </div>
 

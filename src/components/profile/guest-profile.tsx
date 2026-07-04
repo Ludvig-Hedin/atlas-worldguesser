@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
-import { Check, Pencil } from "lucide-react";
+import { Check, Loader2, Pencil } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { useLocalProfile } from "@/hooks/use-local-profile";
 import { StatsGrid } from "./stats-grid";
@@ -26,6 +26,7 @@ function CloudProfile() {
   const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const setUsername = useMutation(api.users.setUsername);
 
   const me = useQuery(api.users.getMe, {});
@@ -62,11 +63,14 @@ function CloudProfile() {
       setEditing(false);
       return;
     }
+    setSavingName(true);
     try {
       await setUsername({ username: name });
       setEditing(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("profile.couldNotSaveName"));
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -89,7 +93,7 @@ function CloudProfile() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && saveName()}
                 maxLength={20}
-                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none transition-colors hover:border-border-strong focus-visible:border-ring"
               />
               <Button size="icon-sm" onClick={saveName} aria-label={t("profile.saveName")}>
                 <Check className="size-4" />
@@ -216,7 +220,7 @@ function LocalProfileView() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && saveName()}
                 maxLength={20}
-                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-9 rounded-lg border border-border bg-input px-3 text-lg font-semibold outline-none transition-colors hover:border-border-strong focus-visible:border-ring"
               />
               <Button size="icon-sm" onClick={saveName} aria-label={t("profile.saveName")}>
                 <Check className="size-4" />

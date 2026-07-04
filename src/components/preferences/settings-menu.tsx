@@ -31,7 +31,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** Header entry point for device-local preferences: theme, language, map type. */
-export function SettingsMenu() {
+export function SettingsMenu({ showLabel = false }: { showLabel?: boolean } = {}) {
   const { theme, setTheme, locale, setLocale, mapType, setMapType, sound, setSound } = usePreferences();
   const { isAuthenticated } = useConvexAuth();
   const push = usePushNotifications();
@@ -55,8 +55,14 @@ export function SettingsMenu() {
       <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label={t("settings.open")}>
+            <Button
+              variant="ghost"
+              size={showLabel ? "sm" : "icon-sm"}
+              aria-label={t("settings.open")}
+              className={showLabel ? "gap-1.5" : undefined}
+            >
               <SettingsIcon className="size-4" />
+              {showLabel && t("settings.title")}
             </Button>
           </DialogTrigger>
         </TooltipTrigger>
