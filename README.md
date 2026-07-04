@@ -120,6 +120,20 @@ by re-running the same prompt template per country code and re-keying.
   pre-game round-trip); custom maps keep the legacy `recordSoloResult` path
   too, since they already stream their full owner-uploaded location pool to
   the client (a different, accepted trust model).
+- ✅ Anti-repeat location tracking — players used to sometimes see the exact
+  same round location twice in one session/day (not the hometown easter eggs
+  — those are an unrelated, intentional post-hoc override). Every game/room
+  used to shuffle its map's pool with a brand-new random seed and no memory of
+  prior games. Now `pickMatchLocations`/`sampleLocations` (`convex/gameLogic.ts`)
+  draw unseen locations first, falling back to repeats only once the whole
+  pool is exhausted (guaranteed on tiny pools like USA's 9 locations if you
+  play enough rounds — this is a real, unavoidable limit, not a bug). History
+  is a per-(user, map) row (`recentLocations` table) for anyone with a `users`
+  row — Clerk-authenticated or ephemeral guest alike — and a parallel
+  localStorage mirror (`src/lib/recent-locations.ts`) for fully anonymous,
+  no-account play (including local party/couch mode). Daily Challenge and
+  shared Survival challenge links are deliberately excluded: both require
+  every viewer to see byte-identical locations for a given seed/day.
 - ✅ Streak freezes — a free retention hook GeoGuessr itself lacks (an open,
   unresolved complaint on their own feedback board). The daily play-streak
   silently survives a single skipped day by auto-spending a banked "freeze".

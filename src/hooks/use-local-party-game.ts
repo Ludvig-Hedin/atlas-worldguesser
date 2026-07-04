@@ -5,6 +5,7 @@ import { scaleMetersForMap } from "@/lib/maps-config";
 import { haversineMeters, roundScore } from "@/lib/scoring";
 import type { GameLocation, GameSettings, LatLng } from "@/lib/types";
 import { pickLocations } from "@/lib/locations";
+import { getRecentLocationKeys, recordSeenLocations } from "@/lib/recent-locations";
 import { hashString, seededRandom } from "@/lib/utils";
 import { ANTIPODE_METERS } from "./use-solo-game";
 
@@ -48,7 +49,7 @@ interface CreateOpts {
 function createGame({ mapId, settings, players, seed }: CreateOpts): LocalPartyGame {
   const resolvedSeed = seed ?? hashString(crypto.randomUUID());
   const rng = seededRandom(resolvedSeed);
-  const locations = pickLocations(mapId, settings.rounds, rng);
+  const locations = pickLocations(mapId, settings.rounds, rng, getRecentLocationKeys(mapId));
   return {
     id: crypto.randomUUID(),
     mapId,
@@ -127,7 +128,10 @@ export function useLocalPartyGame(initial: CreateOpts): UseLocalPartyGame {
   const continueToNextRound = useCallback(() => {
     setGame((prev) => {
       if (prev.phase !== "roundReveal") return prev;
-      if (prev.round >= prev.settings.rounds) return { ...prev, phase: "finished" };
+      if (prev.round >= prev.settings.rounds) {
+        recordSeenLocations(prev.mapId, prev.locations);
+        return { ...prev, phase: "finished" };
+      }
       return {
         ...prev,
         round: prev.round + 1,
