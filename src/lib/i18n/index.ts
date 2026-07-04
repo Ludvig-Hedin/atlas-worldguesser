@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/preferences";
+import type { Locale } from "../preferences";
 import { en, type TKey, type LocaleDictionary } from "./en";
 import { sv } from "./sv";
 import { pl } from "./pl";

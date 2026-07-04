@@ -1,5 +1,5 @@
 import type { GameModeId, GameSettings, Movement } from "./types";
-import type { TKey } from "@/lib/i18n";
+import type { TKey } from "./i18n";
 
 /** Official map metadata: scoring scale, region filter, and default map view. */
 export interface MapConfig {
