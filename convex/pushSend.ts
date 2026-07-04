@@ -1,6 +1,6 @@
 "use node";
 
-import webpush from "web-push";
+import webpush, { WebPushError } from "web-push";
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -75,7 +75,7 @@ export const send = internalAction({
         try {
           await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
         } catch (err) {
-          const statusCode = (err as { statusCode?: number }).statusCode;
+          const statusCode = err instanceof WebPushError ? err.statusCode : undefined;
           if (statusCode === 404 || statusCode === 410) {
             // Push service says this subscription is gone for good — drop it.
             await ctx.runMutation(internal.push.remove, { id: sub._id });
