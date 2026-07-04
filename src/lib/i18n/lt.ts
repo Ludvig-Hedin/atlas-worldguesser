@@ -221,6 +221,14 @@ export const lt: LocaleDictionary = {
   "team.couldNotSwitch": "Nepavyko pakeisti komandos",
   "team.couldNotChangeFormat": "Nepavyko pakeisti formato",
 
+  // Battle Royale (eliminacijos režimas)
+  "battle.label": "Eliminacija",
+  "battle.off": "Išjungta",
+  "battle.on": "Battle Royale",
+  "battle.couldNotChangeFormat": "Nepavyko pakeisti formato",
+  "battle.eliminatedTag": "Pašalintas",
+  "battle.eliminatedAtRound": "Iškrito — {round} raundas",
+
   // Kelių žaidėjų kambarys
   "lobby.roomCode": "Kambario kodas",
   "lobby.copyInviteAria": "Kopijuoti kvietimo nuorodą",
