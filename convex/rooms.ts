@@ -19,7 +19,7 @@ import {
 } from "./gameLogic";
 import { rateLimit } from "./rateLimit";
 import { areFriends } from "./friends";
-import { foldGame } from "../src/lib/progression";
+import { foldGame, resolveCountryByMap } from "../src/lib/progression";
 import { DEFAULT_RATING, computeRatingDelta, kFactorFor } from "../src/lib/rating";
 import type { RoundResult } from "../src/lib/types";
 
@@ -743,11 +743,12 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
         .collect();
       const out = foldGame({
         stats: { ...user.stats, xp: user.xp },
-        streaks: user.streaks,
+        streaks: { ...user.streaks, countryByMap: resolveCountryByMap(user.streaks) },
         ownedAchievements: owned.map((a) => a.achievementId),
         unlockedBuildings: user.unlockedBuildings ?? [],
         results,
         now,
+        mapId: room.mapId,
         wonOverride: won,
       });
       const { xp, ...statsNoXp } = out.stats;
