@@ -137,20 +137,20 @@ export async function createRoomForUser(
 }
 
 export const create = mutation({
-  args: { mapId: v.string(), settings: settingsValidator, teamMode: v.optional(v.boolean()) },
-  handler: async (ctx, { mapId, settings, teamMode }) => {
+  args: { mapId: v.string(), settings: settingsValidator, teamMode: v.optional(v.boolean()), guestId: v.optional(v.string()) },
+  handler: async (ctx, { mapId, settings, teamMode, guestId }) => {
     assertMultiplayerEnabled();
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "roomCreate", user._id);
     return await createRoomForUser(ctx, user, mapId, settings, teamMode);
   },
 });
 
 export const join = mutation({
-  args: { code: v.string() },
-  handler: async (ctx, { code }) => {
+  args: { code: v.string(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { code, guestId }) => {
     assertMultiplayerEnabled();
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, guestId);
     await rateLimit(ctx, "roomJoin", user._id);
     const room = await ctx.db
       .query("rooms")
@@ -193,9 +193,9 @@ export const join = mutation({
 });
 
 export const setReady = mutation({
-  args: { roomId: v.id("rooms"), ready: v.boolean() },
-  handler: async (ctx, { roomId, ready }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), ready: v.boolean(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, ready, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const member = await memberOf(ctx, roomId, user._id);
     if (!member) throw new Error("Not in this room");
     await ctx.db.patch(member._id, { ready, lastSeenAt: Date.now() });
@@ -203,9 +203,9 @@ export const setReady = mutation({
 });
 
 export const heartbeat = mutation({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, { roomId }) => {
-    const user = await currentUser(ctx);
+  args: { roomId: v.id("rooms"), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, guestId }) => {
+    const user = await currentUser(ctx, guestId);
     if (!user) return;
     const member = await memberOf(ctx, roomId, user._id);
     if (member) await ctx.db.patch(member._id, { connected: true, lastSeenAt: Date.now() });
@@ -213,9 +213,9 @@ export const heartbeat = mutation({
 });
 
 export const leave = mutation({
-  args: { roomId: v.id("rooms") },
-  handler: async (ctx, { roomId }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const member = await memberOf(ctx, roomId, user._id);
     if (!member) return;
     await ctx.db.delete(member._id);
@@ -245,9 +245,9 @@ export const leave = mutation({
 });
 
 export const updateSettings = mutation({
-  args: { roomId: v.id("rooms"), mapId: v.string(), settings: settingsValidator },
-  handler: async (ctx, { roomId, mapId, settings: rawSettings }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), mapId: v.string(), settings: settingsValidator, guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, mapId, settings: rawSettings, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can change settings");
     if (room.status !== "lobby") throw new Error("Match already started");
@@ -262,9 +262,9 @@ export const updateSettings = mutation({
 });
 
 export const setTeamMode = mutation({
-  args: { roomId: v.id("rooms"), teamMode: v.boolean() },
-  handler: async (ctx, { roomId, teamMode }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), teamMode: v.boolean(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, teamMode, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const room = await ctx.db.get(roomId);
     if (!room || room.hostId !== user._id) throw new Error("Only the host can change teams");
     if (room.status !== "lobby") throw new Error("Match already started");
@@ -284,9 +284,9 @@ export const setTeamMode = mutation({
 });
 
 export const setTeam = mutation({
-  args: { roomId: v.id("rooms"), team: v.union(v.literal("A"), v.literal("B")) },
-  handler: async (ctx, { roomId, team }) => {
-    const user = await requireUser(ctx);
+  args: { roomId: v.id("rooms"), team: v.union(v.literal("A"), v.literal("B")), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, team, guestId }) => {
+    const user = await requireUser(ctx, guestId);
     const room = await ctx.db.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.status !== "lobby") throw new Error("Match already started");
