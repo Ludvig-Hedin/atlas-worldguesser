@@ -55,18 +55,84 @@ function mulberry32(seed: number) {
   };
 }
 
-/** Deterministically pick the match's hidden answer locations from a seed. */
-export function pickMatchLocations(mapId: string, rounds: number, seed: number): MatchLocation[] {
-  const p = pool(mapId).slice();
+/** Stable identity for a seed/game location — same coordinates always yield
+ * the same key, regardless of which pool (world/country/custom) they came
+ * from. Used to bias repeat picks away from a player's recent history. */
+export function locationKey(l: { lat: number; lng: number }): string {
+  return `${l.lat}:${l.lng}`;
+}
+
+/**
+ * Shuffle-and-slice `count` items out of `pool` using `rng`. When
+ * `excludeKeys` is given, items NOT in it are exhausted first (in random
+ * order) before falling back to excluded items, so a caller can bias away
+ * from recently-seen locations without ever returning fewer than `count`
+ * items (as long as the pool itself has enough). Falls back to sampling with
+ * replacement only once the whole pool has been used once — identical to the
+ * pre-existing pad behavior when `excludeKeys` is omitted.
+ */
+export function layeredSample<T>(
+  pool: readonly T[],
+  count: number,
+  rng: () => number,
+  keyOf: (item: T) => string,
+  excludeKeys?: ReadonlySet<string>,
+): T[] {
+  const shuffled = (items: readonly T[]): T[] => {
+    const arr = items.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      // Math.min guards an rng() that returns exactly 1.0 (mulberry32 never
+      // does, but injected/test RNGs may) from indexing past the end.
+      const j = Math.min(i, Math.floor(rng() * (i + 1)));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+  const ordered =
+    excludeKeys && excludeKeys.size > 0
+      ? [
+          ...shuffled(pool.filter((p) => !excludeKeys.has(keyOf(p)))),
+          ...shuffled(pool.filter((p) => excludeKeys.has(keyOf(p)))),
+        ]
+      : shuffled(pool);
+  const chosen = ordered.slice(0, Math.min(count, pool.length));
+  while (chosen.length < count && pool.length > 0) {
+    chosen.push(pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]);
+  }
+  return chosen;
+}
+
+/** Ring-buffer cap for a user's "recently shown locations" history — see
+ * convex/recentLocations.ts and src/lib/recent-locations.ts. */
+export const RECENT_LOCATIONS_CAP = 30;
+
+/** Append `newKeys` to `existing` and keep only the most recent `cap` entries
+ * (oldest evicted first). Pure so both the server-side table and the
+ * client-only localStorage mirror share one tested eviction rule. */
+export function mergeRecentKeys(
+  existing: readonly string[],
+  newKeys: readonly string[],
+  cap: number = RECENT_LOCATIONS_CAP,
+): string[] {
+  return [...existing, ...newKeys].slice(-cap);
+}
+
+/**
+ * Deterministically pick the match's hidden answer locations from a seed.
+ * `excludeKeys` (see `locationKey`), when given, biases the pick away from a
+ * player's recently-shown locations (see convex/recentLocations.ts) — omit it
+ * for contexts that must stay identical for every viewer (Daily Challenge,
+ * shared Survival challenge links).
+ */
+export function pickMatchLocations(
+  mapId: string,
+  rounds: number,
+  seed: number,
+  excludeKeys?: ReadonlySet<string>,
+): MatchLocation[] {
+  const p = pool(mapId);
   const rng = mulberry32(seed);
-  for (let i = p.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [p[i], p[j]] = [p[j], p[i]];
-  }
-  const chosen = p.slice(0, Math.min(rounds, p.length));
-  while (chosen.length < rounds && p.length > 0) {
-    chosen.push(p[Math.floor(rng() * p.length)]);
-  }
+  const chosen = layeredSample(p, rounds, rng, locationKey, excludeKeys);
   // Hometown easter eggs — small chance any round drops in Åkers Styckebruk or
   // Grundbro, SE. World map only: a Sweden drop inside Europe/USA maps breaks
   // their region contract (matches the solo engine's behavior). Each egg gets
