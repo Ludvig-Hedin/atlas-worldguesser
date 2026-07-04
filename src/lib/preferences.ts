@@ -12,6 +12,8 @@ export interface Preferences {
   theme: Theme;
   locale: Locale;
   mapType: MapType;
+  /** Play sound effects (right/wrong, menu clicks). */
+  sound: boolean;
 }
 
 export const THEMES: readonly Theme[] = ["system", "light", "dark"] as const;
@@ -27,6 +29,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   theme: "system",
   locale: "en",
   mapType: "normal",
+  sound: true,
 };
 
 const KEY = "atlas:prefs:v1";
@@ -52,6 +55,7 @@ export function loadPreferences(): Preferences {
       theme: isTheme(parsed.theme) ? parsed.theme : DEFAULT_PREFERENCES.theme,
       locale: isLocale(parsed.locale) ? parsed.locale : DEFAULT_PREFERENCES.locale,
       mapType: isMapType(parsed.mapType) ? parsed.mapType : DEFAULT_PREFERENCES.mapType,
+      sound: typeof parsed.sound === "boolean" ? parsed.sound : DEFAULT_PREFERENCES.sound,
     };
   } catch {
     return { ...DEFAULT_PREFERENCES };

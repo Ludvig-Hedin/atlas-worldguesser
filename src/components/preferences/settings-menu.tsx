@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Segmented } from "@/components/ui/segmented";
+import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useT } from "@/hooks/use-t";
@@ -29,7 +30,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 /** Header entry point for device-local preferences: theme, language, map type. */
 export function SettingsMenu() {
-  const { theme, setTheme, locale, setLocale, mapType, setMapType } = usePreferences();
+  const { theme, setTheme, locale, setLocale, mapType, setMapType, sound, setSound } = usePreferences();
   const t = useT();
 
   const themeOptions: { value: Theme; label: string }[] = [
@@ -109,6 +110,13 @@ export function SettingsMenu() {
               onChange={setMapType}
               options={mapOptions}
             />
+          </Field>
+
+          <Field label={t("settings.sound")}>
+            <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-overlay px-3 py-2">
+              <span className="text-sm text-muted-foreground">{t("settings.soundHint")}</span>
+              <Switch checked={sound} onCheckedChange={setSound} aria-label={t("settings.sound")} />
+            </label>
           </Field>
         </div>
       </DialogContent>

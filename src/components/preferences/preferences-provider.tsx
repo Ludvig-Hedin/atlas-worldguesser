@@ -18,11 +18,13 @@ import {
   type Preferences,
   type Theme,
 } from "@/lib/preferences";
+import { setSoundEnabled } from "@/lib/sound";
 
 interface PreferencesContextValue extends Preferences {
   setTheme: (theme: Theme) => void;
   setLocale: (locale: Locale) => void;
   setMapType: (mapType: MapType) => void;
+  setSound: (sound: boolean) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -94,6 +96,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = prefs.locale;
   }, [prefs.theme, prefs.locale]);
 
+  // Mirror the sound preference into the (module-level) sound engine.
+  useEffect(() => {
+    setSoundEnabled(prefs.sound);
+  }, [prefs.sound]);
+
   // Live-follow the OS when the theme is "system".
   useEffect(() => {
     if (prefs.theme !== "system" || typeof window === "undefined" || !window.matchMedia) {
@@ -111,6 +118,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setTheme: (theme) => setSnapshot({ ...getSnapshot(), theme }),
       setLocale: (locale) => setSnapshot({ ...getSnapshot(), locale }),
       setMapType: (mapType) => setSnapshot({ ...getSnapshot(), mapType }),
+      setSound: (sound) => setSnapshot({ ...getSnapshot(), sound }),
     }),
     [prefs],
   );
@@ -130,6 +138,7 @@ export function usePreferences(): PreferencesContextValue {
       setTheme: () => {},
       setLocale: () => {},
       setMapType: () => {},
+      setSound: () => {},
     };
   }
   return ctx;

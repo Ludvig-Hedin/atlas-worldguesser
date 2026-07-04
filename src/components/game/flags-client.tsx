@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { AtlasMark } from "@/components/atlas-mark";
 import { Button } from "@/components/ui/button";
 import { FlagSetup } from "./flag-setup";
 import { FlagGame } from "./flag-game";
 import { flagPoolForRegion } from "@/lib/flags/pool";
-import { type FlagRegionId } from "@/lib/flags/regions";
+import { type FlagGameMode, type FlagRegionId } from "@/lib/flags/regions";
 import { useT } from "@/hooks/use-t";
 
 interface Config {
@@ -16,11 +17,13 @@ interface Config {
 }
 
 interface FlagsClientProps {
+  /** Whether each round shows the flag image or the country's name. */
+  mode: FlagGameMode;
   initialRegion?: FlagRegionId;
   initialLength?: number;
 }
 
-export function FlagsClient({ initialRegion, initialLength }: FlagsClientProps) {
+export function FlagsClient({ mode, initialRegion, initialLength }: FlagsClientProps) {
   const t = useT();
   const [config, setConfig] = useState<Config | null>(null);
   const [pool, setPool] = useState<string[] | null>(null);
@@ -53,8 +56,11 @@ export function FlagsClient({ initialRegion, initialLength }: FlagsClientProps) 
   if (config) {
     if (!pool) {
       return (
-        <div className="grid min-h-[100dvh] place-items-center text-sm text-muted-foreground">
-          {t("flags.loading")}
+        <div className="grid min-h-[100dvh] place-items-center">
+          <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
+            <Loader2 className="size-6 animate-spin text-primary-muted" />
+            {t(mode === "flag" ? "flags.loading" : "countries.loading")}
+          </div>
         </div>
       );
     }
@@ -62,6 +68,7 @@ export function FlagsClient({ initialRegion, initialLength }: FlagsClientProps) 
       <FlagGame
         key={gameKey}
         regionId={config.regionId}
+        mode={mode}
         length={config.length}
         pool={pool}
         onExit={exit}
@@ -83,8 +90,12 @@ export function FlagsClient({ initialRegion, initialLength }: FlagsClientProps) 
       <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">{t("flags.title")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("flags.subtitle")}</p>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t(mode === "flag" ? "flags.title" : "countries.title")}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t(mode === "flag" ? "flags.subtitle" : "countries.subtitle")}
+            </p>
           </div>
           <FlagSetup onStart={start} initialRegion={initialRegion} initialLength={initialLength} />
         </div>

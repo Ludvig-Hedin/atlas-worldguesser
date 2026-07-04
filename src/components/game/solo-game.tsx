@@ -21,6 +21,7 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useLocalProfile } from "@/hooks/use-local-profile";
 import { useT } from "@/hooks/use-t";
 import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
+import { playCorrect, playFinish, playWrong } from "@/lib/sound";
 import type { ApplyResult } from "@/lib/local-profile";
 import type { GameLocation, GameSettings, RoundResult } from "@/lib/types";
 
@@ -177,8 +178,18 @@ export function SoloGame({
       recordedRef.current = game.id;
       setApplied(record({ id: game.id, mapId: game.mapId, results: game.results }));
       onComplete?.(game.results, game);
+      playFinish();
     }
   }, [game, record, onComplete]);
+
+  // Sound cue on reveal: right/wrong by whether the country was correct.
+  useEffect(() => {
+    if (game.phase !== "reveal" || !currentResult) return;
+    if (currentResult.countryCorrect) playCorrect();
+    else playWrong();
+    // currentResult is stable for the round; fire once per round reveal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.phase, game.round]);
 
   const handlePlayAgain = useCallback(() => {
     setApplied(null);

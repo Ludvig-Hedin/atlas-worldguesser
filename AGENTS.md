@@ -17,3 +17,17 @@ Convex agent skills for common tasks can be installed by running
 `npx convex ai-files install`.
 
 <!-- convex-ai-end -->
+
+# Documentation is mandatory
+
+**Every change updates the docs — no exceptions.** Whenever you add, change, or
+remove a feature, route, config, script, env var, data model, or user-facing
+behavior, you MUST update the documentation in the same unit of work:
+
+- `README.md` — features (the Status list), setup, scripts, data provenance, and
+  any new route or configuration. Keep it accurate on every change.
+- Any feature/architecture/status doc under `docs/` that the change touches.
+- Code comments where behavior or intent is non-obvious.
+
+This applies to every agent and every session — treat missing/stale docs as an
+incomplete task. Update docs before committing.

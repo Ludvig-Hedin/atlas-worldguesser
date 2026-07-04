@@ -23,11 +23,12 @@ describe("loadPreferences", () => {
   });
 
   it("round-trips saved preferences", () => {
-    savePreferences({ theme: "light", locale: "sv", mapType: "satellite" });
+    savePreferences({ theme: "light", locale: "sv", mapType: "satellite", sound: false });
     expect(loadPreferences()).toEqual({
       theme: "light",
       locale: "sv",
       mapType: "satellite",
+      sound: false,
     });
   });
 
@@ -48,6 +49,7 @@ describe("loadPreferences", () => {
       theme: "dark",
       locale: "en",
       mapType: "terrain",
+      sound: true,
     });
   });
 });

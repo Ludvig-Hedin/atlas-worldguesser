@@ -94,6 +94,14 @@ public domain) with `bun run build:flags`.
 - ✅ Social — friends (requests / accept / remove), recent players, per-user profiles.
 - ✅ Custom maps — build a map by dropping pins, share it public/private, play it solo.
 - ✅ Replays — every finished game is replayable round-by-round.
+- ✅ Flags mode (`/flags`, `/countries`) — Seterra-style: see a country's flag (or
+  its name), then click that country on a blank world map. Play the World or a
+  single continent, retry-until-correct with escalating amber→orange→red feedback,
+  a 🔥 streak counter, XP into the shared pool, and a per-region best-score
+  leaderboard. Flag SVGs are bundled locally (`public/flags/`) so they render on
+  every platform and work offline.
+- ✅ Sound effects — synthesized (Web Audio, no assets, offline) right/wrong/finish
+  cues across every mode plus menu clicks; toggleable in Settings.
 
 > Replays capture each round's guess vs. actual location and score. Recording the
 > live camera path within a "moving" round is a planned enhancement.

@@ -21,6 +21,7 @@ import { getMapConfig, mapNameKey, movementLabelKey } from "@/lib/maps-config";
 import { CountryGlyph } from "@/components/map-glyph";
 import { countryName } from "@/lib/countries-meta";
 import { formatDistance, formatNumber } from "@/lib/format";
+import { playCorrect, playWrong } from "@/lib/sound";
 import type { LatLng } from "@/lib/types";
 
 export function RoomGame({ room }: { room: RoomState }) {
@@ -41,6 +42,16 @@ export function RoomGame({ room }: { room: RoomState }) {
     setGuess(null);
     setHintCircle(null);
   }, [room.currentRound, room.status]);
+
+  // Sound cue when the round result appears: right/wrong by my own guess.
+  useEffect(() => {
+    if (room.status !== "roundResult" || !room.reveal) return;
+    const mine = room.reveal.guesses.find((g) => g.userId === room.myUserId);
+    if (mine?.countryCorrect) playCorrect();
+    else playWrong();
+    // Fire once per round-result transition (room state updates frequently).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.status, room.currentRound]);
 
   const useHint = useCallback(() => {
     const p = room.panorama;

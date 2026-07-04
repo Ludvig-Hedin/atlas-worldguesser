@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
@@ -205,6 +206,11 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
       img.className = "h-5 w-8 rounded-sm object-cover ring-2 ring-white/90 shadow-2 sm:h-6 sm:w-10";
       el.appendChild(img);
       revealMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(pos).addTo(map);
+      // If the answer sits off-screen (small or edge country), gently bring it
+      // into view so the player actually sees where it was.
+      if (!map.getBounds().contains(pos)) {
+        map.easeTo({ center: pos, duration: 650 });
+      }
     }
   }, [status]);
 
@@ -223,7 +229,7 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
       <div ref={containerRef} className="h-full w-full" />
       {!fc && (
         <div className="absolute inset-0 grid place-items-center bg-background text-sm text-muted-foreground">
-          Loading map…
+          <Loader2 className="size-6 animate-spin text-primary-muted" />
         </div>
       )}
     </div>

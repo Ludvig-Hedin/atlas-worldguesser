@@ -10,6 +10,7 @@ import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, ROUND_OPTIONS, TIME_OPTIONS, DEFAULT_SETTINGS, mapNameKey, mapTaglineKey } from "@/lib/maps-config";
 import { poolSize } from "@/lib/locations";
 import { pluralize } from "@/lib/format";
+import { playClick } from "@/lib/sound";
 import { useT } from "@/hooks/use-t";
 import type { SoloMode } from "@/hooks/use-solo-game";
 import type { GameModeId, GameSettings, Movement } from "@/lib/types";
@@ -35,8 +36,10 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
   const [rounds, setRounds] = useState<number>(DEFAULT_SETTINGS.rounds);
   const [timeLimitSec, setTimeLimitSec] = useState<number>(DEFAULT_SETTINGS.timeLimitSec);
 
-  const startWith = (mode: SoloMode) =>
+  const startWith = (mode: SoloMode) => {
+    playClick();
     onStart({ mapId, settings: { rounds, timeLimitSec, movement }, mode });
+  };
 
   return (
     <motion.div
@@ -54,7 +57,10 @@ export function PlaySetup({ onStart, initialMapId = "world" }: PlaySetupProps) {
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setMapId(m.id)}
+                onClick={() => {
+                  playClick();
+                  setMapId(m.id);
+                }}
                 className={cn(
                   "group relative flex flex-col items-start gap-1 rounded-xl border p-3.5 text-left shadow-1 transition-all duration-200 ease-fluid active:scale-[0.98]",
                   active
