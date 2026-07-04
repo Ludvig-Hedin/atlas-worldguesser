@@ -40,13 +40,27 @@ const game = {
   results: [],
 } as unknown as SoloGame;
 
-function makeApplied(leveledUp: boolean): ApplyResult {
+function makeApplied(
+  leveledUp: boolean,
+  opts: { streakFreezeUsed?: boolean; freezesAvailable?: number } = {},
+): ApplyResult {
   return {
-    profile: { stats: { xp: XP } },
+    profile: {
+      stats: { xp: XP },
+      streaks: {
+        daily: 1,
+        lastPlayedDay: 0,
+        win: 0,
+        bestWin: 0,
+        countryByMap: {},
+        freezesAvailable: opts.freezesAvailable ?? 0,
+      },
+    },
     xpGained: 1200,
     newAchievements: [],
     newBuildings: [],
     leveledUp,
+    streakFreezeUsed: opts.streakFreezeUsed ?? false,
     won: true,
     totalScore: 12000,
   } as unknown as ApplyResult;
@@ -94,5 +108,37 @@ describe("MatchResults level-up celebration", () => {
       <MatchResults game={game} applied={applied} onPlayAgain={() => {}} onNewGame={() => {}} />,
     );
     expect(toast.success).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("MatchResults streak-freeze notice", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("fires a streak-frozen toast once with the remaining freeze count", () => {
+    render(
+      <MatchResults
+        game={game}
+        applied={makeApplied(false, { streakFreezeUsed: true, freezesAvailable: 2 })}
+        onPlayAgain={() => {}}
+        onNewGame={() => {}}
+      />,
+    );
+    const expected = translate("en", "match.streakFrozen", { count: 2 });
+    expect(toast.success).toHaveBeenCalledTimes(1);
+    expect(toast.success).toHaveBeenCalledWith(expected);
+  });
+
+  it("does not fire when no freeze was used", () => {
+    render(
+      <MatchResults
+        game={game}
+        applied={makeApplied(false, { streakFreezeUsed: false })}
+        onPlayAgain={() => {}}
+        onNewGame={() => {}}
+      />,
+    );
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });

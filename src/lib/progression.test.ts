@@ -151,6 +151,101 @@ describe("foldGame", () => {
     expect(out.stats.wins).toBe(1);
     expect(out.streaks.win).toBe(1);
   });
+
+  it("spends a banked freeze to bridge exactly one missed day", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 5, lastPlayedDay: today - 2, freezesAvailable: 1 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(6); // streak survives the gap
+    expect(out.streaks.freezesAvailable).toBe(0); // one freeze consumed
+    expect(out.streakFreezeUsed).toBe(true);
+  });
+
+  it("does not use a freeze for a gap longer than one day", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 30, lastPlayedDay: today - 3, freezesAvailable: 1 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(1); // a 2+ day absence still breaks the streak
+    expect(out.streaks.freezesAvailable).toBe(1); // freeze left untouched
+    expect(out.streakFreezeUsed).toBe(false);
+  });
+
+  it("never spends a freeze for a brand-new account (daily === 0)", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 0, lastPlayedDay: today - 2, freezesAvailable: 1 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(1);
+    expect(out.streaks.freezesAvailable).toBe(1);
+    expect(out.streakFreezeUsed).toBe(false);
+  });
+
+  it("earns a freeze at each 7-day milestone", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 6, lastPlayedDay: today - 1, freezesAvailable: 0 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(7);
+    expect(out.streaks.freezesAvailable).toBe(1); // milestone grant
+    expect(out.streakFreezeUsed).toBe(false);
+  });
+
+  it("caps banked freezes at 3", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 13, lastPlayedDay: today - 1, freezesAvailable: 3 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(14); // 14 % 7 === 0 → milestone
+    expect(out.streaks.freezesAvailable).toBe(3); // capped, not 4
+  });
+
+  it("does not farm freezes by replaying on a milestone day", () => {
+    const today = Math.floor(NOW / 86_400_000);
+    const out = foldGame({
+      stats: { ...EMPTY_STATS },
+      streaks: { ...EMPTY_STREAKS, daily: 7, lastPlayedDay: today, freezesAvailable: 0 },
+      ownedAchievements: [],
+      unlockedBuildings: [],
+      results: [perfect],
+      now: NOW,
+      mapId: "world",
+    });
+    expect(out.streaks.daily).toBe(7); // same-day replay, unchanged
+    expect(out.streaks.freezesAvailable).toBe(0); // no grant: daily not > s.daily
+    expect(out.streakFreezeUsed).toBe(false);
+  });
 });
 
 describe("isSoloWin", () => {
