@@ -8,38 +8,47 @@ import { hashString } from "@/lib/utils";
 import { DemoPanorama } from "./demo-panorama";
 import { GoogleStreetView } from "./google-street-view";
 
+/** "load" = the Maps API failed to load; "auth" = it loaded but Google
+ *  rejected the key/referer; "coverage" = no panorama near this location. */
+export type StreetViewUnavailableReason = "load" | "coverage" | "auth";
+
 interface Props {
   location: GameLocation;
   movement: Movement;
-  /** Called when Google has no coverage ("coverage") or the Maps API itself
-   * failed to load ("load"). If provided, the parent handles it (e.g. re-rolls
-   * to another location) and no demo view is shown. */
-  onUnavailable?: (reason?: "load" | "coverage") => void;
+  /** Called when Google has no coverage or the Maps API itself failed to load
+   * or authenticate. If provided, the parent handles it (e.g. re-rolls to
+   * another location) and no demo view is shown. */
+  onUnavailable?: (reason?: StreetViewUnavailableReason) => void;
   /** Force the demo view (e.g. after coverage re-rolls are exhausted). */
   forceDemo?: boolean;
+  /** Why the parent set forceDemo — picks the right demo caption. */
+  forceDemoReason?: StreetViewUnavailableReason;
 }
 
 /**
  * Unified panorama surface. Uses Google Street View when a key is present and
  * coverage exists; otherwise either delegates (onUnavailable) or shows the demo.
  */
-export function StreetViewCanvas({ location, movement, onUnavailable, forceDemo }: Props) {
-  const [localFallback, setLocalFallback] = useState(false);
+export function StreetViewCanvas({ location, movement, onUnavailable, forceDemo, forceDemoReason }: Props) {
+  const [localFallback, setLocalFallback] = useState<StreetViewUnavailableReason | null>(null);
 
   // Retry Google coverage whenever the location changes (by value).
   useEffect(() => {
-    setLocalFallback(false);
+    setLocalFallback(null);
   }, [location.lat, location.lng]);
 
   const handleUnavailable = useCallback(
-    (reason?: "load" | "coverage") => {
+    (reason?: StreetViewUnavailableReason) => {
       if (onUnavailable) onUnavailable(reason);
-      else setLocalFallback(true);
+      else setLocalFallback(reason ?? "coverage");
     },
     [onUnavailable],
   );
 
-  const demoMode = !features.googleMaps || forceDemo || localFallback;
+  const demoMode = !features.googleMaps || forceDemo || localFallback !== null;
+  // Only a real "coverage" failure earns the "no Street View here" copy — an
+  // API/auth failure gets an honest "unavailable" message instead (see demo-panorama.tsx).
+  const demoReason = forceDemo ? forceDemoReason : (localFallback ?? undefined);
   const nmpz = movement === "noMoveNoPanZoom";
   const scene = demoScene(location);
   const seed = hashString(`${location.lat.toFixed(4)},${location.lng.toFixed(4)}`);
@@ -47,7 +56,13 @@ export function StreetViewCanvas({ location, movement, onUnavailable, forceDemo 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
       {demoMode ? (
-        <DemoPanorama scene={scene} seed={seed} disablePan={nmpz} hasGoogleKey={features.googleMaps} />
+        <DemoPanorama
+          scene={scene}
+          seed={seed}
+          disablePan={nmpz}
+          hasGoogleKey={features.googleMaps}
+          unavailableReason={demoReason}
+        />
       ) : (
         <GoogleStreetView location={location} movement={movement} onUnavailable={handleUnavailable} />
       )}

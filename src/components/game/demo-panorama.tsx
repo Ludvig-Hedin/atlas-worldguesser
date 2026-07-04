@@ -27,6 +27,8 @@ interface DemoPanoramaProps {
   disablePan?: boolean;
   /** Whether a Google key exists (changes the fallback caption). */
   hasGoogleKey?: boolean;
+  /** Why the demo is showing despite a key being configured — picks the caption. */
+  unavailableReason?: "load" | "coverage" | "auth";
   className?: string;
 }
 
@@ -34,7 +36,7 @@ const W = 1200;
 const H = 600;
 const BASE = 360;
 
-export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className }: DemoPanoramaProps) {
+export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, unavailableReason, className }: DemoPanoramaProps) {
   const [heading, setHeading] = useState(0.12);
   const drag = useRef<{ x: number; start: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,9 +126,11 @@ export function DemoPanorama({ scene, seed, disablePan, hasGoogleKey, className 
 
       <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-medium text-white/80 shadow-1 backdrop-blur-md">
         <ImageOff className="size-3" />
-        {hasGoogleKey
-          ? "No Street View here — showing a demo view"
-          : "Demo panorama — add a Google Maps key for real Street View"}
+        {!hasGoogleKey
+          ? "Demo panorama — add a Google Maps key for real Street View"
+          : unavailableReason === "coverage"
+            ? "No Street View here — showing a demo view"
+            : "Street View unavailable — showing a demo view"}
       </div>
     </div>
   );

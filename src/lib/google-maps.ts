@@ -3,6 +3,29 @@ import { googleMapsBrowserKey, googleMapsDisabled } from "./env";
 
 let loadPromise: Promise<typeof google> | null = null;
 
+// Google calls this global (if defined) on a bad/misconfigured key — invalid
+// key, referer not allowed, API not activated, billing disabled, etc. Crucially,
+// the script still finishes loading and calls the ready callback normally: the
+// failure only surfaces here and in the console, never as a script/network
+// error. Every panorama lookup after this point will keep silently failing, so
+// callers must report it as an "auth" problem, not misread it as "no Street
+// View coverage at this specific location".
+let authFailed = false;
+
+/** True once Google has reported an auth failure (bad key / referer / billing) for this page load. */
+export function hasGoogleMapsAuthFailed(): boolean {
+  return authFailed;
+}
+
+function installAuthFailureHook(): void {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as { gm_authFailure?: () => void };
+  if (w.gm_authFailure) return;
+  w.gm_authFailure = () => {
+    authFailed = true;
+  };
+}
+
 const SCRIPT_TIMEOUT_MS = 15_000;
 const PANO_TIMEOUT_MS = 10_000;
 // One retry after a timeout/network error — a single dropped packet on a
@@ -59,6 +82,7 @@ export function loadGoogleMaps(): Promise<typeof google> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Google Maps can only load in the browser"));
   }
+  installAuthFailureHook();
   if (googleMapsDisabled) {
     return Promise.reject(new Error("Google Maps disabled by kill switch"));
   }

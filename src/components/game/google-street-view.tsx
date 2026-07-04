@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findPanorama, loadGoogleMaps } from "@/lib/google-maps";
+import { findPanorama, hasGoogleMapsAuthFailed, loadGoogleMaps } from "@/lib/google-maps";
 import type { GameLocation, Movement } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
@@ -31,9 +31,10 @@ function optionsFor(movement: Movement): google.maps.StreetViewPanoramaOptions {
 interface Props {
   location: GameLocation;
   movement: Movement;
-  /** "load" = the Maps API failed to load (re-rolling won't help);
+  /** "load" = the Maps API failed to load; "auth" = it loaded but Google
+   *  rejected the key/referer (re-rolling won't help in either case);
    *  "coverage" = no panorama near this location. */
-  onUnavailable: (reason?: "load" | "coverage") => void;
+  onUnavailable: (reason?: "load" | "coverage" | "auth") => void;
 }
 
 export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
@@ -107,7 +108,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
         if (cancelled) return;
         if (!res) {
           loadedKeyRef.current = null;
-          onUnavailableRef.current("coverage");
+          onUnavailableRef.current(hasGoogleMapsAuthFailed() ? "auth" : "coverage");
           return;
         }
         const pano = panoRef.current!;
@@ -119,7 +120,7 @@ export function GoogleStreetView({ location, movement, onUnavailable }: Props) {
       .catch(() => {
         if (!cancelled) {
           loadedKeyRef.current = null;
-          onUnavailableRef.current("coverage");
+          onUnavailableRef.current(hasGoogleMapsAuthFailed() ? "auth" : "coverage");
         }
       });
     return () => {

@@ -94,6 +94,7 @@ export function SoloGame({
   const [mounted, setMounted] = useState(false);
   const [hintCircle, setHintCircle] = useState<HintCircle | null>(null);
   const [forceDemo, setForceDemo] = useState(false);
+  const [forceDemoReason, setForceDemoReason] = useState<"load" | "coverage" | "auth" | undefined>(undefined);
   const [rerolling, setRerolling] = useState(false);
   const rerollRef = useRef(0);
   const rerollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,6 +104,7 @@ export function SoloGame({
   useEffect(() => {
     setHintCircle(null);
     setForceDemo(false);
+    setForceDemoReason(undefined);
     setRerolling(false);
     rerollRef.current = 0;
     if (rerollTimer.current) {
@@ -139,13 +141,15 @@ export function SoloGame({
 
   // No Google coverage → swap in another location instead of showing the demo.
   const handleNoCoverage = useCallback(
-    (reason?: "load" | "coverage") => {
-      // The Maps API itself failed to load (blocked / offline): re-rolling can't
-      // help, and no further onUnavailable would ever fire — go straight to demo.
+    (reason?: "load" | "coverage" | "auth") => {
+      // The Maps API itself failed to load or Google rejected the key/referer
+      // (blocked / offline / misconfigured): re-rolling can't help, and no
+      // further onUnavailable would ever fire — go straight to demo.
       // Cap kept low: each reroll is a billed Street View lookup+render, and
       // a badly-covered pool entry shouldn't be allowed to burn a budget.
-      if (reason === "load" || rerollRef.current >= 1) {
+      if (reason === "load" || reason === "auth" || rerollRef.current >= 1) {
         setForceDemo(true);
+        setForceDemoReason(reason);
         setRerolling(false);
         if (rerollTimer.current) {
           clearTimeout(rerollTimer.current);
@@ -175,6 +179,7 @@ export function SoloGame({
         replaceCurrentLocation(nextLoc);
       } else {
         setForceDemo(true);
+        setForceDemoReason(reason);
         setRerolling(false);
       }
     },
@@ -280,6 +285,7 @@ export function SoloGame({
         movement={settings.movement}
         onUnavailable={handleNoCoverage}
         forceDemo={forceDemo}
+        forceDemoReason={forceDemoReason}
       />
 
       <AnimatePresence>
