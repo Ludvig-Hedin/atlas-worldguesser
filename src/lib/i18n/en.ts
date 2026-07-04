@@ -18,6 +18,7 @@ export const en = {
   "nav.singleplayer": "Singleplayer",
   "nav.multiplayer": "Multiplayer",
   "nav.profile": "Profile",
+  "nav.github": "View source on GitHub",
 
   // Auth
   "auth.signIn": "Sign in",

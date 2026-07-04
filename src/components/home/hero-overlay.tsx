@@ -4,10 +4,14 @@ import Link from "next/link";
 import { HeroMenu } from "@/components/home/hero-menu";
 import { LiveStats } from "@/components/live-stats";
 import { AuthSlot } from "@/components/auth/auth-slot";
+import { GithubMark } from "@/components/github-mark";
 import { SettingsMenu } from "@/components/preferences/settings-menu";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
+
+const GITHUB_REPO_URL = "https://github.com/Ludvig-Hedin/atlas-worldguesser";
 
 /**
  * WorldGuessr-style four-corner overlay for the homepage hero, laid over the
@@ -40,9 +44,19 @@ export function HeroOverlay() {
         <AuthSlot />
       </div>
 
-      {/* Bottom-left: settings */}
-      <div className="pointer-events-auto opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
+      {/* Bottom-left: settings + GitHub */}
+      <div className="pointer-events-auto flex items-center gap-1 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
         <SettingsMenu />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" asChild aria-label={t("nav.github")}>
+              <Link href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer">
+                <GithubMark className="size-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("nav.github")}</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Bottom-right: online badge */}

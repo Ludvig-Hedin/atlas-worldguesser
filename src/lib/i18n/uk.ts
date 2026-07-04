@@ -11,6 +11,7 @@ export const uk: LocaleDictionary = {
   "nav.singleplayer": "Одиночна гра",
   "nav.multiplayer": "Багатокористувацька",
   "nav.profile": "Профіль",
+  "nav.github": "Переглянути код на GitHub",
 
   // Auth
   "auth.signIn": "Увійти",

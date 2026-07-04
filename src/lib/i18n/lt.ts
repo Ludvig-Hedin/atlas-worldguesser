@@ -11,6 +11,7 @@ export const lt: LocaleDictionary = {
   "nav.singleplayer": "Vienas žaidėjas",
   "nav.multiplayer": "Keli žaidėjai",
   "nav.profile": "Profilis",
+  "nav.github": "Žiūrėti kodą GitHub",
 
   // Prisijungimas
   "auth.signIn": "Prisijungti",

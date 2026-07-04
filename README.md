@@ -312,4 +312,10 @@ Auth, multiplayer, leaderboards, friends and replays require Convex + Clerk
   determined client can still inspect panorama data — an inherent tradeoff of
   rendering Street View in the browser.
 - Contact: ludvig@ludvighedin.com
-# atlas-worldguesser
+
+## License
+
+[GNU AGPL v3.0](LICENSE). If you run a modified version of this app as a
+network service, you must make your modified source available to its users —
+this closes the "hosted SaaS" loophole plain GPL leaves open, so forks stay
+open source even when only deployed, never distributed.

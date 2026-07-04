@@ -11,6 +11,7 @@ export const pl: LocaleDictionary = {
   "nav.singleplayer": "Jeden gracz",
   "nav.multiplayer": "Wieloosobowa",
   "nav.profile": "Profil",
+  "nav.github": "Zobacz kod na GitHub",
 
   // Auth
   "auth.signIn": "Zaloguj się",

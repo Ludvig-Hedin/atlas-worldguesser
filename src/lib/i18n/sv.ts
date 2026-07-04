@@ -11,6 +11,7 @@ export const sv: LocaleDictionary = {
   "nav.singleplayer": "En spelare",
   "nav.multiplayer": "Flerspelare",
   "nav.profile": "Profil",
+  "nav.github": "Visa källkod på GitHub",
 
   // Auth
   "auth.signIn": "Logga in",
