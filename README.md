@@ -82,6 +82,12 @@ Flag SVGs in `public/flags/` (used by the Flags game mode) are copied from
 [flag-icons](https://github.com/lipis/flag-icons) (MIT; the flag artwork is
 public domain) with `bun run build:flags`.
 
+Building-avatar art in `public/buildings/` is AI-generated (Nano Banana /
+Gemini image API) flat-illustration icons, one per curated country in
+`src/lib/buildings.ts`, rendered on a solid white background and chroma-keyed
+to a transparent PNG with ImageMagick. No regeneration script yet — regenerate
+by re-running the same prompt template per country code and re-keying.
+
 ## Status
 
 - ✅ Core solo gameplay — modes (World / Europe / USA / Countries), difficulty
@@ -92,6 +98,12 @@ public domain) with `bun run build:flags`.
   host controls & ready status, synchronized live rounds, server-authoritative
   scoring, live scoreboard, chat, match results, rematch.
 - ✅ Social — friends (requests / accept / remove), recent players, per-user profiles.
+- ✅ Unlockable avatars — 105 curated iconic-building avatars (~50% of all 209
+  countries), unlocked by correctly guessing that country in any game mode.
+  Free background-color customization. Cloud accounts persist unlocks
+  server-side (`convex/users.setAvatar`); guests track locally and merge into
+  their account on sign-in. Art generated via Nano Banana, chroma-keyed to
+  transparent PNGs (`public/buildings/`, catalog in `src/lib/buildings.ts`).
 - ✅ Custom maps — build a map by dropping pins, share it public/private, play it solo.
 - ✅ Replays — every finished game is replayable round-by-round.
 - ✅ Flags mode (`/flags`, `/countries`) — Seterra-style: see a country's flag (or
