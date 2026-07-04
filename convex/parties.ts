@@ -152,6 +152,11 @@ export const invite = mutation({
         fromUsername: user.username,
       });
     }
+    await ctx.scheduler.runAfter(0, internal.pushSend.send, {
+      kind: "partyInvite",
+      userId: friend._id,
+      fromUsername: user.username,
+    });
   },
 });
 

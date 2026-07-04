@@ -13,6 +13,12 @@ import { features } from "@/lib/env";
 import { useT } from "@/hooks/use-t";
 import type { TKey } from "@/lib/i18n";
 
+const MODE_TILES: { icon: typeof MapPin; titleKey: TKey; bodyKey: TKey; href: string }[] = [
+  { icon: MapPin, titleKey: "home.classicCardTitle", bodyKey: "home.classicCardBody", href: "/play" },
+  { icon: Flag, titleKey: "home.flagsCardTitle", bodyKey: "home.flagsCardBody", href: "/flags" },
+  { icon: Type, titleKey: "home.countriesCardTitle", bodyKey: "home.countriesCardBody", href: "/countries" },
+];
+
 const HIGHLIGHTS: { icon: typeof MapPin; titleKey: TKey; bodyKey: TKey }[] = [
   { icon: MapPin, titleKey: "home.highlightStreetsTitle", bodyKey: "home.highlightStreetsBody" },
   { icon: Timer, titleKey: "home.highlightPaceTitle", bodyKey: "home.highlightPaceBody" },
@@ -70,17 +76,23 @@ export function HomeContent() {
               <ArrowRight className="size-4" />
             </Link>
           </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            asChild
-            className="min-w-44 border-border bg-overlay backdrop-blur-sm hover:bg-overlay-hover"
-          >
-            <Link href="/play">{t("home.chooseMap")}</Link>
-          </Button>
         </div>
 
-        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms]">
+        <div className="pointer-events-auto mt-6 grid w-full max-w-xl grid-cols-3 gap-3 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:220ms]">
+          {MODE_TILES.map((m) => (
+            <Link
+              key={m.href}
+              href={m.href}
+              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2 active:scale-[0.97]"
+            >
+              <m.icon className="size-6 text-primary-muted transition-transform duration-200 ease-fluid group-hover:scale-110" />
+              <span className="line-clamp-1 text-sm font-semibold">{t(m.titleKey)}</span>
+              <span className="hidden line-clamp-1 text-[11px] text-muted-foreground sm:block">{t(m.bodyKey)}</span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:260ms]">
           {features.auth && <LiveStats />}
 
           <p className="mt-3 text-xs text-subtle drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] hidden">
@@ -123,32 +135,6 @@ export function HomeContent() {
                 </Link>
               ))}
             </div>
-            <Link
-              href="/flags"
-              className="group mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2"
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
-                <Flag className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-sm font-semibold">{t("home.flagsCardTitle")}</p>
-                <p className="text-xs text-muted-foreground">{t("home.flagsCardBody")}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground transition-transform duration-200 ease-fluid group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              href="/countries"
-              className="group mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2"
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
-                <Type className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-sm font-semibold">{t("home.countriesCardTitle")}</p>
-                <p className="text-xs text-muted-foreground">{t("home.countriesCardBody")}</p>
-              </div>
-              <ArrowRight className="size-4 text-muted-foreground transition-transform duration-200 ease-fluid group-hover:translate-x-0.5" />
-            </Link>
           </div>
 
           {/* Highlights */}

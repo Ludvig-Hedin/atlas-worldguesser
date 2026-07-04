@@ -20,6 +20,8 @@ import type * as leaderboard from "../leaderboard.js";
 import type * as maps from "../maps.js";
 import type * as parties from "../parties.js";
 import type * as presence from "../presence.js";
+import type * as push from "../push.js";
+import type * as pushSend from "../pushSend.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as rooms from "../rooms.js";
 import type * as solo from "../solo.js";
@@ -44,6 +46,8 @@ declare const fullApi: ApiFromModules<{
   maps: typeof maps;
   parties: typeof parties;
   presence: typeof presence;
+  push: typeof push;
+  pushSend: typeof pushSend;
   rateLimit: typeof rateLimit;
   rooms: typeof rooms;
   solo: typeof solo;

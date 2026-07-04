@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useConvexAuth } from "convex/react";
 import { Check, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePreferences } from "@/hooks/use-preferences";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { useT } from "@/hooks/use-t";
 import { LOCALES } from "@/lib/i18n";
 import type { MapType, Theme } from "@/lib/preferences";
@@ -31,6 +33,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 /** Header entry point for device-local preferences: theme, language, map type. */
 export function SettingsMenu() {
   const { theme, setTheme, locale, setLocale, mapType, setMapType, sound, setSound } = usePreferences();
+  const { isAuthenticated } = useConvexAuth();
+  const push = usePushNotifications();
   const t = useT();
 
   const themeOptions: { value: Theme; label: string }[] = [
@@ -118,6 +122,24 @@ export function SettingsMenu() {
               <Switch checked={sound} onCheckedChange={setSound} aria-label={t("settings.sound")} />
             </label>
           </Field>
+
+          {isAuthenticated && push.supported && (
+            <Field label={t("settings.notifications")}>
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-overlay px-3 py-2">
+                <span className="text-sm text-muted-foreground">
+                  {push.permission === "denied"
+                    ? t("settings.notificationsBlocked")
+                    : t("settings.notificationsHint")}
+                </span>
+                <Switch
+                  checked={push.subscribed}
+                  disabled={!push.ready || push.loading || push.permission === "denied"}
+                  onCheckedChange={(checked) => void (checked ? push.enable() : push.disable())}
+                  aria-label={t("settings.notifications")}
+                />
+              </label>
+            </Field>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -14,6 +14,8 @@ export const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.trim() || "";
 export const clerkPublishableKey =
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || "";
 
+export const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
+
 /** Cost/abuse kill switches. Set to "true" to hard-disable, even if keys exist. */
 export const googleMapsDisabled = process.env.NEXT_PUBLIC_DISABLE_GOOGLE_MAPS === "true";
 export const multiplayerDisabled = process.env.NEXT_PUBLIC_DISABLE_MULTIPLAYER === "true";
@@ -27,6 +29,8 @@ export const features = {
   auth: clerkPublishableKey.length > 0 && convexUrl.length > 0,
   /** Realtime multiplayer (Convex + not killed). */
   multiplayer: convexUrl.length > 0 && !multiplayerDisabled,
+  /** Web Push configured (VAPID public key present — private key lives in Convex only). */
+  push: vapidPublicKey.length > 0 && convexUrl.length > 0,
 } as const;
 
 export type Features = typeof features;

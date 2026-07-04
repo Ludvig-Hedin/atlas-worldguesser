@@ -64,6 +64,11 @@ export const sendRequest = mutation({
         fromUsername: me.username,
       });
     }
+    await ctx.scheduler.runAfter(0, internal.pushSend.send, {
+      kind: "friendRequest",
+      userId: target._id,
+      fromUsername: me.username,
+    });
   },
 });
 
@@ -83,6 +88,13 @@ export const respond = mutation({
           kind: "friendAccepted",
           to: requester.email,
           toUsername: requester.username,
+          fromUsername: me.username,
+        });
+      }
+      if (requester) {
+        await ctx.scheduler.runAfter(0, internal.pushSend.send, {
+          kind: "friendAccepted",
+          userId: requester._id,
           fromUsername: me.username,
         });
       }

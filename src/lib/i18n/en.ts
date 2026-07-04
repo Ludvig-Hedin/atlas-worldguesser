@@ -33,6 +33,9 @@ export const en = {
   "settings.mapType": "Map type",
   "settings.sound": "Sound",
   "settings.soundHint": "Play sound effects",
+  "settings.notifications": "Notifications",
+  "settings.notificationsHint": "Push notifications for friend requests and invites",
+  "settings.notificationsBlocked": "Blocked in your browser settings",
   "settings.mapType.normal": "Normal",
   "settings.mapType.satellite": "Satellite",
   "settings.mapType.terrain": "Terrain",
@@ -433,9 +436,9 @@ export const en = {
   "flags.noScoresYet": "No scores yet. Be the first!",
   "flags.correctOf": "{count}/{total} correct",
   "home.flagsCardTitle": "Guess the Flag",
-  "home.flagsCardBody": "See a flag, click the country. World or by continent.",
+  "home.flagsCardBody": "Name the country",
   "home.countriesCardTitle": "Guess the Country",
-  "home.countriesCardBody": "See a country's name, click it on the map. World or by continent.",
+  "home.countriesCardBody": "Find it on the map",
 } satisfies Record<string, string>;
 
 export type EnDictionary = typeof en;

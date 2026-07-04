@@ -349,6 +349,12 @@ export const inviteFriend = mutation({
         roomCode: room.code,
       });
     }
+    await ctx.scheduler.runAfter(0, internal.pushSend.send, {
+      kind: "roomInvite",
+      userId: friend._id,
+      fromUsername: user.username,
+      roomCode: room.code,
+    });
   },
 });
 
