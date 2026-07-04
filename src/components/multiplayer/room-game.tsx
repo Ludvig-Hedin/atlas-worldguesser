@@ -8,6 +8,7 @@ import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { Scoreboard } from "./scoreboard";
 import { TeamScoreboard } from "./team-scoreboard";
+import { DuelHealthBar } from "./duel-health-bar";
 import { RevealMap } from "./reveal-map";
 import { StreetViewCanvas } from "@/components/game/street-view-canvas";
 import { GameHUD } from "@/components/game/game-hud";
@@ -140,7 +141,9 @@ export function RoomGame({ room }: { room: RoomState }) {
 
       {/* Live standings */}
       <div className="absolute left-4 top-24 z-20 hidden w-56 rounded-2xl border border-white/10 bg-black/50 p-2.5 backdrop-blur md:block">
-        {room.teamMode ? (
+        {room.duelsMode ? (
+          <DuelHealthBar standings={room.standings} myUserId={room.myUserId} />
+        ) : room.teamMode ? (
           <TeamScoreboard
             standings={room.standings}
             myUserId={room.myUserId}
