@@ -25,6 +25,13 @@ export interface StreakState {
   bestWin: number;
   /** Country-correct streak, segmented per map id (e.g. "world", "usa"). */
   countryByMap: Record<string, CountryMapStreak>;
+  /**
+   * Banked daily-streak "freezes". Each auto-bridges exactly one missed day so
+   * a single skipped day doesn't reset the daily play streak (see foldGame).
+   * Earned at every 7-day milestone, capped at 3. Optional so pre-feature rows
+   * and stored guest profiles (which lack it) stay assignable; read as 0.
+   */
+  freezesAvailable?: number;
 }
 
 export const EMPTY_STREAKS: StreakState = {
@@ -33,6 +40,7 @@ export const EMPTY_STREAKS: StreakState = {
   win: 0,
   bestWin: 0,
   countryByMap: {},
+  freezesAvailable: 0,
 };
 
 /**
@@ -87,6 +95,8 @@ export interface ProgressionOutput {
   newBuildings: string[];
   xpGained: number;
   leveledUp: boolean;
+  /** A banked freeze was auto-spent to bridge a one-day gap and save the daily streak. */
+  streakFreezeUsed: boolean;
   won: boolean;
   totalScore: number;
   perfectRounds: number;
@@ -121,10 +131,28 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
   const leveledUp = levelForXp(stats.xp) > prevLevel;
 
   const today = dayNumber(now);
+  let freezesAvailable = s.freezesAvailable ?? 0;
+  let streakFreezeUsed = false;
   let daily: number;
-  if (s.lastPlayedDay === today) daily = Math.max(1, s.daily);
-  else if (s.lastPlayedDay === today - 1) daily = s.daily + 1;
-  else daily = 1;
+  if (s.lastPlayedDay === today) {
+    daily = Math.max(1, s.daily);
+  } else if (s.lastPlayedDay === today - 1) {
+    daily = s.daily + 1;
+  } else if (s.daily > 0 && today - s.lastPlayedDay === 2 && freezesAvailable > 0) {
+    // Bridges exactly one missed day; a longer gap still breaks the streak.
+    // `s.daily > 0` keeps a brand-new account from ever spending a freeze on
+    // what isn't really a "returning" gap.
+    daily = s.daily + 1;
+    freezesAvailable -= 1;
+    streakFreezeUsed = true;
+  } else {
+    daily = 1;
+  }
+  // Earn one freeze at every 7-day milestone (7, 14, 21…), capped at 3. Guarded
+  // by `daily > s.daily` so replaying on a milestone day can't farm freezes.
+  if (daily > s.daily && daily % 7 === 0) {
+    freezesAvailable = Math.min(3, freezesAvailable + 1);
+  }
 
   const win = won ? s.win + 1 : 0;
 
@@ -148,6 +176,7 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
     win,
     bestWin: Math.max(s.bestWin, win),
     countryByMap,
+    freezesAvailable,
   };
 
   const ctx: AchievementContext = {
@@ -165,6 +194,7 @@ export function foldGame(input: ProgressionInput): ProgressionOutput {
     newBuildings,
     xpGained,
     leveledUp,
+    streakFreezeUsed,
     won,
     totalScore,
     perfectRounds,
