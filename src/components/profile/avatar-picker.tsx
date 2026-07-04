@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMutation } from "convex/react";
 import { motion } from "motion/react";
 import { Check, Lock } from "lucide-react";
@@ -8,11 +9,14 @@ import { BUILDING_LIST, AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from "@/lib/buildi
 import { countryName } from "@/lib/countries-meta";
 import { useT } from "@/hooks/use-t";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface AvatarPickerProps {
   avatarBuildingId?: string | null;
   avatarColor?: string | null;
   unlockedBuildings: string[];
+  /** Cap the grid to this many buildings and show a "view all" link to /profile/avatars. Omit to render the full list. */
+  limit?: number;
 }
 
 /**
@@ -22,11 +26,13 @@ interface AvatarPickerProps {
  * user hasn't actually unlocked) — this component never assumes success and
  * just re-renders once the underlying `getMe` query updates.
  */
-export function AvatarPicker({ avatarBuildingId, avatarColor, unlockedBuildings }: AvatarPickerProps) {
+export function AvatarPicker({ avatarBuildingId, avatarColor, unlockedBuildings, limit }: AvatarPickerProps) {
   const t = useT();
   const setAvatar = useMutation(api.users.setAvatar);
   const unlockedSet = new Set(unlockedBuildings);
   const color = avatarColor ?? DEFAULT_AVATAR_COLOR;
+  const visibleBuildings = limit ? BUILDING_LIST.slice(0, limit) : BUILDING_LIST;
+  const hasMore = limit !== undefined && BUILDING_LIST.length > limit;
 
   return (
     <div className="flex flex-col gap-3">
@@ -49,7 +55,7 @@ export function AvatarPicker({ avatarBuildingId, avatarColor, unlockedBuildings 
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        {BUILDING_LIST.map((b) => {
+        {visibleBuildings.map((b) => {
           const unlocked = unlockedSet.has(b.id);
           const active = avatarBuildingId === b.id;
           return (
@@ -97,6 +103,12 @@ export function AvatarPicker({ avatarBuildingId, avatarColor, unlockedBuildings 
           );
         })}
       </div>
+
+      {hasMore && (
+        <Button variant="outline" size="sm" asChild className="self-start">
+          <Link href="/profile/avatars">{t("profile.viewAllAvatars")}</Link>
+        </Button>
+      )}
 
       <div className="flex items-center gap-2 pt-1">
         <span className="text-xs text-muted-foreground">{t("profile.avatarColor")}</span>

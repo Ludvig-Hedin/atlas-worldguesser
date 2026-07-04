@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { Check, Loader2, Pencil } from "lucide-react";
@@ -9,6 +10,7 @@ import { useLocalProfile } from "@/hooks/use-local-profile";
 import { StatsGrid } from "./stats-grid";
 import { AchievementGrid } from "./achievement-grid";
 import { AvatarPicker } from "./avatar-picker";
+import { UnlockedBuildingsGrid } from "./unlocked-buildings-grid";
 import { RecentGames, type RecentItem } from "./recent-games";
 import { IdentityAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,9 @@ import { bestCountryStreakOf } from "@/lib/progression";
 import { useT } from "@/hooks/use-t";
 import { features } from "@/lib/env";
 import { BUILDING_LIST } from "@/lib/buildings";
-import { countryName } from "@/lib/countries-meta";
+
+/** Grid caps to this many tiles before showing a "view all" link — fits within 3-4 rows at both grid-cols-2 (mobile) and sm:grid-cols-3 breakpoints. */
+const AVATAR_PREVIEW_LIMIT = 8;
 
 /** Cloud-backed self-view for a signed-in user, mirroring the guest layout below. */
 function CloudProfile() {
@@ -140,6 +144,7 @@ function CloudProfile() {
         avatarBuildingId={profile.avatarBuildingId}
         avatarColor={profile.avatarColor}
         unlockedBuildings={profile.unlockedBuildings}
+        limit={AVATAR_PREVIEW_LIMIT}
       />
       <AchievementGrid
         owned={achievements.map((a) => a.id)}
@@ -216,6 +221,7 @@ function LocalProfileView() {
   };
 
   const unlockedSet = new Set(profile.unlockedBuildings);
+  const unlockedBuildingDefs = BUILDING_LIST.filter((b) => unlockedSet.has(b.id));
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8">
@@ -263,26 +269,16 @@ function LocalProfileView() {
         bestCountryStreak={bestCountryStreakOf(profile.streaks.countryByMap)}
       />
 
-      {profile.unlockedBuildings.length > 0 && (
+      {unlockedBuildingDefs.length > 0 && (
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-muted-foreground">{t("profile.avatarTitle")}</h2>
           <p className="text-xs text-muted-foreground">{t("profile.avatarGuestHint")}</p>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {BUILDING_LIST.filter((b) => unlockedSet.has(b.id)).map((b) => (
-              <div
-                key={b.id}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card/40 p-3"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-overlay">
-                  <img src={b.image} alt="" className="size-full object-contain p-1" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium leading-tight">{b.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{countryName(b.id)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <UnlockedBuildingsGrid buildings={unlockedBuildingDefs.slice(0, AVATAR_PREVIEW_LIMIT)} />
+          {unlockedBuildingDefs.length > AVATAR_PREVIEW_LIMIT && (
+            <Button variant="outline" size="sm" asChild className="self-start">
+              <Link href="/profile/avatars">{t("profile.viewAllAvatars")}</Link>
+            </Button>
+          )}
         </div>
       )}
 

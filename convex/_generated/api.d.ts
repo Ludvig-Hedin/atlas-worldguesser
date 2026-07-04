@@ -24,6 +24,7 @@ import type * as presence from "../presence.js";
 import type * as push from "../push.js";
 import type * as pushSend from "../pushSend.js";
 import type * as rateLimit from "../rateLimit.js";
+import type * as recentLocations from "../recentLocations.js";
 import type * as rooms from "../rooms.js";
 import type * as solo from "../solo.js";
 import type * as users from "../users.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   push: typeof push;
   pushSend: typeof pushSend;
   rateLimit: typeof rateLimit;
+  recentLocations: typeof recentLocations;
   rooms: typeof rooms;
   solo: typeof solo;
   users: typeof users;
