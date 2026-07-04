@@ -288,6 +288,7 @@ export const setTeamMode = mutation({
     if (teamMode && room.elimination) {
       throw new Error("Team mode can't be combined with Battle Royale");
     }
+    if (teamMode && room.duelsMode) throw new Error("Turn off Duels first");
     const members = await membersOf(ctx, roomId);
     if (teamMode) {
       // Balance existing members into A/B by join order (alternating).
@@ -337,6 +338,30 @@ export const setTeam = mutation({
     const onTeam = members.filter((m) => m.team === team && m.userId !== user._id).length;
     if (onTeam >= MAX_TEAM) throw new Error(`Team ${team} is full`);
     await ctx.db.patch(member._id, { team, lastSeenAt: Date.now() });
+  },
+});
+
+export const setDuelsMode = mutation({
+  args: { roomId: v.id("rooms"), duelsMode: v.boolean(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { roomId, duelsMode, guestId }) => {
+    const user = await requireUser(ctx, guestId);
+    const room = await ctx.db.get(roomId);
+    if (!room || room.hostId !== user._id) throw new Error("Only the host can change modes");
+    if (room.status !== "lobby") throw new Error("Match already started");
+    if (duelsMode) {
+      const members = await membersOf(ctx, roomId);
+      if (members.length > 2) {
+        throw new Error("Duels needs exactly 2 players — remove extra players first");
+      }
+      if (room.teamMode) {
+        // Duels and Teams are mutually exclusive — switching to Duels clears
+        // any existing team assignments (mirrors setTeamMode's own clear).
+        for (const m of members) await ctx.db.patch(m._id, { team: undefined });
+      }
+      await ctx.db.patch(roomId, { duelsMode: true, teamMode: false });
+    } else {
+      await ctx.db.patch(roomId, { duelsMode: false });
+    }
   },
 });
 
