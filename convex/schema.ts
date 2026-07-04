@@ -122,6 +122,10 @@ export default defineSchema({
     settings: settingsValidator,
     // Team play (A vs B). Absent/false = free-for-all (the default).
     teamMode: v.optional(v.boolean()),
+    // 1v1 Duels — capacity is capped at 2 instead of MAX_MEMBERS (see
+    // rooms.ts join/start). Mutually exclusive with teamMode; enforced in
+    // rooms.ts (create/setTeamMode/setDuelsMode), not the schema.
+    duelsMode: v.optional(v.boolean()),
     currentRound: v.number(),
     // Hidden answers for the whole match, resolved at creation. Never exposed
     // to clients while a round is active (see rooms.publicState).
