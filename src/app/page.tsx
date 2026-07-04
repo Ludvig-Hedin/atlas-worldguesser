@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="pointer-events-none relative flex min-h-[100dvh] flex-col">
+    // `isolate` pins the globe canvas's negative z-index to this local stacking
+    // context — without it, `relative` alone doesn't create one, so the fixed
+    // canvas escapes to the page root and the hero's `pointer-events-none`
+    // click-through (see home-content.tsx) can't reach it.
+    <div className="isolate relative flex min-h-[100dvh] flex-col">
       {/* Hoisted to <head> by React 19 — starts the globe point-cloud fetch in
           parallel with JS hydration instead of after it, so the globe animates
           in sooner on first load. */}

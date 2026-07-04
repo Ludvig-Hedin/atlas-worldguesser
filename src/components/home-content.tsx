@@ -41,7 +41,7 @@ export function HomeContent() {
   const t = useT();
 
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="pointer-events-none flex flex-1 flex-col">
       {/* Hero — full viewport so the globe has room to breathe */}
       <section className="relative flex min-h-[calc(100svh-4.25rem)] select-none flex-col items-center justify-center px-4 pb-12 text-center">
         <Badge
