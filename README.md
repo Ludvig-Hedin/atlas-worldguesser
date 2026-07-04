@@ -273,8 +273,10 @@ by re-running the same prompt template per country code and re-keying.
   its name), then click that country on a blank world map. Play the World or a
   single continent, retry-until-correct with escalating amber→orange→red feedback,
   a 🔥 streak counter, XP into the shared pool, and a per-region best-score
-  leaderboard. Flag SVGs are bundled locally (`public/flags/`) so they render on
-  every platform and work offline.
+  leaderboard. Past rounds' countries stay on the map in a muted green/amber/red
+  once you move on, instead of resetting to blank, so you can see your trail
+  across the whole run. Flag SVGs are bundled locally (`public/flags/`) so they
+  render on every platform and work offline.
 - ✅ Sound effects — synthesized (Web Audio, no assets, offline) right/wrong/finish
   cues across every mode plus menu clicks; toggleable in Settings.
 - ✅ In-product clue reference ("What gives it away?") — every round reveal shows
