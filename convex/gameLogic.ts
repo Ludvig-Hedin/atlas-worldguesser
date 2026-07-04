@@ -96,6 +96,10 @@ export function layeredSample<T>(
         ]
       : shuffled(pool);
   const chosen = ordered.slice(0, Math.min(count, pool.length));
+  // Once `count` exceeds the pool, pad with replacement, indexing the
+  // ORIGINAL `pool` order (not `ordered`) — same element set either way, but
+  // this means a padded pick for a given seed/rng draw isn't reproducible
+  // across code versions that padded from a different array order.
   while (chosen.length < count && pool.length > 0) {
     chosen.push(pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]);
   }
