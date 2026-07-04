@@ -1,5 +1,124 @@
 # Code Review Backlog
 
+## Bug Hunt — 2026-07-04 (targeted: useConvexAuth-without-isLoading + full-repo checklist sweep)
+
+Triggered by a user bug report: the solo match-results "New building unlocked" pill
+showed "Sign in to claim" to an already-signed-in user. Root cause (fixed earlier
+this session, not counted below): `match-results.tsx`'s `BuildingClaimAction`/
+`ChallengeShareAction` destructured `isAuthenticated` from `useConvexAuth()` without
+also checking `isLoading` — Convex reports `isAuthenticated: false` while still
+resolving the Clerk JWT, so a signed-in user can briefly see wrong UI. User then
+asked to hunt for *similar* bugs; this entry covers that hunt (all 17
+`useConvexAuth()` call sites in the repo, checked individually) plus a 4-way
+parallel full-repo sweep for the standard bug-hunt checklist (logic errors, race
+conditions, swallowed errors, missing awaits) across convex/, game components/hooks,
+multiplayer/social/profile, and lib/maps/misc.
+
+### Auto-fixed (4 issues, validated: `tsc --noEmit` 0 errors / `vitest run` 208/208 / `eslint` 0 new errors)
+
+- `src/components/game/daily-client.tsx` + `src/components/challenge/challenge-client.tsx`
+  — same `isAuthenticated`-without-`isLoading` pattern as the original report: both
+  showed a "sign in to play" nudge under the Play button to an already-authenticated
+  user during the auth-loading window. Both now also destructure `isLoading` and gate
+  the nudge on `!authLoading`.
+- `src/components/social/friends-client.tsx` — accept/decline friend-request buttons
+  called `respond(...)` with no `.catch` at all (every other mutation in the same file
+  has one). A stale/withdrawn/expired request (realistic: two tabs, or the sender
+  cancels first) threw an unhandled rejection with the button silently doing nothing.
+  Added a `respondToRequest` helper with `.catch` + toast, matching the file's own
+  established pattern. New i18n key `friends.couldNotRespond` (5 locales).
+- `src/components/profile/guest-profile.tsx` (`CloudProfile.saveName`) — username
+  rename had no `.catch`; `setEditing(false)` fired unconditionally right after the
+  fire-and-forget mutation. Since `convex/users.ts`'s `setUsername` was hardened in an
+  earlier pass to *throw* on invalid/duplicate names (instead of silently substituting
+  a random one), a normal user typing a taken name now got an unhandled rejection and
+  the edit UI closed as if it had succeeded, with no explanation why the name didn't
+  change. Now `await`s inside try/catch, only closes the editor on success, toasts on
+  failure. New i18n key `profile.couldNotSaveName` (5 locales).
+
+### Needs human review (11 issues — TODOs in code)
+
+- `src/components/game/daily-client.tsx` + `src/components/challenge/challenge-client.tsx`
+  (`handleComplete`) — unlike `SoloCloudSync`/`EnsureUser`/`FlagCloudSync` (which gate
+  a `useEffect` on `isAuthenticated` and therefore re-run once it resolves), these are
+  one-shot callbacks fired directly from game-end. A stale `isAuthenticated` read here
+  permanently skips `submit`/`submitAttempt` — no retry, no error toast, silent loss of
+  that day's/that challenge's result. Fix: submit from a `useEffect` keyed on
+  `[isAuthenticated, isLoading]` instead of a direct check in the callback.
+- `src/components/profile/guest-profile.tsx` (`AuthGate`) — no `isLoading` check: while
+  Convex resolves the Clerk JWT, `GuestProfile` briefly renders `<LocalProfileView>`
+  (wrong stats/data) for an actually-signed-in user before flipping to
+  `<CloudProfile>`. Fix: render a loading skeleton while `isLoading` instead of
+  choosing a real view.
+- `src/components/maps/maps-client.tsx` (`canLike={isAuthenticated}`) — same missing
+  `isLoading` check; a signed-in user landing on `/maps` can briefly see every Like
+  button disabled with no explanation. Low severity (self-corrects in ~1s).
+- `src/components/guest/guest-session-provider.tsx` (`provisionGuest`) +
+  `src/components/multiplayer/room-client.tsx` (mount effect, the highest-traffic call
+  site since invite links land here first) — same missing `isLoading` check; a
+  signed-in user landing directly on `/room/CODE` before auth resolves can trip
+  `!isAuthenticated` and provision a redundant ephemeral guest row. Harmless
+  server-side (Clerk wins there) but wastes a mutation + DB row per race.
+- `src/components/multiplayer/room-client.tsx` (auto-join effect) — `joinedRef.current`
+  is claimed before `join()` resolves and its rejection is fully swallowed. A
+  transient failure permanently strands the user rendering `RoomLobby` as a
+  non-member, with every action silently no-op'ing — no retry, no way back short of a
+  reload. Needs a bounded retry or a visible "couldn't join — retry" affordance.
+- `convex/leaderboard.ts` (`topPeriod`) — only users with an `xpSnapshots` row for the
+  period are considered; that row is only created by the weekly/monthly cron. Anyone
+  who signs up after the last cron run is silently excluded from "This Week"/"This
+  Month" for the rest of the period, even with huge XP gains — the opposite of the
+  feature's own "new player can outrank a veteran" goal. Needs a decision: seed a 0-XP
+  snapshot at account creation, or treat a missing snapshot as baseline 0.
+- `convex/challenges.ts` (`submitAttempt`) — round validation checks range + no
+  duplicates but never requires an unbroken prefix from round 1. A client can omit
+  the round(s) it got wrong and submit only correct ones, inflating the recorded
+  Survival "streak" past the true consecutive-from-start value.
+- `convex/friends.ts` (`findPair`) — two separate index reads ((A,B) then (B,A)) don't
+  overlap in Convex's OCC read-tracking; near-simultaneous mutual friend requests can
+  both see "no existing pair" and both succeed, producing duplicate pending rows for
+  the same pair (shows the same person in both "incoming" and "outgoing" for both
+  users). Needs a design decision (auto-accept on reverse-pending hit, or canonicalize
+  to one row per unordered pair).
+- `src/components/game/match-results.tsx` (`mapStreak`) — keyed correctly by
+  `game.mapId` (`"daily"` for Daily Challenge, kept distinct from `"world"`), but the
+  card's label uses `mapNameKey(map.id)` where `map = getMapConfig(game.mapId)` falls
+  back to `MAPS.world` for the unknown id `"daily"`. Result: after a Daily Challenge,
+  the card reads "World streak" while showing the separate `countryByMap["daily"]`
+  numbers, not the player's real World streak. Needs a decision: fold Daily into
+  `countryByMap["world"]`, or keep it separate with its own label.
+- `src/components/game/flag-cloud-sync.tsx` — duplicates the already-tracked
+  "pending retry stranded on unmount" tradeoff from `solo-cloud-sync.tsx` (see that
+  entry below): navigating away mid-backoff silently drops the Flags result.
+
+### Reviewed clean (no new issues)
+
+- `src/lib/**`, `src/components/maps/map-creator.tsx`, `src/components/preferences/**`,
+  achievements/buildings data, i18n interpolation, `flags/pool.ts` + `flags/scoring.ts`.
+- `convex/rooms.ts` duels/team/elimination logic, `solo.ts`/`dailyChallenge.ts`
+  server-authoritative session flow, `gameLogic.ts`, `maps.ts`, `games.ts`, `chat.ts`,
+  `parties.ts`, `presence.ts`, `rateLimit.ts`, `pushSend.ts`.
+- `src/hooks/use-local-party-game.ts` + local-party UI, guest replay storage
+  (`local-profile.ts`), level-up/streak-freeze toasts, `use-flag-game.ts` + Flags UI,
+  `play-client.tsx`.
+- `src/components/multiplayer/*` (except the two items above) — `duel-health-bar.tsx`,
+  `party-client.tsx`, `room-game.tsx`, `room-lobby.tsx`, `room-results.tsx`,
+  `scoreboard.tsx`, `team-scoreboard.tsx`, `chat-panel.tsx`, `reveal-map.tsx`,
+  `multiplayer-entry.tsx`, `room-invite-notifier.tsx`, `avatar-picker.tsx`,
+  `achievement-grid.tsx`, `public-profile.tsx`, `recent-games.tsx`, `stats-grid.tsx`,
+  `replay-client.tsx`, `replay-view.tsx`.
+- The other 12 `useConvexAuth()` call sites not listed above (`solo-cloud-sync.tsx`,
+  `ensure-user.tsx`, `settings-menu.tsx`, `use-push-notifications.ts`, and the
+  provisioning-gate effects in `guest-session-provider.tsx`/`room-client.tsx` not
+  covered by the TODO above) either only gate an effect that safely re-runs once
+  `isAuthenticated` resolves, or only skip/unskip a query — no visible-wrong-UI risk.
+
+### Validation
+
+- `tsc --noEmit` ✓ (0 errors)
+- `eslint` ✓ (0 new errors; 3 pre-existing warnings unchanged)
+- `vitest run` ✓ (208/208)
+
 ## Solo/Daily server-authoritative scoring — backend landed 2026-07-04 (client wiring deferred)
 
 Addresses the "client-supplied `actual` coordinates" trust gap below (Needs-human-review
