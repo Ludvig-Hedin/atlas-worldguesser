@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useHasKeyboard } from "@/hooks/use-has-keyboard";
 import type { LatLng } from "@/lib/types";
 import { clamp } from "@/lib/math";
+import { cn } from "@/lib/utils";
 
 interface MapSheetProps {
   guess: LatLng | null;
@@ -67,31 +68,32 @@ export function MapSheet({
     drag.current = null;
   }, []);
 
-  if (collapsed) {
-    return (
-      <div className="fixed bottom-4 right-4 z-30">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => setCollapsed(false)}
-              className="flex size-11 items-center justify-center rounded-full bg-hud text-foreground shadow-2 ring-1 ring-inset ring-border backdrop-blur-md transition hover:bg-hud-hover hover:ring-border-strong"
-              aria-label="Show map"
-            >
-              <MapIcon className="size-4.5" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Show map</TooltipContent>
-        </Tooltip>
-      </div>
-    );
-  }
-
   return (
-    <div
-      className={fullscreen ? "fixed inset-x-3 bottom-3 top-16 z-40" : "fixed bottom-4 right-4 z-30"}
-      style={fullscreen ? undefined : { width: size.w }}
-    >
+    <>
+      {collapsed && (
+        <div className="fixed bottom-4 right-4 z-30">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setCollapsed(false)}
+                className="flex size-11 items-center justify-center rounded-full bg-hud text-foreground shadow-2 ring-1 ring-inset ring-border backdrop-blur-md transition hover:bg-hud-hover hover:ring-border-strong"
+                aria-label="Show map"
+              >
+                <MapIcon className="size-4.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Show map</TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+      <div
+        className={cn(
+          collapsed && "hidden",
+          fullscreen ? "fixed inset-x-3 bottom-3 top-16 z-40" : "fixed bottom-4 right-4 z-30",
+        )}
+        style={fullscreen ? undefined : { width: size.w }}
+      >
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-card shadow-3 relative">
         <div className="relative w-full" style={fullscreen ? { flex: 1 } : { height: size.h }}>
           <GuessMap guess={guess} onGuess={onGuess} initialView={initialView} interactive hintCircle={hintCircle} />
@@ -177,6 +179,7 @@ export function MapSheet({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

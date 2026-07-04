@@ -100,17 +100,24 @@ export function SoloGame({
   const rerollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordedRef = useRef<string | null>(null);
 
-  // Reset the hint + coverage re-roll each round.
+  // Reset the hint + coverage re-roll each round. An "auth" failure (bad/blocked
+  // API key) is session-wide, not per-location — clearing it here would send
+  // every new round back through a doomed real-Street-View attempt first.
   useEffect(() => {
     setHintCircle(null);
-    setForceDemo(false);
-    setForceDemoReason(undefined);
+    if (forceDemoReason !== "auth") {
+      setForceDemo(false);
+      setForceDemoReason(undefined);
+    }
     setRerolling(false);
     rerollRef.current = 0;
     if (rerollTimer.current) {
       clearTimeout(rerollTimer.current);
       rerollTimer.current = null;
     }
+    // Only game.round should retrigger this reset; forceDemoReason is read,
+    // not reacted to, so an auth failure doesn't get cleared mid-round.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.round]);
 
   // Clear any pending reroll timer on unmount.
