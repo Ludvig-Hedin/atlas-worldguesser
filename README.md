@@ -227,6 +227,11 @@ by re-running the same prompt template per country code and re-keying.
   server-side (`convex/users.setAvatar`); guests track locally and merge into
   their account on sign-in. Art generated via Nano Banana, chroma-keyed to
   transparent PNGs (`public/buildings/`, catalog in `src/lib/buildings.ts`).
+  The profile page's Avatar section shows only the first 8 tiles (3-4 rows) with
+  a "View all" button (`src/components/profile/avatar-picker.tsx`,
+  `unlocked-buildings-grid.tsx`) linking to the full grid at `/profile/avatars`
+  (`src/components/profile/all-avatars-view.tsx`) — same cloud/guest split as
+  the main profile page.
 - ✅ Custom maps — build a map by dropping pins, share it public/private, play it solo.
   The community browser (`/maps`) has Trending/Newest/Most Played sort tabs and a
   like button per map (`convex/maps.ts` `toggleLike`, denormalized `likes`/`plays`
