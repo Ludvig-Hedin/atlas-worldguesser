@@ -61,7 +61,13 @@ export function PublicProfile({ username }: { username: string }) {
         </div>
       </header>
 
-      <StatsGrid stats={profile.stats} xp={profile.xp} dailyStreak={profile.streaks.daily} />
+      <StatsGrid
+        stats={profile.stats}
+        xp={profile.xp}
+        dailyStreak={profile.streaks.daily}
+        rating={profile.rating}
+        ratingGamesPlayed={profile.ratingGamesPlayed}
+      />
       <AchievementGrid
         owned={achievements.map((a) => a.id)}
         stats={profile.stats}

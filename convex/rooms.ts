@@ -20,6 +20,7 @@ import {
 import { rateLimit } from "./rateLimit";
 import { areFriends } from "./friends";
 import { foldGame } from "../src/lib/progression";
+import { DEFAULT_RATING, computeRatingDelta, kFactorFor } from "../src/lib/rating";
 import type { RoundResult } from "../src/lib/types";
 
 const REVEAL_MS = 6000;
@@ -547,6 +548,7 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
   // members); every member of the winning team wins. FFA: highest individual.
   // Both guard against all-zero / non-competitive matches so idle games don't
   // inflate win streaks.
+  let competitive: boolean;
   let wonFor: (m: Doc<"roomMembers">) => boolean;
   if (room.teamMode) {
     const totals = teamTotalsOf(members);
@@ -556,12 +558,57 @@ async function finishMatch(ctx: MutationCtx, room: Doc<"rooms">) {
     // members>1 guard.
     const hasA = members.some((m) => m.team === "A");
     const hasB = members.some((m) => m.team === "B");
-    const competitive = winningTeam !== null && hasA && hasB;
+    competitive = winningTeam !== null && hasA && hasB;
     wonFor = (m) => competitive && m.team === winningTeam;
   } else {
     const maxScore = members.reduce((m, x) => Math.max(m, x.totalScore), 0);
-    const competitive = members.length > 1 && maxScore > 0;
+    competitive = members.length > 1 && maxScore > 0;
     wonFor = (m) => competitive && m.totalScore === maxScore;
+  }
+
+  // ── Ranked rating (ELO-lite) ───────────────────────────────────────────
+  // Rating applies to every competitive room (FFA, Team, Duels) and reuses the
+  // same `competitive` guard as win-streaks, so idle/walkover matches never move
+  // it. Guests never accrue OR consume rating: they're excluded from the
+  // opponent average entirely, so a guest sharing the room can't skew a
+  // signed-in player's delta versus the same match played all-signed-in. Needs
+  // ≥2 signed-in players for a meaningful opponent field; otherwise skipped for
+  // the whole match. Runs BEFORE the progression fold below; the fold's patch
+  // sets only xp/stats/streaks, so it never clobbers these rating fields.
+  if (competitive) {
+    const ratedUsers = new Map<Id<"roomMembers">, Doc<"users">>();
+    for (const m of members) {
+      const u = await ctx.db.get(m.userId);
+      if (u && !u.isGuest) ratedUsers.set(m._id, u);
+    }
+    if (ratedUsers.size >= 2) {
+      const ratingOf = (u: Doc<"users">) => u.rating ?? DEFAULT_RATING;
+      for (const member of members) {
+        const me = ratedUsers.get(member._id);
+        if (!me) continue; // guest — never rated
+        let sum = 0;
+        let count = 0;
+        for (const [otherId, other] of ratedUsers) {
+          if (otherId === member._id) continue;
+          sum += ratingOf(other);
+          count++;
+        }
+        // count ≥ 1 here (ratedUsers.size ≥ 2 and we skipped self).
+        const avgOpponentRating = sum / count;
+        const played = me.ratingGamesPlayed ?? 0;
+        const delta = computeRatingDelta({
+          myRating: ratingOf(me),
+          avgOpponentRating,
+          won: wonFor(member),
+          k: kFactorFor(played),
+        });
+        await ctx.db.patch(me._id, {
+          rating: ratingOf(me) + delta,
+          ratingGamesPlayed: played + 1,
+        });
+        await ctx.db.patch(member._id, { ratingDelta: delta });
+      }
+    }
   }
 
   for (const member of members) {
@@ -663,7 +710,11 @@ export const rematch = mutation({
       for (const g of gs) await ctx.db.delete(g._id);
     }
     const members = await membersOf(ctx, roomId);
-    for (const m of members) await ctx.db.patch(m._id, { totalScore: 0, ready: false });
+    // Clear ratingDelta too: a rematch that turns out non-competitive (or
+    // includes a guest) won't overwrite it, so a stale delta from the prior
+    // match would otherwise surface on the next results screen.
+    for (const m of members)
+      await ctx.db.patch(m._id, { totalScore: 0, ready: false, ratingDelta: undefined });
 
     // Clear stale ad-hoc invites — the room reuses this same roomId/code, so
     // without this a rematch would resurrect old invites: re-toasting people
@@ -740,6 +791,10 @@ export const getByCode = query({
             isHost: m.userId === room.hostId,
             hasGuessed: guessByUser.has(m.userId),
             team: m.team ?? null,
+            // Per-match ranked-rating change; only populated once finishMatch
+            // has run (status === "finished"), null otherwise. Read by the
+            // results screen — no extra query needed.
+            ratingDelta: m.ratingDelta ?? null,
           };
         }),
       )

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useMutation } from "convex/react";
 import { motion } from "motion/react";
-import { Home, RotateCcw, Trophy } from "lucide-react";
+import { Home, Medal, RotateCcw, Trophy } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { RoomState } from "./types";
 import { TeamScoreboard } from "./team-scoreboard";
@@ -114,9 +114,24 @@ export function RoomResults({ room }: { room: RoomState }) {
               <span className="min-w-0 flex-1 truncate font-medium" title={s.username}>
                 {s.username}
               </span>
-              <span className="text-lg font-semibold tabular text-primary-muted">
-                {formatNumber(s.totalScore)}
-              </span>
+              <div className="flex flex-col items-end leading-tight">
+                <span className="text-lg font-semibold tabular text-primary-muted">
+                  {formatNumber(s.totalScore)}
+                </span>
+                {s.ratingDelta != null && s.ratingDelta !== 0 && (
+                  <span
+                    className={cn(
+                      "flex items-center gap-0.5 text-xs font-medium tabular",
+                      s.ratingDelta > 0 ? "text-emerald-500" : "text-red-400",
+                    )}
+                    title={t("rating.title")}
+                  >
+                    <Medal className="size-3" />
+                    {s.ratingDelta > 0 ? "+" : "−"}
+                    {Math.abs(s.ratingDelta)}
+                  </span>
+                )}
+              </div>
             </motion.div>
           ))}
         </div>

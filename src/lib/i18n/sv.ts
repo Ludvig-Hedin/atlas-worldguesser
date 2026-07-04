@@ -168,6 +168,10 @@ export const sv: LocaleDictionary = {
   "match.setAsAvatar": "Använd som avatar",
   "match.signInToClaim": "Logga in för att hämta ut",
   "match.levelUp": "Ny nivå! Nu på nivå {level}",
+  "match.challengeFriend": "Utmana en vän",
+  "match.challengeSignIn": "Logga in för att utmana en vän",
+  "match.challengeCopied": "Utmaningslänk kopierad!",
+  "match.challengeErrorFallback": "Kunde inte skapa utmaningslänken.",
 
   // Lokalt "skicka runt"-läge (samma enhet, inga konton)
   "party.entryTitle": "Spela tillsammans på den här enheten",
@@ -290,6 +294,20 @@ export const sv: LocaleDictionary = {
   "daily.countriesOf5": "{count}/5 länder",
   "daily.submitSuccess": "Dagens utmaning skickad — {score} p · {correct}/5 länder",
   "daily.submitErrorFallback": "Kunde inte skicka in ditt resultat.",
+
+  "challenge.solo": "Solo",
+  "challenge.badge": "Svit-utmaning",
+  "challenge.unknownPlayer": "Okänd spelare",
+  "challenge.subtitle": "{count} i rad. Samma platser, samma ordning — tror du att du kan slå det?",
+  "challenge.attemptsSoFar": "Försök hittills: {count}",
+  "challenge.playButton": "Slå sviten",
+  "challenge.signInNudge": "Logga in för att spara ditt försök och jämföra poäng.",
+  "challenge.notFound": "Utmaningen hittades inte",
+  "challenge.you": "Du",
+  "challenge.youWon": "Du slog sviten!",
+  "challenge.youLost": "{name}s svit står kvar",
+  "challenge.attemptSaved": "Försök sparat — {streak} i rad · {score} poäng",
+  "challenge.attemptErrorFallback": "Kunde inte spara ditt försök.",
 
   // Generic / shared
   "common.loading": "Laddar…",

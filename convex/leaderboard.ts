@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { levelForXp } from "../src/lib/xp";
+import { DEFAULT_RATING, tierForRating } from "../src/lib/rating";
 import { currentUser } from "./users";
 
 function row(u: Doc<"users">, rank: number) {
@@ -40,6 +41,50 @@ export const top = query({
     for (let i = 0; i < users.length; i++) {
       const rank = i > 0 && users[i].xp === users[i - 1].xp ? rows[i - 1].rank : i + 1;
       rows.push(row(users[i], rank));
+    }
+    return rows;
+  },
+});
+
+function ratingRow(u: Doc<"users">, rank: number) {
+  const rating = u.rating ?? DEFAULT_RATING;
+  return {
+    rank,
+    _id: u._id,
+    username: u.username,
+    avatarUrl: u.avatarUrl,
+    avatarBuildingId: u.avatarBuildingId,
+    avatarColor: u.avatarColor,
+    rating,
+    tier: tierForRating(rating).key,
+    level: levelForXp(u.xp),
+    gamesPlayed: u.stats.gamesPlayed,
+    wins: u.stats.wins,
+  };
+}
+
+/**
+ * Global ranked-rating leaderboard. Mirrors `top` but ordered by the by_rating
+ * index and restricted to players who have actually played a rated match
+ * (rating !== undefined) — which naturally excludes guests (they never accrue
+ * rating) and everyone still on the default 1000 they've never earned.
+ */
+export const topRated = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit }) => {
+    const n = Math.max(1, Math.min(Math.floor(limit ?? 50) || 50, 100));
+    // by_rating sorts undefined-rating rows lowest, so `.order("desc")` puts the
+    // real rated players first; over-fetch a margin, drop guests + never-rated
+    // rows, then slice to n (same shape as `top`).
+    const pool = Math.min(n + 150, 500);
+    const users = (await ctx.db.query("users").withIndex("by_rating").order("desc").take(pool))
+      .filter((u) => !u.isGuest && u.rating !== undefined)
+      .slice(0, n);
+    // Competition ranking (ties share a rank), matching `top`.
+    const rows: ReturnType<typeof ratingRow>[] = [];
+    for (let i = 0; i < users.length; i++) {
+      const rank = i > 0 && users[i].rating === users[i - 1].rating ? rows[i - 1].rank : i + 1;
+      rows.push(ratingRow(users[i], rank));
     }
     return rows;
   },

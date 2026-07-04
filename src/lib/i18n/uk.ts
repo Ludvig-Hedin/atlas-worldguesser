@@ -168,6 +168,10 @@ export const uk: LocaleDictionary = {
   "match.setAsAvatar": "Встановити як аватар",
   "match.signInToClaim": "Увійдіть, щоб отримати",
   "match.levelUp": "Новий рівень! Тепер рівень {level}",
+  "match.challengeFriend": "Викликати друга",
+  "match.challengeSignIn": "Увійдіть, щоб викликати друга",
+  "match.challengeCopied": "Посилання на виклик скопійовано!",
+  "match.challengeErrorFallback": "Не вдалося створити посилання на виклик.",
 
   // Локальний режим "по колу" (один пристрій, без акаунтів)
   "party.entryTitle": "Грайте разом на цьому пристрої",

@@ -168,6 +168,10 @@ export const pl: LocaleDictionary = {
   "match.setAsAvatar": "Ustaw jako awatar",
   "match.signInToClaim": "Zaloguj się, aby odebrać",
   "match.levelUp": "Nowy poziom! Teraz poziom {level}",
+  "match.challengeFriend": "Wyzwij znajomego",
+  "match.challengeSignIn": "Zaloguj się, aby wyzwać znajomego",
+  "match.challengeCopied": "Link wyzwania skopiowany!",
+  "match.challengeErrorFallback": "Nie udało się utworzyć linku wyzwania.",
 
   // Lokalny tryb "Podawajki" (jedno urządzenie, bez kont)
   "party.entryTitle": "Zagraj razem na tym urządzeniu",

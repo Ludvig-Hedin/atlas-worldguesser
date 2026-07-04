@@ -102,7 +102,13 @@ function CloudProfile() {
         </div>
       </header>
 
-      <StatsGrid stats={profile.stats} xp={profile.xp} dailyStreak={profile.streaks.daily} />
+      <StatsGrid
+        stats={profile.stats}
+        xp={profile.xp}
+        dailyStreak={profile.streaks.daily}
+        rating={profile.rating}
+        ratingGamesPlayed={profile.ratingGamesPlayed}
+      />
       <AvatarPicker
         avatarBuildingId={profile.avatarBuildingId}
         avatarColor={profile.avatarColor}

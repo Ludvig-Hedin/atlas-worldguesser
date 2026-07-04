@@ -6,6 +6,7 @@ import { rateLimit } from "./rateLimit";
 import { ANTIPODE_METERS, clampSettings, computeGuessScore } from "./gameLogic";
 import { foldGame } from "../src/lib/progression";
 import { levelForXp } from "../src/lib/xp";
+import { DEFAULT_RATING, tierForRating } from "../src/lib/rating";
 import { ACHIEVEMENTS } from "../src/lib/achievements";
 import { BUILDINGS, AVATAR_COLORS } from "../src/lib/buildings";
 import type { RoundResult } from "../src/lib/types";
@@ -115,6 +116,11 @@ function publicProfile(user: Doc<"users">) {
     unlockedBuildings: user.unlockedBuildings ?? [],
     xp: user.xp,
     level: levelForXp(user.xp),
+    // Ranked rating (ELO-lite): undefined = never played rated, reads as the
+    // default 1000. ratingGamesPlayed drives the "Unranked until placed" UI.
+    rating: user.rating ?? DEFAULT_RATING,
+    ratingGamesPlayed: user.ratingGamesPlayed ?? 0,
+    tier: tierForRating(user.rating ?? DEFAULT_RATING).key,
     stats: user.stats,
     streaks: user.streaks,
     createdAt: user.createdAt,

@@ -168,6 +168,10 @@ export const lt: LocaleDictionary = {
   "match.setAsAvatar": "Nustatyti kaip avatarą",
   "match.signInToClaim": "Prisijunkite, kad gautumėte",
   "match.levelUp": "Naujas lygis! Dabar {level} lygis",
+  "match.challengeFriend": "Iššūkis draugui",
+  "match.challengeSignIn": "Prisijunkite, kad mestumėte iššūkį draugui",
+  "match.challengeCopied": "Iššūkio nuoroda nukopijuota!",
+  "match.challengeErrorFallback": "Nepavyko sukurti iššūkio nuorodos.",
 
   // Vietinis "Perduok toliau" režimas (vienas įrenginys, be paskyrų)
   "party.entryTitle": "Žaiskite kartu šiame įrenginyje",

@@ -180,6 +180,10 @@ export const en = {
   "match.setAsAvatar": "Set as avatar",
   "match.signInToClaim": "Sign in to claim",
   "match.levelUp": "Level up! Now level {level}",
+  "match.challengeFriend": "Challenge a friend",
+  "match.challengeSignIn": "Sign in to challenge a friend",
+  "match.challengeCopied": "Challenge link copied!",
+  "match.challengeErrorFallback": "Couldn't create the challenge link.",
 
   // Local "Pass & Play" party mode (same-device, no accounts)
   "party.entryTitle": "Play together on this device",
@@ -302,6 +306,21 @@ export const en = {
   "daily.countriesOf5": "{count}/5 countries",
   "daily.submitSuccess": "Daily submitted — {score} pts · {correct}/5 countries",
   "daily.submitErrorFallback": "Couldn't submit your daily score.",
+
+  // Async streak-challenge link
+  "challenge.solo": "Solo",
+  "challenge.badge": "Streak Challenge",
+  "challenge.unknownPlayer": "Unknown player",
+  "challenge.subtitle": "{count} in a row. Same locations, same order — think you can beat it?",
+  "challenge.attemptsSoFar": "Attempts so far: {count}",
+  "challenge.playButton": "Beat the streak",
+  "challenge.signInNudge": "Sign in to save your attempt and compare scores.",
+  "challenge.notFound": "Challenge not found",
+  "challenge.you": "You",
+  "challenge.youWon": "You beat the streak!",
+  "challenge.youLost": "{name}'s streak still stands",
+  "challenge.attemptSaved": "Attempt saved — {streak} in a row · {score} pts",
+  "challenge.attemptErrorFallback": "Couldn't save your attempt.",
 
   // Generic / shared
   "common.loading": "Loading…",
