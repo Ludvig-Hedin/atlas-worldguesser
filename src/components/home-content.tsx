@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Globe2, MapPin, Timer, Trophy } from "lucide-react";
+import { ArrowRight, Flag, Globe2, MapPin, Timer, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MultiplayerEntry } from "@/components/multiplayer/multiplayer-entry";
@@ -121,6 +121,19 @@ export function HomeContent() {
                 </Link>
               ))}
             </div>
+            <Link
+              href="/flags"
+              className="group mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-4 shadow-1 backdrop-blur-sm transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-card hover:shadow-2"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+                <Flag className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-sm font-semibold">{t("home.flagsCardTitle")}</p>
+                <p className="text-xs text-muted-foreground">{t("home.flagsCardBody")}</p>
+              </div>
+              <ArrowRight className="size-4 text-muted-foreground transition-transform duration-200 ease-fluid group-hover:translate-x-0.5" />
+            </Link>
           </div>
 
           {/* Highlights */}

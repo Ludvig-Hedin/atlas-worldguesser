@@ -11,6 +11,7 @@
 import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
 import type * as dailyChallenge from "../dailyChallenge.js";
+import type * as flags from "../flags.js";
 import type * as friends from "../friends.js";
 import type * as gameLogic from "../gameLogic.js";
 import type * as games from "../games.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   crons: typeof crons;
   dailyChallenge: typeof dailyChallenge;
+  flags: typeof flags;
   friends: typeof friends;
   gameLogic: typeof gameLogic;
   games: typeof games;

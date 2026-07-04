@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  applyFlagResult,
   applyGame,
   emptyProfile,
   loadProfile,
   saveProfile,
   type ApplyResult,
+  type FlagApplyResult,
   type GameSummary,
   type LocalProfile,
 } from "@/lib/local-profile";
@@ -15,6 +17,7 @@ export interface UseLocalProfile {
   profile: LocalProfile;
   ready: boolean;
   record: (game: GameSummary) => ApplyResult;
+  recordFlag: (input: { region: string; score: number; xpGained: number }) => FlagApplyResult;
   setUsername: (username: string) => void;
   reset: () => void;
 }
@@ -37,6 +40,13 @@ export function useLocalProfile(): UseLocalProfile {
     return result;
   }, []);
 
+  const recordFlag = useCallback((input: { region: string; score: number; xpGained: number }): FlagApplyResult => {
+    const result = applyFlagResult(loadProfile(), input);
+    saveProfile(result.profile);
+    setProfile(result.profile);
+    return result;
+  }, []);
+
   const setUsername = useCallback((username: string) => {
     // Merge onto the freshest persisted state (like record) so renaming can't
     // clobber stats written by another hook instance or tab since mount.
@@ -51,5 +61,5 @@ export function useLocalProfile(): UseLocalProfile {
     setProfile(fresh);
   }, []);
 
-  return { profile, ready, record, setUsername, reset };
+  return { profile, ready, record, recordFlag, setUsername, reset };
 }

@@ -78,6 +78,10 @@ until the keys are present.
 a curated seed of ~650 real-world coordinates with country codes). Regenerate
 with `bun run build:geo` (downloads public-domain Natural Earth sources).
 
+Flag SVGs in `public/flags/` (used by the Flags game mode) are copied from
+[flag-icons](https://github.com/lipis/flag-icons) (MIT; the flag artwork is
+public domain) with `bun run build:flags`.
+
 ## Status
 
 - ✅ Core solo gameplay — modes (World / Europe / USA / Countries), difficulty

@@ -30,6 +30,8 @@ export default defineSchema({
     avatarColor: v.optional(v.string()),
     unlockedBuildings: v.optional(v.array(v.string())),
     xp: v.number(),
+    // Flags mode: lightweight aggregate (optional = additive, no migration).
+    flagStats: v.optional(v.object({ gamesPlayed: v.number(), bestScore: v.number() })),
     createdAt: v.number(),
     lastActiveAt: v.number(),
     stats: v.object({
@@ -233,6 +235,23 @@ export default defineSchema({
     .index("by_day", ["day"])
     .index("by_day_user", ["day", "userId"])
     .index("by_day_score", ["day", "score"]),
+
+  // Flags mode — all-time best score per (region, user). One row per player per
+  // region, upserted only when a run beats the stored best. by_region_score
+  // drives each region's leaderboard.
+  flagResults: defineTable({
+    region: v.string(),
+    userId: v.id("users"),
+    username: v.string(),
+    avatarUrl: v.optional(v.string()),
+    bestScore: v.number(),
+    flagCount: v.number(),
+    correctCount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_region", ["region"])
+    .index("by_region_user", ["region", "userId"])
+    .index("by_region_score", ["region", "bestScore"]),
 
   // Persistent friend groups that stay together across matches. The leader
   // starts a room (activeRoomCode) which the whole party one-click-joins.

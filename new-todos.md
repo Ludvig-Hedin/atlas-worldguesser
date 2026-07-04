@@ -1,5 +1,6 @@
 To do:
 
+- Litauen: Kaunu pilis
 - add custom asset coverage for all countries. 
 
 

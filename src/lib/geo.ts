@@ -38,6 +38,12 @@ export async function countryAtAsync(pt: LatLng): Promise<string | null> {
   return countryAt(pt, fc);
 }
 
+/** ISO alpha-2 codes that have a country polygon (a Set dedupes CY/SO duplicates). */
+export async function countryIsoSet(): Promise<Set<string>> {
+  const fc = await loadCountries();
+  return new Set(fc.features.map((f) => f.properties.iso));
+}
+
 /** A geodesic circle polygon (GeoJSON) around a center — used for the map hint. */
 export function circlePolygon(
   center: LatLng,

@@ -1,4 +1,5 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl";
+import type { FeatureCollection } from "geojson";
 import type { MapType } from "@/lib/preferences";
 
 /**
@@ -120,4 +121,72 @@ export const MAP_STYLES: Record<MapType, StyleSpecification> = {
 /** Resolve a map-type preference to its style, defaulting to the normal basemap. */
 export function mapStyleFor(type: MapType): StyleSpecification {
   return MAP_STYLES[type] ?? CARTO_LIGHT_STYLE;
+}
+
+/* --------------------------------------------------------------------------
+ * Flags mode — a blank, label-free country map (Seterra style).
+ *
+ * No basemap tiles (works fully offline) and no place labels (they'd give the
+ * answer away). Countries come from an in-memory GeoJSON source so clicks and
+ * hover/answer coloring are driven by `feature-state`.
+ * ------------------------------------------------------------------------ */
+
+/** Per-attempt answer colors, shared with the reveal banner. Theme-independent. */
+export const FLAG_STATUS_COLORS = {
+  correct: "#22c55e",
+  wrong1: "#f59e0b", // amber
+  wrong2: "#f97316", // orange
+  wrong3: "#ef4444", // red
+} as const;
+
+interface CountryPaint {
+  ocean: string;
+  land: string;
+  hoverLand: string;
+  border: string;
+  /** Data-driven fill color keyed off the `status`/`hover` feature-state. */
+  fillColor: ExpressionSpecification;
+}
+
+/** Land/ocean/border colors + the fill expression for the current theme. */
+export function countryPaint(dark: boolean): CountryPaint {
+  const ocean = dark ? "#0e1622" : "#cfe0ee";
+  const land = dark ? "#232a35" : "#f1efe8";
+  const hoverLand = dark ? "#2e3a49" : "#dbe7f4";
+  const border = dark ? "#3a434f" : "#b7c0ca";
+  const c = FLAG_STATUS_COLORS;
+  const fillColor: ExpressionSpecification = [
+    "match",
+    ["feature-state", "status"],
+    "correct", c.correct,
+    "revealed", c.correct,
+    "wrong1", c.wrong1,
+    "wrong2", c.wrong2,
+    "wrong3", c.wrong3,
+    // Default: hover highlight, else base land.
+    ["case", ["boolean", ["feature-state", "hover"], false], hoverLand, land],
+  ];
+  return { ocean, land, hoverLand, border, fillColor };
+}
+
+/** Build the blank country style for a theme from an already-loaded FeatureCollection. */
+export function blankCountryStyle(dark: boolean, fc: FeatureCollection): StyleSpecification {
+  const p = countryPaint(dark);
+  return {
+    version: 8,
+    // Empty glyph URL keeps the style valid without a font server (no labels).
+    sources: {
+      countries: { type: "geojson", data: fc, promoteId: "iso" },
+    },
+    layers: [
+      { id: "bg", type: "background", paint: { "background-color": p.ocean } },
+      { id: "country-fill", type: "fill", source: "countries", paint: { "fill-color": p.fillColor } },
+      {
+        id: "country-border",
+        type: "line",
+        source: "countries",
+        paint: { "line-color": p.border, "line-width": 0.7 },
+      },
+    ],
+  };
 }

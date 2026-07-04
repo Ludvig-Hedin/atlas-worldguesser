@@ -25,6 +25,8 @@ export interface LocalProfile {
   /** Country codes with a building avatar unlocked (guest-local, merged into the cloud account on sign-in). */
   unlockedBuildings: string[];
   recent: RecentGame[];
+  /** Flags-mode progress: best score per region + games played. */
+  flag: { bests: Record<string, number>; gamesPlayed: number };
 }
 
 export function emptyProfile(): LocalProfile {
@@ -35,6 +37,7 @@ export function emptyProfile(): LocalProfile {
     achievements: [],
     unlockedBuildings: [],
     recent: [],
+    flag: { bests: {}, gamesPlayed: 0 },
   };
 }
 
@@ -52,6 +55,10 @@ export function loadProfile(): LocalProfile {
       achievements: parsed.achievements ?? [],
       unlockedBuildings: parsed.unlockedBuildings ?? [],
       recent: parsed.recent ?? [],
+      flag: {
+        bests: parsed.flag?.bests ?? {},
+        gamesPlayed: parsed.flag?.gamesPlayed ?? 0,
+      },
     };
   } catch {
     return emptyProfile();
@@ -84,7 +91,43 @@ export function guestImportPayload(profile: LocalProfile) {
 
 /** Whether a guest profile has anything worth importing into a new account. */
 export function hasGuestProgress(profile: LocalProfile): boolean {
-  return profile.stats.gamesPlayed > 0;
+  // XP alone counts — a guest who only played Flags earns XP but no distance games.
+  return profile.stats.gamesPlayed > 0 || profile.stats.xp > 0;
+}
+
+export interface FlagApplyResult {
+  profile: LocalProfile;
+  xpGained: number;
+  /** Best score for the region after this run. */
+  best: number;
+  /** Whether this run set a new regional best. */
+  bestBeaten: boolean;
+}
+
+/**
+ * Fold a finished Flags run into a guest profile. XP goes into the same pool as
+ * distance games (so levels are unified); flag bests/plays are tracked
+ * separately. Does not touch distance-game stats (gamesPlayed/wins).
+ */
+export function applyFlagResult(
+  profile: LocalProfile,
+  input: { region: string; score: number; xpGained: number },
+): FlagApplyResult {
+  const prevBest = profile.flag.bests[input.region] ?? 0;
+  const best = Math.max(prevBest, input.score);
+  return {
+    profile: {
+      ...profile,
+      stats: { ...profile.stats, xp: profile.stats.xp + input.xpGained },
+      flag: {
+        bests: { ...profile.flag.bests, [input.region]: best },
+        gamesPlayed: profile.flag.gamesPlayed + 1,
+      },
+    },
+    xpGained: input.xpGained,
+    best,
+    bestBeaten: input.score > prevBest,
+  };
 }
 
 export interface GameSummary {

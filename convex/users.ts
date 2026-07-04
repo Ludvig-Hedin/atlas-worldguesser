@@ -466,7 +466,8 @@ export const importGuestProfile = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     if (user.stats.gamesPlayed > 0 || user.xp > 0) return { merged: false };
-    if (args.stats.gamesPlayed <= 0) return { merged: false };
+    // Nothing to import unless the guest earned distance games or Flags XP.
+    if (args.stats.gamesPlayed <= 0 && args.xp <= 0) return { merged: false };
 
     const stats = {
       gamesPlayed: clampInt(args.stats.gamesPlayed, 1_000_000),

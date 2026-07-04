@@ -13,6 +13,7 @@ export const en = {
   "nav.leaderboard": "Leaderboard",
   "nav.friends": "Friends",
   "nav.stats": "Stats",
+  "nav.flags": "Flags",
   "nav.play": "Play",
 
   // Auth
@@ -350,6 +351,35 @@ export const en = {
   "profile.noRecentGames": "No games yet. Time to explore.",
   "common.win": "Win",
   "common.multiplayer": "Multiplayer",
+
+  // Flags mode
+  "flagRegion.americas.name": "Americas",
+  "flags.title": "Flags",
+  "flags.subtitle": "See a flag, then click the country on the map.",
+  "flags.solo": "Classic",
+  "flags.chooseRegion": "Choose a region",
+  "flags.length": "Flags per game",
+  "flags.start": "Start",
+  "flags.loading": "Loading flags…",
+  "flags.menu": "Menu",
+  "flags.of": "{current} / {total}",
+  "flags.flagAlt": "Flag to identify",
+  "flags.prompt": "Which country's flag is this?",
+  "flags.correct": "Correct!",
+  "flags.answerWas": "It was {country}",
+  "flags.solved": "Correct",
+  "flags.missed": "Not found",
+  "flags.resultSummary": "{correct}/{total} correct · +{xp} XP",
+  "flags.level": "Level {level}",
+  "flags.playAgain": "Play again",
+  "flags.newGame": "New game",
+  "flags.leaderboardTitle": "Top scores",
+  "flags.youScore": "You: {score}",
+  "flags.youScoreRank": "You: {score} · #{rank}",
+  "flags.noScoresYet": "No scores yet. Be the first!",
+  "flags.correctOf": "{count}/{total} correct",
+  "home.flagsCardTitle": "Guess the Flag",
+  "home.flagsCardBody": "See a flag, click the country. World or by continent.",
 } satisfies Record<string, string>;
 
 export type EnDictionary = typeof en;

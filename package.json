@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "build:geo": "node scripts/build-geo-data.mjs"
+    "build:geo": "node scripts/build-geo-data.mjs",
+    "build:flags": "node scripts/build-flags.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.12",
@@ -51,6 +52,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "flag-icons": "^7.5.0",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",

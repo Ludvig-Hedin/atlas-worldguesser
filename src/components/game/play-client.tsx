@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag } from "lucide-react";
 import { AtlasMark } from "@/components/atlas-mark";
 import { PlaySetup } from "./play-setup";
 import { SoloGame } from "./solo-game";
@@ -99,6 +99,21 @@ export function PlayClient({ initialMapId, quickStart, resume }: PlayClientProps
               <p className="font-semibold">Daily Challenge</p>
               <p className="text-xs text-muted-foreground">
                 Same five places as everyone else. One shot a day.
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+          <Link
+            href="/flags"
+            className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-1 transition-all duration-200 ease-fluid hover:-translate-y-0.5 hover:border-border-strong hover:bg-elevated hover:shadow-2"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-muted">
+              <Flag className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Flags</p>
+              <p className="text-xs text-muted-foreground">
+                See a flag, click the country. World or by continent.
               </p>
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />

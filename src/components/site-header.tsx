@@ -35,6 +35,9 @@ export function SiteHeader() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/profile">{t("nav.stats")}</Link>
         </Button>
+        <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+          <Link href="/flags">{t("nav.flags")}</Link>
+        </Button>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/play">{t("nav.play")}</Link>
         </Button>

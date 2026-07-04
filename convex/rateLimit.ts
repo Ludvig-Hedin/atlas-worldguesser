@@ -13,6 +13,7 @@ export const LIMITS = {
   mapCreate: { max: 10, windowMs: DAY },
   soloRecord: { max: 300, windowMs: DAY },
   dailyRecord: { max: 20, windowMs: DAY },
+  flagRecord: { max: 300, windowMs: DAY },
   partyInvite: { max: 60, windowMs: MINUTE },
 } as const;
 

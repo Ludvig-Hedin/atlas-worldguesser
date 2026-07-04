@@ -29,7 +29,7 @@ describe("buildings catalog", () => {
 
   it("every image path is a curated /buildings/<lowercase-cc> asset", () => {
     for (const b of BUILDING_LIST) {
-      expect(b.image).toBe(`/buildings/${b.id.toLowerCase()}.svg`);
+      expect(b.image).toBe(`/buildings/${b.id.toLowerCase()}.png`);
     }
   });
 
