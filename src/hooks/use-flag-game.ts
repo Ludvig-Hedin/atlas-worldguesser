@@ -26,6 +26,9 @@ export interface FlagGameState {
   /** Wrong ISO codes clicked on the current flag, in order (drives the trail). */
   wrongCodes: string[];
   results: FlagRoundResult[];
+  /** Final status of every completed round's countries, kept for the whole
+   *  run so past correct/wrong clicks stay visible (muted) on the map. */
+  history: Record<string, FlagCellStatus>;
 }
 
 interface FlagGameArgs {
@@ -45,6 +48,7 @@ function createState({ regionId, pool, length }: FlagGameArgs): FlagGameState {
     wrongThisFlag: 0,
     wrongCodes: [],
     results: [],
+    history: {},
   };
 }
 
@@ -67,6 +71,8 @@ export interface FlagGame {
   currentIso: string | undefined;
   totalScore: number;
   status: Record<string, FlagCellStatus>;
+  /** Muted final status of past rounds' countries — persists across rounds. */
+  pastStatus: Record<string, FlagCellStatus>;
   length: number;
   /** Register a clicked country; no-op unless currently guessing. */
   guess: (iso: string) => void;
@@ -111,8 +117,11 @@ export function useFlagGame(args: FlagGameArgs): FlagGame {
   const next = useCallback(() => {
     setState((s) => {
       if (s.phase !== "revealed") return s;
-      if (s.index + 1 >= s.flags.length) return { ...s, phase: "finished" };
-      return { ...s, index: s.index + 1, phase: "guessing", wrongThisFlag: 0, wrongCodes: [] };
+      // Fold this round's final coloring into the permanent history before
+      // clearing it, so the map keeps a (muted) trail of past answers.
+      const history = { ...s.history, ...buildStatus(s) };
+      if (s.index + 1 >= s.flags.length) return { ...s, phase: "finished", history };
+      return { ...s, index: s.index + 1, phase: "guessing", wrongThisFlag: 0, wrongCodes: [], history };
     });
   }, []);
 
@@ -129,6 +138,7 @@ export function useFlagGame(args: FlagGameArgs): FlagGame {
     currentIso: state.flags[state.index],
     totalScore,
     status,
+    pastStatus: state.history,
     length: state.flags.length,
     guess,
     next,

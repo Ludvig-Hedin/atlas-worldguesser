@@ -173,6 +173,21 @@ interface CountryPaint {
   fillColor: ExpressionSpecification;
 }
 
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** Blend a status color toward the base land color — used for the muted
+ *  "past round" trail so it reads as history, not an active answer. */
+function muted(hex: string, land: string): string {
+  const [r1, g1, b1] = hexToRgb(hex);
+  const [r2, g2, b2] = hexToRgb(land);
+  const t = 0.45; // weight toward the status color
+  const mix = (a: number, b: number) => Math.round(a * t + b * (1 - t));
+  return `#${[mix(r1, r2), mix(g1, g2), mix(b1, b2)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
 /** Land/ocean/border colors + the fill expression for the current theme. */
 export function countryPaint(dark: boolean): CountryPaint {
   const ocean = dark ? "#0e1622" : "#cfe0ee";
@@ -180,6 +195,12 @@ export function countryPaint(dark: boolean): CountryPaint {
   const hoverLand = dark ? "#2e3a49" : "#dbe7f4";
   const border = dark ? "#3a434f" : "#b7c0ca";
   const c = FLAG_STATUS_COLORS;
+  const m = {
+    correct: muted(c.correct, land),
+    wrong1: muted(c.wrong1, land),
+    wrong2: muted(c.wrong2, land),
+    wrong3: muted(c.wrong3, land),
+  };
   const fillColor: ExpressionSpecification = [
     "match",
     ["feature-state", "status"],
@@ -188,8 +209,18 @@ export function countryPaint(dark: boolean): CountryPaint {
     "wrong1", c.wrong1,
     "wrong2", c.wrong2,
     "wrong3", c.wrong3,
-    // Default: hover highlight, else base land.
-    ["case", ["boolean", ["feature-state", "hover"], false], hoverLand, land],
+    // No active status this round — fall back to the muted history trail
+    // from past rounds, then hover highlight, then base land.
+    [
+      "match",
+      ["feature-state", "pastStatus"],
+      "correct", m.correct,
+      "revealed", m.correct,
+      "wrong1", m.wrong1,
+      "wrong2", m.wrong2,
+      "wrong3", m.wrong3,
+      ["case", ["boolean", ["feature-state", "hover"], false], hoverLand, land],
+    ],
   ];
   return { ocean, land, hoverLand, border, fillColor };
 }

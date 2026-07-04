@@ -17,6 +17,8 @@ export type FlagCellStatus = "wrong1" | "wrong2" | "wrong3" | "revealed" | "corr
 interface FlagMapProps {
   /** ISO → answer status for the current flag; drives feature-state coloring. */
   status: Record<string, FlagCellStatus>;
+  /** ISO → final status of past rounds; painted muted so the trail persists. */
+  pastStatus?: Record<string, FlagCellStatus>;
   /** Fired with the clicked country's ISO (ocean clicks are ignored). */
   onPick: (iso: string) => void;
   initialView: [number, number, number];
@@ -62,7 +64,14 @@ function countryCentroid(geometry: Polygon | MultiPolygon): [number, number] {
   return [best.x, best.y];
 }
 
-export function FlagMap({ status, onPick, initialView, interactive = true, className }: FlagMapProps) {
+export function FlagMap({
+  status,
+  pastStatus = {},
+  onPick,
+  initialView,
+  interactive = true,
+  className,
+}: FlagMapProps) {
   const { theme } = usePreferences();
   const dark = resolveTheme(theme) === "dark";
 
@@ -72,6 +81,8 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
   const hoveredRef = useRef<string | null>(null);
   const statusRef = useRef<Record<string, FlagCellStatus>>({});
   const prevStatusRef = useRef<Record<string, FlagCellStatus>>({});
+  const pastStatusRef = useRef<Record<string, FlagCellStatus>>({});
+  const prevPastStatusRef = useRef<Record<string, FlagCellStatus>>({});
   const interactiveRef = useRef(interactive);
   const onPickRef = useRef(onPick);
   const centroidsRef = useRef<Map<string, [number, number]>>(new Map());
