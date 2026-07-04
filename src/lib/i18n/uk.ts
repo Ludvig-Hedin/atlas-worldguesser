@@ -429,8 +429,8 @@ export const uk: LocaleDictionary = {
   "flags.youScoreRank": "Ви: {score} · #{rank}",
   "flags.noScoresYet": "Ще немає результатів. Будьте першим!",
   "flags.correctOf": "{count}/{total} правильних",
-  "home.flagsCardTitle": "Вгадай прапор",
+  "home.flagsCardTitle": "Прапори",
   "home.flagsCardBody": "Назвіть країну",
-  "home.countriesCardTitle": "Вгадай країну",
+  "home.countriesCardTitle": "Країни",
   "home.countriesCardBody": "Знайдіть її на карті",
 };

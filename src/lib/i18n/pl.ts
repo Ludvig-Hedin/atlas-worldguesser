@@ -429,8 +429,8 @@ export const pl: LocaleDictionary = {
   "flags.youScoreRank": "Ty: {score} · #{rank}",
   "flags.noScoresYet": "Brak wyników. Bądź pierwszy!",
   "flags.correctOf": "{count}/{total} poprawnych",
-  "home.flagsCardTitle": "Zgadnij flagę",
+  "home.flagsCardTitle": "Flagi",
   "home.flagsCardBody": "Nazwij kraj",
-  "home.countriesCardTitle": "Zgadnij kraj",
+  "home.countriesCardTitle": "Kraje",
   "home.countriesCardBody": "Znajdź go na mapie",
 };

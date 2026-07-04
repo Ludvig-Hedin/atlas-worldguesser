@@ -429,8 +429,8 @@ export const sv: LocaleDictionary = {
   "flags.youScoreRank": "Du: {score} · #{rank}",
   "flags.noScoresYet": "Inga poäng än. Bli först!",
   "flags.correctOf": "{count}/{total} rätt",
-  "home.flagsCardTitle": "Gissa flaggan",
+  "home.flagsCardTitle": "Flaggor",
   "home.flagsCardBody": "Namnge landet",
-  "home.countriesCardTitle": "Gissa landet",
+  "home.countriesCardTitle": "Länder",
   "home.countriesCardBody": "Hitta det på kartan",
 };

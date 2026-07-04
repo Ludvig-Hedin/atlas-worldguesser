@@ -429,8 +429,8 @@ export const lt: LocaleDictionary = {
   "flags.youScoreRank": "Jūs: {score} · #{rank}",
   "flags.noScoresYet": "Rezultatų dar nėra. Būkite pirmas!",
   "flags.correctOf": "{count}/{total} teisingų",
-  "home.flagsCardTitle": "Atspėk vėliavą",
+  "home.flagsCardTitle": "Vėliavos",
   "home.flagsCardBody": "Įvardykite šalį",
-  "home.countriesCardTitle": "Atspėk šalį",
+  "home.countriesCardTitle": "Šalys",
   "home.countriesCardBody": "Raskite ją žemėlapyje",
 };

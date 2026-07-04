@@ -435,9 +435,9 @@ export const en = {
   "flags.youScoreRank": "You: {score} · #{rank}",
   "flags.noScoresYet": "No scores yet. Be the first!",
   "flags.correctOf": "{count}/{total} correct",
-  "home.flagsCardTitle": "Guess the Flag",
+  "home.flagsCardTitle": "Flags",
   "home.flagsCardBody": "Name the country",
-  "home.countriesCardTitle": "Guess the Country",
+  "home.countriesCardTitle": "Countries",
   "home.countriesCardBody": "Find it on the map",
 } satisfies Record<string, string>;
 

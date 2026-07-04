@@ -34,7 +34,7 @@ Replace `src/lib/progression.test.ts` in full with:
 
 ```typescript
 import { describe, expect, it } from "vitest";
-import { foldGame, resolveCountryByMap, EMPTY_STREAKS, isSoloWin } from "./progression";
+import { foldGame, resolveCountryByMap, bestCountryStreakOf, EMPTY_STREAKS, isSoloWin } from "./progression";
 import { EMPTY_STATS, type RoundResult } from "./types";
 
 const perfect: RoundResult = {
@@ -212,6 +212,16 @@ describe("resolveCountryByMap", () => {
     expect(resolveCountryByMap({})).toEqual({});
   });
 });
+
+describe("bestCountryStreakOf", () => {
+  it("returns the max best across every map", () => {
+    expect(bestCountryStreakOf({ world: { current: 1, best: 5 }, usa: { current: 0, best: 9 } })).toBe(9);
+  });
+
+  it("returns undefined for an empty map", () => {
+    expect(bestCountryStreakOf({})).toBeUndefined();
+  });
+});
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -261,6 +271,14 @@ export function resolveCountryByMap(streaks: {
   if (streaks.countryByMap) return streaks.countryByMap;
   if (!streaks.country && !streaks.bestCountry) return {};
   return { world: { current: streaks.country ?? 0, best: streaks.bestCountry ?? 0 } };
+}
+
+/** Best streak across every map — used for the profile page's aggregate summary. */
+export function bestCountryStreakOf(
+  countryByMap: Record<string, CountryMapStreak>,
+): number | undefined {
+  const bests = Object.values(countryByMap).map((m) => m.best);
+  return bests.length ? Math.max(...bests) : undefined;
 }
 ```
 
@@ -1082,32 +1100,37 @@ Expected: PASS (every locale still covers every English key, no extras, no empti
 
 - [ ] **Step 4: Add the streak card to `MatchResults`**
 
-In `src/components/game/match-results.tsx`, insert a new card immediately before the existing Level card (currently starting `<div className="rounded-2xl border border-border bg-card p-4 shadow-1">` that wraps the `match.level` row). Add, right above that `<div>`:
+In `src/components/game/match-results.tsx`, add a computed `mapStreak` const alongside the other top-of-component computed values. Replace:
+
+```typescript
+  const level = levelProgress(applied.profile.stats.xp);
+```
+
+with:
+
+```typescript
+  const level = levelProgress(applied.profile.stats.xp);
+  const mapStreak = applied.profile.streaks.countryByMap[game.mapId] ?? { current: 0, best: 0 };
+```
+
+Then insert a new card immediately before the existing Level card (currently starting `<div className="rounded-2xl border border-border bg-card p-4 shadow-1">` that wraps the `match.level` row). Add, right above that `<div>`:
 
 ```tsx
-        {(() => {
-          const mapStreak = applied.profile.streaks.countryByMap[game.mapId] ?? {
-            current: 0,
-            best: 0,
-          };
-          return (
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
-              <p className="mb-3 text-sm font-medium">
-                {t("match.countryStreak", { map: t(mapNameKey(map.id)) })}
-              </p>
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.current)}</p>
-                  <p className="text-xs text-muted-foreground">{t("match.countryStreakCurrent")}</p>
-                </div>
-                <div>
-                  <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.best)}</p>
-                  <p className="text-xs text-muted-foreground">{t("match.countryStreakBest")}</p>
-                </div>
-              </div>
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-1">
+          <p className="mb-3 text-sm font-medium">
+            {t("match.countryStreak", { map: t(mapNameKey(map.id)) })}
+          </p>
+          <div className="flex gap-6">
+            <div>
+              <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.current)}</p>
+              <p className="text-xs text-muted-foreground">{t("match.countryStreakCurrent")}</p>
             </div>
-          );
-        })()}
+            <div>
+              <p className="text-xl font-semibold tabular">{formatNumber(mapStreak.best)}</p>
+              <p className="text-xs text-muted-foreground">{t("match.countryStreakBest")}</p>
+            </div>
+          </div>
+        </div>
 
 ```
 
@@ -1191,7 +1214,13 @@ export function StatsGrid({ stats, xp, dailyStreak, bestCountryStreak }: StatsGr
 
 - [ ] **Step 2: Wire the prop from `public-profile.tsx`**
 
-In `src/components/profile/public-profile.tsx`, replace:
+In `src/components/profile/public-profile.tsx`, add the import (alongside the other `@/lib` imports):
+
+```typescript
+import { bestCountryStreakOf } from "@/lib/progression";
+```
+
+Replace:
 
 ```tsx
       <StatsGrid stats={profile.stats} xp={profile.xp} dailyStreak={profile.streaks.daily} />
@@ -1208,24 +1237,12 @@ with:
       />
 ```
 
-Add this helper near the top of the file (after the imports, before the component):
+- [ ] **Step 3: Wire the prop from `guest-profile.tsx`'s `CloudProfile` and `LocalProfileView`**
+
+In `src/components/profile/guest-profile.tsx`, add the same import (alongside the other `@/lib` imports):
 
 ```typescript
-function bestCountryStreakOf(countryByMap: Record<string, { current: number; best: number }>) {
-  const bests = Object.values(countryByMap).map((m) => m.best);
-  return bests.length ? Math.max(...bests) : undefined;
-}
-```
-
-- [ ] **Step 3: Wire the prop from `guest-profile.tsx`'s `CloudProfile`**
-
-In `src/components/profile/guest-profile.tsx`, add the same helper near the top of the file (after imports):
-
-```typescript
-function bestCountryStreakOf(countryByMap: Record<string, { current: number; best: number }>) {
-  const bests = Object.values(countryByMap).map((m) => m.best);
-  return bests.length ? Math.max(...bests) : undefined;
-}
+import { bestCountryStreakOf } from "@/lib/progression";
 ```
 
 In `CloudProfile`, replace:
