@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChevronLeft } from "lucide-react";
+import { motion, useAnimationControls } from "motion/react";
+import { ChevronLeft, CheckCircle2, XCircle } from "lucide-react";
 import { FlagMap } from "./flag-map";
 import { FlagResults } from "./flag-results";
 import { AnimatedNumber } from "./animated-number";
@@ -10,8 +11,9 @@ import { getFlagRegion, type FlagRegionId } from "@/lib/flags/regions";
 import { countryName } from "@/lib/countries-meta";
 import { useT } from "@/hooks/use-t";
 import { formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
-const REVEAL_MS = 950;
+const REVEAL_MS = 1500;
 
 interface FlagGameProps {
   regionId: FlagRegionId;
@@ -87,18 +89,36 @@ export function FlagGame({ regionId, length, pool, onExit }: FlagGameProps) {
       {/* Flag stimulus */}
       {game.currentIso && (
         <div className="pointer-events-none absolute inset-x-0 top-16 z-10 flex justify-center px-4">
-          <div className="flex flex-col items-center gap-2 rounded-2xl bg-hud px-5 py-4 text-center shadow-2 backdrop-blur-md">
+          <div
+            key={state.index}
+            className="animate-fade-up flex flex-col items-center gap-2 rounded-2xl bg-hud px-5 py-4 text-center shadow-2 backdrop-blur-md"
+          >
             <img
               src={`/flags/${game.currentIso.toLowerCase()}.svg`}
               alt={t("flags.flagAlt")}
-              className="h-20 w-32 rounded-md object-cover ring-1 ring-border sm:h-24 sm:w-40"
+              className={cn(
+                "h-20 w-32 rounded-md object-cover ring-1 ring-border transition-transform duration-300 sm:h-24 sm:w-40",
+                revealed && last?.solved && "scale-105 ring-2 ring-[#22c55e]",
+              )}
             />
-            <p className="text-sm font-medium text-foreground">
+            <p
+              className={cn(
+                "flex items-center gap-1.5 text-sm font-medium",
+                revealed && last?.solved && "text-[#22c55e]",
+                revealed && last && !last.solved && "text-[#ef4444]",
+                !revealed && "text-foreground",
+              )}
+            >
+              {revealed && last?.solved && <CheckCircle2 className="size-4" />}
+              {revealed && last && !last.solved && <XCircle className="size-4" />}
               {revealed && last
                 ? last.solved
                   ? t("flags.correct")
                   : t("flags.answerWas", { country: countryName(state.flags[state.index]) })
                 : t("flags.prompt")}
+              {revealed && last?.solved && last.score > 0 && (
+                <span className="font-semibold">+{last.score}</span>
+              )}
             </p>
           </div>
         </div>

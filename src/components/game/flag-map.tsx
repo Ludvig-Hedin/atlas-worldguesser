@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { loadCountries } from "@/lib/geo";
 import { blankCountryStyle, countryPaint } from "@/lib/map-style";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -26,6 +26,41 @@ interface FlagMapProps {
 
 const HIT_BOX = 4; // px tolerance so micro-states are clickable
 
+// Never a flag answer (mirrors pool.ts's NON_COUNTRY) and only clutters the
+// blank map — Antarctica in particular renders enormous under Mercator.
+const NON_MAP_ISO = new Set(["AQ", "TF"]);
+
+/** Signed area + centroid of a single ring via the shoelace formula. */
+function ringCentroid(ring: number[][]): { x: number; y: number; area: number } {
+  let area = 0;
+  let cx = 0;
+  let cy = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i];
+    const [x2, y2] = ring[i + 1];
+    const cross = x1 * y2 - x2 * y1;
+    area += cross;
+    cx += (x1 + x2) * cross;
+    cy += (y1 + y2) * cross;
+  }
+  area /= 2;
+  if (area === 0) return { x: ring[0][0], y: ring[0][1], area: 0 };
+  return { x: cx / (6 * area), y: cy / (6 * area), area: Math.abs(area) };
+}
+
+/** Centroid of a country's largest ring — keeps the marker on the main
+ *  landmass for archipelagos instead of averaging into open ocean. */
+function countryCentroid(geometry: Polygon | MultiPolygon): [number, number] {
+  const rings = geometry.type === "Polygon" ? [geometry.coordinates[0]] : geometry.coordinates.map((p) => p[0]);
+  let best = { x: 0, y: 0, area: -1 };
+  for (const ring of rings) {
+    if (!ring || ring.length < 4) continue;
+    const c = ringCentroid(ring);
+    if (c.area > best.area) best = c;
+  }
+  return [best.x, best.y];
+}
+
 export function FlagMap({ status, onPick, initialView, interactive = true, className }: FlagMapProps) {
   const { theme } = usePreferences();
   const dark = resolveTheme(theme) === "dark";
@@ -38,6 +73,8 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
   const prevStatusRef = useRef<Record<string, FlagCellStatus>>({});
   const interactiveRef = useRef(interactive);
   const onPickRef = useRef(onPick);
+  const centroidsRef = useRef<Map<string, [number, number]>>(new Map());
+  const revealMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [fc, setFc] = useState<FeatureCollection | null>(null);
 
   useEffect(() => {
@@ -47,11 +84,22 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
     interactiveRef.current = interactive;
   }, [interactive]);
 
-  // Lazily pull the bundled polygons (kept out of the initial bundle).
+  // Lazily pull the bundled polygons (kept out of the initial bundle). Drop
+  // non-country landmasses (Antarctica etc.) — they can never be an answer
+  // and just clutter/inflate the blank map.
   useEffect(() => {
     let alive = true;
     loadCountries().then((data) => {
-      if (alive) setFc(data as unknown as FeatureCollection);
+      if (!alive) return;
+      const raw = data as unknown as FeatureCollection;
+      const features = raw.features.filter((f) => !NON_MAP_ISO.has((f.properties as { iso?: string })?.iso ?? ""));
+      const centroids = new Map<string, [number, number]>();
+      for (const f of features) {
+        const iso = (f.properties as { iso?: string }).iso;
+        if (iso && !centroids.has(iso)) centroids.set(iso, countryCentroid(f.geometry as Polygon | MultiPolygon));
+      }
+      centroidsRef.current = centroids;
+      setFc({ ...raw, features });
     });
     return () => {
       alive = false;
@@ -125,6 +173,8 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
 
     return () => {
       ro.disconnect();
+      revealMarkerRef.current?.remove();
+      revealMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
       loadedRef.current = false;
@@ -133,13 +183,29 @@ export function FlagMap({ status, onPick, initialView, interactive = true, class
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fc]);
 
-  // Diff the status map onto feature-state (one repaint per changed country).
+  // Diff the status map onto feature-state (one repaint per changed country),
+  // and pin the answer's flag over its shape while it's shown in green.
   useEffect(() => {
     const map = mapRef.current;
     statusRef.current = status;
     if (!map || !loadedRef.current) return;
     applyStatus(map, status, prevStatusRef.current);
     prevStatusRef.current = status;
+
+    const answerIso = Object.entries(status).find(([, s]) => s === "correct" || s === "revealed")?.[0];
+    const pos = answerIso ? centroidsRef.current.get(answerIso) : undefined;
+    revealMarkerRef.current?.remove();
+    revealMarkerRef.current = null;
+    if (answerIso && pos) {
+      const el = document.createElement("div");
+      el.className = "pointer-events-none animate-fade-up";
+      const img = document.createElement("img");
+      img.src = `/flags/${answerIso.toLowerCase()}.svg`;
+      img.alt = "";
+      img.className = "h-5 w-8 rounded-sm object-cover ring-2 ring-white/90 shadow-2 sm:h-6 sm:w-10";
+      el.appendChild(img);
+      revealMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(pos).addTo(map);
+    }
   }, [status]);
 
   // Recolor in place on theme change — never setStyle (would wipe feature-state).

@@ -180,7 +180,13 @@ export function blankCountryStyle(dark: boolean, fc: FeatureCollection): StyleSp
     },
     layers: [
       { id: "bg", type: "background", paint: { "background-color": p.ocean } },
-      { id: "country-fill", type: "fill", source: "countries", paint: { "fill-color": p.fillColor } },
+      {
+        id: "country-fill",
+        type: "fill",
+        source: "countries",
+        // Ease the wrong/correct color swap instead of an instant hard-cut.
+        paint: { "fill-color": p.fillColor, "fill-color-transition": { duration: 260 } },
+      },
       {
         id: "country-border",
         type: "line",
