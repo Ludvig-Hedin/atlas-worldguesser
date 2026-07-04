@@ -142,6 +142,10 @@ export const uk: LocaleDictionary = {
   "mp.playWithParty": "Грати компанією",
   "mp.couldNotCreateRoom": "Не вдалося створити кімнату",
   "duels.opponentLeft": "Суперник вийшов",
+  "duels.toggle": "Дуелі (1 на 1)",
+  "duels.start": "Почати дуель",
+  "duels.badge": "Результат дуелі",
+  "duels.couldNotChangeMode": "Не вдалося змінити режим",
 
   // Game HUD
   "hud.menu": "Меню",

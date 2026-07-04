@@ -142,6 +142,10 @@ export const pl: LocaleDictionary = {
   "mp.playWithParty": "Zagraj z grupą",
   "mp.couldNotCreateRoom": "Nie udało się utworzyć pokoju",
   "duels.opponentLeft": "Przeciwnik opuścił grę",
+  "duels.toggle": "Pojedynki (1 na 1)",
+  "duels.start": "Rozpocznij pojedynek",
+  "duels.badge": "Wynik pojedynku",
+  "duels.couldNotChangeMode": "Nie udało się zmienić trybu",
 
   // Game HUD
   "hud.menu": "Menu",

@@ -142,6 +142,10 @@ export const sv: LocaleDictionary = {
   "mp.playWithParty": "Spela med ett sällskap",
   "mp.couldNotCreateRoom": "Kunde inte skapa rum",
   "duels.opponentLeft": "Motståndaren lämnade",
+  "duels.toggle": "Dueller (1 mot 1)",
+  "duels.start": "Starta en duell",
+  "duels.badge": "Duellresultat",
+  "duels.couldNotChangeMode": "Kunde inte ändra läge",
 
   // Game HUD
   "hud.menu": "Meny",

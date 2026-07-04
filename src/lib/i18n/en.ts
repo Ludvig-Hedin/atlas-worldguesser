@@ -154,6 +154,10 @@ export const en = {
   "mp.playWithParty": "Play with a party",
   "mp.couldNotCreateRoom": "Could not create room",
   "duels.opponentLeft": "Opponent left",
+  "duels.toggle": "Duels (1v1)",
+  "duels.start": "Start a Duel",
+  "duels.badge": "Duel result",
+  "duels.couldNotChangeMode": "Could not change mode",
 
   // Game HUD
   "hud.menu": "Menu",

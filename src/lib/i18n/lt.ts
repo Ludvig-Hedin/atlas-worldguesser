@@ -142,6 +142,10 @@ export const lt: LocaleDictionary = {
   "mp.playWithParty": "Žaisti su kompanija",
   "mp.couldNotCreateRoom": "Nepavyko sukurti kambario",
   "duels.opponentLeft": "Varžovas paliko",
+  "duels.toggle": "Dvikovos (1 prieš 1)",
+  "duels.start": "Pradėti dvikovą",
+  "duels.badge": "Dvikovos rezultatas",
+  "duels.couldNotChangeMode": "Nepavyko pakeisti režimo",
 
   // Žaidimo skydelis (HUD)
   "hud.menu": "Meniu",
