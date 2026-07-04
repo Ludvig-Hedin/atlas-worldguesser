@@ -1,7 +1,7 @@
-import { WORLD_LOCATIONS, COUNTRY_LOCATIONS, toGameLocation, type SeedLocation } from "@/data/locations";
+import { WORLD_LOCATIONS, COUNTRY_LOCATIONS, toGameLocation, type SeedLocation } from "../data/locations";
 import { getMapConfig } from "./maps-config";
 import type { GameLocation } from "./types";
-import { layeredSample, locationKey } from "@convex/gameLogic";
+import { layeredSample, locationKey } from "../../convex/gameLogic";
 
 /**
  * The candidate pool of seed locations for a given map. Driven entirely off the
