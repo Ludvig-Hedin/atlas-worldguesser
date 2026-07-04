@@ -7,6 +7,7 @@ import { haversineMeters, roundScore } from "@/lib/scoring";
 import type { GameLocation, GameSettings, LatLng, RoundResult } from "@/lib/types";
 import { pickLocations, sampleLocations } from "@/lib/locations";
 import { hashString, seededRandom } from "@/lib/utils";
+import { SURVIVAL_BUFFER } from "@convex/gameLogic";
 
 /** Farthest two points on Earth can be (antipodal), used when no guess is made. */
 export const ANTIPODE_METERS = Math.PI * 6_371_008.8;
@@ -54,9 +55,6 @@ interface CreateOpts {
 /** Hometown easter eggs — a small chance any round drops here. */
 const AKERS: GameLocation = { lat: 59.217, lng: 17.006, countryCode: "SE" };
 const GRUNDBRO: GameLocation = { lat: 59.3089, lng: 17.0899, countryCode: "SE" };
-
-/** Survival pre-picks a deep buffer up front; a run rarely reaches this many. */
-const SURVIVAL_BUFFER = 200;
 
 function createGame({
   mapId,

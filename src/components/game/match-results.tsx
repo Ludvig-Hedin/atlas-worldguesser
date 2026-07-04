@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation } from "convex/react";
-import { Home, RotateCcw, Settings2 } from "lucide-react";
+import { Check, Home, RotateCcw, Settings2, Swords } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { MatchMap } from "./match-map";
 import { AchievementIcon } from "@/components/achievement-icon";
@@ -27,6 +27,7 @@ import { MAX_ROUND_SCORE } from "@/lib/types";
 import { levelProgress } from "@/lib/xp";
 import type { ApplyResult } from "@/lib/local-profile";
 import type { SoloGame } from "@/hooks/use-solo-game";
+import type { GameSettings } from "@/lib/types";
 
 interface MatchResultsProps {
   game: SoloGame;
@@ -88,6 +89,22 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
             {pct}% · +{formatNumber(applied.xpGained)} XP
           </p>
         </motion.div>
+
+        {isSurvival && features.auth && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex justify-center"
+          >
+            <ChallengeShareAction
+              mapId={game.mapId}
+              settings={game.settings}
+              streak={survived}
+              score={applied.totalScore}
+            />
+          </motion.div>
+        )}
 
         {applied.newAchievements.length > 0 && (
           <motion.div
@@ -194,6 +211,66 @@ export function MatchResults({ game, applied, onPlayAgain, onNewGame }: MatchRes
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Mint an async streak-challenge link for a just-finished Survival run and
+ * copy it to the clipboard. Only ever mounted when `features.auth` is true
+ * (see the `{isSurvival && features.auth && ...}` guard above) — same
+ * Convex/Clerk-context precondition as BuildingClaimAction below.
+ */
+function ChallengeShareAction({
+  mapId,
+  settings,
+  streak,
+  score,
+}: {
+  mapId: string;
+  settings: GameSettings;
+  streak: number;
+  score: number;
+}) {
+  const t = useT();
+  const { isAuthenticated } = useConvexAuth();
+  const create = useMutation(api.challenges.create);
+  const [copied, setCopied] = useState(false);
+
+  if (!isAuthenticated) {
+    return (
+      <SignInButton mode="modal">
+        <Button variant="secondary" size="sm" className="gap-1.5">
+          <Swords className="size-3.5" />
+          {t("match.challengeSignIn")}
+        </Button>
+      </SignInButton>
+    );
+  }
+
+  const handleClick = async () => {
+    try {
+      const challengeId = await create({
+        mapId,
+        settings,
+        creatorStreak: streak,
+        creatorScore: score,
+      });
+      await navigator.clipboard
+        .writeText(`${window.location.origin}/challenge/${challengeId}`)
+        .catch(() => {});
+      setCopied(true);
+      toast.success(t("match.challengeCopied"));
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("match.challengeErrorFallback"));
+    }
+  };
+
+  return (
+    <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => void handleClick()}>
+      {copied ? <Check className="size-3.5" /> : <Swords className="size-3.5" />}
+      {t("match.challengeFriend")}
+    </Button>
   );
 }
 

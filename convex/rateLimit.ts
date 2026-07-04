@@ -18,6 +18,8 @@ export const LIMITS = {
   partyInvite: { max: 60, windowMs: MINUTE },
   roomInvite: { max: 60, windowMs: MINUTE },
   mapLike: { max: 60, windowMs: MINUTE },
+  challengeCreate: { max: 30, windowMs: DAY },
+  challengeAttempt: { max: 100, windowMs: DAY },
   // Keyed on the guest session id being provisioned (not a user id). Only the
   // create path consumes it, so a stable device is never locked out of
   // reconnecting; it just caps repeated fresh-account creation for one id.

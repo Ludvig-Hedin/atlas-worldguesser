@@ -33,6 +33,14 @@ interface SoloGameProps {
   customLocations?: GameLocation[];
   /** "classic" (fixed rounds) or "survival" (endless country streak). */
   mode?: SoloMode;
+  /**
+   * Play `customLocations` verbatim, in order — no resample, no easter-egg
+   * roll. Required whenever the server (not the client) owns the round
+   * order, e.g. a streak-challenge attempt replaying a creator's exact
+   * sequence — a client reshuffle would show a different round order than
+   * the creator saw. Default false (custom maps keep sampling fresh).
+   */
+  fixedOrder?: boolean;
   /** Mirror the finished game to the global cloud profile. Default true. */
   cloudSync?: boolean;
   /** Fired once when the game finishes (e.g. daily-challenge submit). */
@@ -49,12 +57,13 @@ export function SoloGame({
   onExit,
   customLocations,
   mode = "classic",
+  fixedOrder = false,
   cloudSync = true,
   onComplete,
   customMapId,
 }: SoloGameProps) {
   const t = useT();
-  const engine = useSoloGame({ mapId, settings, customLocations, mode });
+  const engine = useSoloGame({ mapId, settings, customLocations, mode, fixedOrder });
   const {
     game,
     guess,

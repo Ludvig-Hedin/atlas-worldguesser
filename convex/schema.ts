@@ -43,6 +43,13 @@ export default defineSchema({
     avatarColor: v.optional(v.string()),
     unlockedBuildings: v.optional(v.array(v.string())),
     xp: v.number(),
+    // Ranked rating (ELO-lite) accrued from competitive multiplayer rooms
+    // (FFA, Team, Duels). Optional = additive, no backfill: undefined means
+    // "never played rated" and reads as DEFAULT_RATING (1000) at query time
+    // (see src/lib/rating.ts). ratingGamesPlayed is the placement-period
+    // counter that widens the K-factor for a player's first few rated games.
+    rating: v.optional(v.number()),
+    ratingGamesPlayed: v.optional(v.number()),
     // Flags mode: lightweight aggregate (optional = additive, no migration).
     flagStats: v.optional(v.object({ gamesPlayed: v.number(), bestScore: v.number() })),
     createdAt: v.number(),
@@ -76,7 +83,8 @@ export default defineSchema({
     .index("by_clerk", ["clerkId"])
     .index("by_username", ["usernameLower"])
     .index("by_guest_session", ["guestSessionId"])
-    .index("by_xp", ["xp"]),
+    .index("by_xp", ["xp"])
+    .index("by_rating", ["rating"]),
 
   achievements: defineTable({
     userId: v.id("users"),
@@ -134,6 +142,11 @@ export default defineSchema({
     // rooms.ts join/start). Mutually exclusive with teamMode; enforced in
     // rooms.ts (create/setTeamMode/setDuelsMode), not the schema.
     duelsMode: v.optional(v.boolean()),
+    // Battle Royale: worst scorer(s) each round are cut until one survivor
+    // remains (see rooms.ts enterRoundResult/advance/finishMatch). Mutually
+    // exclusive with teamMode and duelsMode; enforced in rooms.ts
+    // (create/setTeamMode/setElimination), not the schema.
+    elimination: v.optional(v.boolean()),
     currentRound: v.number(),
     // Hidden answers for the whole match, resolved at creation. Never exposed
     // to clients while a round is active (see rooms.publicState).
@@ -152,6 +165,12 @@ export default defineSchema({
     ready: v.boolean(),
     connected: v.boolean(),
     totalScore: v.number(),
+    // Ranked-rating change from the finished match, written once by
+    // rooms.finishMatch and read back by getByCode's standings so the results
+    // screen shows it with no extra query. Absent = this member didn't accrue
+    // rating this match (guest, non-competitive room, or <2 signed-in players).
+    // Cleared on rematch so a stale delta never leaks into the next match.
+    ratingDelta: v.optional(v.number()),
     // Team assignment when the room is in team mode; absent = unassigned/FFA.
     team: v.optional(v.union(v.literal("A"), v.literal("B"))),
     joinedAt: v.number(),

@@ -17,6 +17,13 @@ const MAX_DRAG_PITCH = 1.1; // clamp so the globe can't flip past its pole (rad)
 const PITCH_SPRING_BACK_PER_SECOND = 2.2; // tilt eases back to level once released
 const YAW_FLING_DECAY_PER_SECOND = 1.8; // exponential decay of released spin momentum
 
+// Passive hover tilt — a light lean toward the cursor anywhere on the page,
+// layered under the drag rotation above so the globe still feels alive
+// without a click. Paused while actively dragging.
+const MAX_HOVER_YAW = 0.05; // rad
+const MAX_HOVER_PITCH = 0.035; // rad
+const HOVER_EASE_PER_SECOND = 6;
+
 // Stars: one per ~9000px^2 of canvas, clamped to a sane range.
 const STAR_DENSITY = 1 / 9000;
 const MIN_STARS = 90;
@@ -80,6 +87,8 @@ export function GlobeBackground({ className }: { className?: string }) {
     let lastPointerY = 0;
     let lastMoveTime = 0;
     let yawVelocity = 0; // rad/s — residual spin momentum after release
+    const pointerTarget = { x: 0, y: 0 };
+    const pointerCurrent = { x: 0, y: 0 };
     let lastTime = performance.now();
     let now = lastTime;
     let width = 0;
@@ -137,9 +146,10 @@ export function GlobeBackground({ className }: { className?: string }) {
       const globeRadius = size * SCALE;
       const cx = width * 0.5;
       const cy = height * CY;
-      const centerLon = INITIAL_CENTER_LON + rotation;
-      const cosPitch = Math.cos(pitch);
-      const sinPitch = Math.sin(pitch);
+      const centerLon = INITIAL_CENTER_LON + rotation + pointerCurrent.x * MAX_HOVER_YAW;
+      const totalPitch = pitch + pointerCurrent.y * MAX_HOVER_PITCH;
+      const cosPitch = Math.cos(totalPitch);
+      const sinPitch = Math.sin(totalPitch);
       const baseDotRadius = Math.max(0.7, size / 520);
 
       for (const point of points) {
@@ -194,6 +204,9 @@ export function GlobeBackground({ className }: { className?: string }) {
           pitch -= pitch * ease;
           if (Math.abs(pitch) < 0.0005) pitch = 0;
         }
+        const hoverEase = 1 - Math.exp(-dt * HOVER_EASE_PER_SECOND);
+        pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * hoverEase;
+        pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * hoverEase;
         draw();
       }
       raf = requestAnimationFrame(frame);
@@ -211,6 +224,15 @@ export function GlobeBackground({ className }: { className?: string }) {
     const onVisible = () => {
       lastTime = performance.now();
     };
+    const onHoverMove = (e: PointerEvent) => {
+      if (!dragEnabled || dragging) return;
+      pointerTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerTarget.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    const onHoverRecenter = () => {
+      pointerTarget.x = 0;
+      pointerTarget.y = 0;
+    };
 
     // Grab-and-spin: only mouse drags rotate the globe, so touch scrolling
     // over the fixed background canvas is never hijacked.
@@ -219,6 +241,8 @@ export function GlobeBackground({ className }: { className?: string }) {
       dragging = true;
       dragPointerId = e.pointerId;
       yawVelocity = 0;
+      pointerTarget.x = 0;
+      pointerTarget.y = 0;
       lastPointerX = e.clientX;
       lastPointerY = e.clientY;
       lastMoveTime = performance.now();
@@ -254,6 +278,9 @@ export function GlobeBackground({ className }: { className?: string }) {
     mobileMedia.addEventListener("change", onViewport);
     finePointerMedia.addEventListener("change", onPointerCapability);
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pointermove", onHoverMove, { passive: true });
+    window.addEventListener("blur", onHoverRecenter);
+    document.addEventListener("mouseleave", onHoverRecenter);
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMoveDrag);
     canvas.addEventListener("pointerup", endDrag);
@@ -283,6 +310,9 @@ export function GlobeBackground({ className }: { className?: string }) {
       mobileMedia.removeEventListener("change", onViewport);
       finePointerMedia.removeEventListener("change", onPointerCapability);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pointermove", onHoverMove);
+      window.removeEventListener("blur", onHoverRecenter);
+      document.removeEventListener("mouseleave", onHoverRecenter);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMoveDrag);
       canvas.removeEventListener("pointerup", endDrag);
