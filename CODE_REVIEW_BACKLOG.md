@@ -420,3 +420,36 @@ Reviewed the full diff between `origin/main` and local `HEAD` (backend leaderboa
 - `bun lint` ✓ (0 errors; 17 pre-existing warnings, none from `proxy.ts`)
 - `bun run build` — Turbopack compiled the full graph incl. `proxy.ts` + Clerk with **zero** code errors; only failure was `next/font/google` failing to fetch Geist over an unstable local connection (environmental, succeeds on Vercel).
 - Live HTTP smoke test blocked locally (sandbox `listen EPERM` + flaky dev server) — compile-time validation stands in.
+
+## Auth investigation — 2026-07-05 (signed-in header vs signed-out content)
+
+### Verified CORRECT (ruled out as causes)
+- Clerk JWT template `convex` exists with `aud: "convex"` (checked via Clerk Backend API).
+- `CLERK_JWT_ISSUER_DOMAIN` matches the publishable key's issuer on all three sides:
+  publishable key (`robust-raven-20.clerk.accounts.dev`), `.env.local`, and the Convex
+  `dev:aware-pheasant-35` deployment env. NOT a keys/config problem for dev.
+- `src/proxy.ts` (clerkMiddleware) IS running — live response headers show
+  `x-clerk-auth-status` / `x-middleware-rewrite`.
+
+### Root cause + fix (1)
+- **`src/components/auth/auth-slot.tsx`** — split-brain auth source. The header/hero
+  `AuthSlot` gated on Clerk `useUser().isSignedIn` (optimistic, client-only, flips true
+  the instant Clerk JS loads), while every content surface gates on Convex
+  `useConvexAuth().isAuthenticated` (authoritative, resolves after the JWT validates).
+  When they disagree — the norm on a slow link — the header shows "signed in" while
+  pages show "Sign in", and the sign-in buttons no-op (already signed in on Clerk).
+  Fixed: `AuthSlot` now reads `useConvexAuth()` (isLoading → skeleton, isAuthenticated →
+  AccountWidget, else SignInButton), so every surface reflects the same truth.
+
+### Left as documented follow-ups (pre-existing, low/narrow — not the reported bug)
+- `maps-client.tsx:125` — Like buttons flash disabled ~1s for a signed-in user while
+  Convex resolves (no `isLoading` gate). Cosmetic.
+- `room-client.tsx` RoomInner — join sets `joinedRef` before `join()` resolves and
+  swallows the rejection; a transient failure can strand a non-member in the lobby.
+  Needs a bounded retry; left untouched to avoid rewriting multiplayer join untested.
+
+### Still to confirm (needs the user's browser / prod dashboard)
+- Whether Convex actually mints/validates the token for a signed-in user at runtime
+  (config + middleware are correct, so it should) — confirm with the console snippet.
+- PROD Convex deployment `CLERK_JWT_ISSUER_DOMAIN` must match the PROD Clerk instance's
+  issuer (only dev was verifiable from here).
