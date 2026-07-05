@@ -50,27 +50,33 @@ export function HeroOverlay() {
         <AuthSlot />
       </div>
 
-      {/* Bottom-left: settings + GitHub */}
-      <div className="pointer-events-auto flex items-center gap-1.5 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
-        <SettingsMenu showLabel />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" asChild aria-label={t("nav.github")}>
-              <Link href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer">
-                <GithubMark className="size-4" />
-              </Link>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t("nav.github")}</TooltipContent>
-        </Tooltip>
-      </div>
-
-      {/* Bottom-right: online badge */}
-      {features.auth && (
-        <div className="pointer-events-auto opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms] sm:absolute sm:bottom-6 sm:right-6">
-          <LiveStats />
+      {/* Bottom cluster: settings + GitHub + online badge grouped in one row,
+          pinned to the bottom on mobile (`mt-auto` in the flex column); `sm:contents`
+          drops the wrapper at the sm breakpoint so the two groups return to
+          being independent absolutely-positioned corners on desktop. */}
+      <div className="mt-auto flex flex-wrap items-center gap-3 sm:contents">
+        {/* Bottom-left: settings + GitHub */}
+        <div className="pointer-events-auto flex items-center gap-1.5 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
+          <SettingsMenu showLabel />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" asChild aria-label={t("nav.github")}>
+                <Link href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer">
+                  <GithubMark className="size-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t("nav.github")}</TooltipContent>
+          </Tooltip>
         </div>
-      )}
+
+        {/* Bottom-right: online badge */}
+        {features.auth && (
+          <div className="pointer-events-auto opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:240ms] sm:absolute sm:bottom-6 sm:right-6">
+            <LiveStats />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
