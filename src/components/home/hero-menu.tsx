@@ -60,7 +60,7 @@ export function HeroMenu() {
               {t(m.titleKey)}
             </Link>
           ))}
-          <div className="mt-1 flex flex-col gap-2 px-1 pt-1">
+          <div className="mt-1 flex flex-col gap-2 pt-1">
             <ResumeCta />
             <Button size="md" asChild className="w-full">
               <Link href="/play?map=world&quick=1">
@@ -88,6 +88,7 @@ export function HeroMenu() {
         {features.convex && <MenuLink href="/leaderboard">{t("nav.leaderboard")}</MenuLink>}
         {features.auth && <MenuLink href="/friends">{t("nav.friends")}</MenuLink>}
         <MenuLink href="/profile">{t("nav.stats")}</MenuLink>
+        {features.convex && <MenuLink href="/maps">{t("nav.maps")}</MenuLink>}
       </nav>
     </div>
   );

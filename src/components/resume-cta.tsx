@@ -25,10 +25,10 @@ export function ResumeCta() {
 
   return (
     <Button
-      size="lg"
+      size="md"
       variant="secondary"
       asChild
-      className="min-w-44 border-border bg-overlay backdrop-blur-sm hover:bg-overlay-hover"
+      className="w-full border-border bg-overlay backdrop-blur-sm hover:bg-overlay-hover"
     >
       <Link href="/play?resume=1">
         <RotateCcw className="size-4" />

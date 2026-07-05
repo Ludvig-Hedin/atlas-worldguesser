@@ -40,13 +40,8 @@ export function HeroOverlay() {
         <HeroMenu />
       </div>
 
-      {/* Top-right: Maps + Auth */}
-      <div className="pointer-events-auto flex items-center gap-2 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:80ms] sm:absolute sm:right-6 sm:top-6">
-        {features.convex && (
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/maps">{t("nav.maps")}</Link>
-          </Button>
-        )}
+      {/* Top-right: Auth */}
+      <div className="pointer-events-auto opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:80ms] sm:absolute sm:right-6 sm:top-6">
         <AuthSlot />
       </div>
 
@@ -54,7 +49,7 @@ export function HeroOverlay() {
           pinned to the bottom on mobile (`mt-auto` in the flex column); `sm:contents`
           drops the wrapper at the sm breakpoint so the two groups return to
           being independent absolutely-positioned corners on desktop. */}
-      <div className="mt-auto flex flex-wrap items-center gap-3 sm:contents">
+      <div className="mt-auto flex w-full items-center justify-between sm:contents">
         {/* Bottom-left: settings + GitHub */}
         <div className="pointer-events-auto flex items-center gap-1.5 opacity-0 animate-[fade-up_0.5s_ease-out_forwards] [animation-delay:160ms] sm:absolute sm:bottom-6 sm:left-6">
           <SettingsMenu showLabel />
