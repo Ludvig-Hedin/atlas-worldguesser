@@ -5,6 +5,7 @@ import { MapPin, Timer, Trophy } from "lucide-react";
 import { HeroOverlay } from "@/components/home/hero-overlay";
 import { MapGlyph } from "@/components/map-glyph";
 import { OFFICIAL_MAPS, mapNameKey, mapTaglineKey } from "@/lib/maps-config";
+import { useLockedViewportHeight } from "@/hooks/use-locked-viewport-height";
 import { useT } from "@/hooks/use-t";
 import type { TKey } from "@/lib/i18n";
 
@@ -34,11 +35,17 @@ const FAQ: { qKey: TKey; aKey: TKey }[] = [
  */
 export function HomeContent() {
   const t = useT();
+  // Locked to the viewport height at load so the hero doesn't resize as
+  // mobile browsers show/hide their address bar on scroll (see hook doc).
+  const viewportHeight = useLockedViewportHeight();
 
   return (
     <main className="pointer-events-none flex flex-1 flex-col">
       {/* Hero — full viewport four-corner overlay over the globe */}
-      <section className="relative min-h-[100svh] select-none">
+      <section
+        className="relative min-h-[100svh] select-none"
+        style={viewportHeight ? { minHeight: viewportHeight } : undefined}
+      >
         <HeroOverlay />
       </section>
 

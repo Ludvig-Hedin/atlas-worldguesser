@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useLockedViewportHeight } from "@/hooks/use-locked-viewport-height";
 import { cn } from "@/lib/utils";
 
 // One rotation roughly every 50s on desktop. Mobile spins faster (see multiplier).
@@ -64,6 +65,10 @@ function makeStars(width: number, height: number): Star[] {
 export function GlobeBackground({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointsRef = useRef<Point[]>([]);
+  // Locked so this fixed, inset-0 canvas doesn't resize (and re-trigger the
+  // ResizeObserver below) as mobile browsers show/hide their address bar on
+  // scroll — the classic `position: fixed` viewport-jump issue.
+  const viewportHeight = useLockedViewportHeight();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -320,5 +325,12 @@ export function GlobeBackground({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={canvasRef} aria-hidden className={cn("pointer-events-auto cursor-grab", className)} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      className={cn("pointer-events-auto cursor-grab", className)}
+      style={viewportHeight ? { height: viewportHeight } : undefined}
+    />
+  );
 }
