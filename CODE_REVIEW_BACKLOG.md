@@ -404,3 +404,19 @@ Reviewed the full diff between `origin/main` and local `HEAD` (backend leaderboa
 - `bun lint` ✓ (0 errors, 17 warnings — all pre-existing or the codebase's existing raw-`<img>` convention, none are regressions)
 - `bun test:run` ✓ (230/230, 27 files)
 - `bun run build` ✓ (production build succeeds; sandbox's local proxy briefly broke Next.js's font-fetch on the very first local attempt — not a code issue, confirmed by a clean retry with direct network)
+
+## Bug Hunt — 2026-07-05 (auth: signed-in users treated as guest)
+
+### Auto-fixed (1 issue — critical)
+- **NEW `src/proxy.ts`** — the app had **no Clerk middleware at all**. `@clerk/nextjs@7.5.12` requires `clerkMiddleware()` to run its session handshake; Next 16 renamed the `middleware.ts` convention to `proxy.ts` (`node_modules/next/dist/docs/.../proxy.md`), and the file was simply missing. Without it the browser keeps a Clerk session but never mints a fresh session token, so `ConvexProviderWithClerk` never receives a valid JWT → `useConvexAuth().isAuthenticated` stays `false` → a signed-in player is treated as a **guest** (`getMe` → null, `AccountWidget` renders blank, "Sign in to claim" can't resolve). A first-time sign-in (no prior cookie, e.g. the friend) can't establish a durable session at all. This is the root cause of all four reported symptoms (can't sign in / stuck as guest / claim button dead / some buttons dead). Fix: added `src/proxy.ts` exporting `clerkMiddleware()` with the standard asset-excluding matcher, **guarded** so a keyless (solo-only) build passes requests through instead of throwing `Missing publishableKey` on every route.
+
+### Not a code bug — verify in dashboards if issue persists after deploy
+- Clerk JWT template must be named exactly `convex` (Clerk dashboard).
+- `CLERK_JWT_ISSUER_DOMAIN` must be set in the **Convex** deployment env (prod, not just dev).
+- Both `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` must be in Vercel (prod).
+
+### Validation
+- `bun typecheck` ✓ (0 errors)
+- `bun lint` ✓ (0 errors; 17 pre-existing warnings, none from `proxy.ts`)
+- `bun run build` — Turbopack compiled the full graph incl. `proxy.ts` + Clerk with **zero** code errors; only failure was `next/font/google` failing to fetch Geist over an unstable local connection (environmental, succeeds on Vercel).
+- Live HTTP smoke test blocked locally (sandbox `listen EPERM` + flaky dev server) — compile-time validation stands in.

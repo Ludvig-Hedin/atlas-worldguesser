@@ -72,8 +72,18 @@ integration is optional and independent:
    npx convex deploy --cmd 'next build'
    ```
 3. Add env vars in Vercel: `NEXT_PUBLIC_CONVEX_URL`, `CONVEX_DEPLOY_KEY`, the
-   Clerk keys, and (optionally) the Google Maps browser key. In the Convex
-   dashboard set `CLERK_JWT_ISSUER_DOMAIN` and add a JWT template named `convex`.
+   Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` **and** `CLERK_SECRET_KEY`),
+   and (optionally) the Google Maps browser key. In the Convex dashboard set
+   `CLERK_JWT_ISSUER_DOMAIN` and add a JWT template named `convex`.
+
+> **Clerk session middleware is required.** `src/proxy.ts` (Next 16's renamed
+> `middleware.ts`) runs `clerkMiddleware()`, which performs Clerk's session
+> handshake. Without it the browser holds a Clerk session but never mints a
+> valid Convex JWT, so a signed-in user is silently treated as a guest
+> (`useConvexAuth().isAuthenticated` stays `false`, `getMe` returns `null`, and
+> "Sign in to claim" does nothing). It's guarded to pass through untouched when
+> no Clerk key is set, so the zero-config solo build still boots. **Do not
+> delete it**, and make sure **both** Clerk keys are present in Vercel.
 
 The app deploys and runs without any of these — it simply serves solo demo mode
 until the keys are present.
