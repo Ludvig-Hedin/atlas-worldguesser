@@ -101,6 +101,10 @@ until the keys are present.
   View when available and falls back to a procedural demo panorama otherwise.
 - **Guess map** is MapLibre GL over a free, key-less CARTO basemap (Voyager
   light tiles, Dark Matter tiles for the "Dark map" preference).
+- **Homepage hero** (globe canvas + overlay) locks its height to
+  `window.innerHeight` captured once at load (`useLockedViewportHeight`)
+  instead of `dvh`/a live `100%`, so it doesn't resize as mobile browsers
+  show/hide their address bar while scrolling.
 
 ### Data
 
