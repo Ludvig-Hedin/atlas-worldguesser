@@ -28,7 +28,7 @@ export function HeroOverlay() {
   const t = useT();
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col items-center gap-8 px-6 py-10 sm:block sm:px-0 sm:py-0">
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-start gap-6 px-4 py-8 sm:block sm:px-0 sm:py-0">
       {/* Subtle backdrop behind the left menu, for legibility over the globe */}
       <div
         aria-hidden
