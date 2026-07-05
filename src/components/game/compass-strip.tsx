@@ -33,7 +33,6 @@ export function CompassStrip({ heading }: { heading: number }) {
           className="absolute inset-y-0"
           style={{
             transform: `translateX(${translate}px)`,
-            transition: "transform 100ms linear",
             width: TRACK_DEG * PX_PER_DEG,
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))",
           }}

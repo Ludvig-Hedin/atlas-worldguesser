@@ -36,7 +36,7 @@ export function PanoramaControls({
               width="22"
               height="22"
               viewBox="0 0 24 24"
-              style={{ transform: `rotate(${-headingDeg}deg)`, transition: "transform 120ms linear" }}
+              style={{ transform: `rotate(${-headingDeg}deg)` }}
             >
               <path d="M12 3 L15 12 L12 10 L9 12 Z" fill="#ff453a" />
               <path d="M12 21 L9 12 L12 14 L15 12 Z" fill="#e5e5ea" />
